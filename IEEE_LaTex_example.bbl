@@ -7,8 +7,7 @@
 \providecommand{\BIBentrySTDinterwordspacing}{\spaceskip=0pt\relax}
 \providecommand{\BIBentryALTinterwordstretchfactor}{4}
 \providecommand{\BIBentryALTinterwordspacing}{\spaceskip=\fontdimen2\font plus
-\BIBentryALTinterwordstretchfactor\fontdimen3\font minus
-  \fontdimen4\font\relax}
+\BIBentryALTinterwordstretchfactor\fontdimen3\font minus \fontdimen4\font\relax}
 \providecommand{\BIBforeignlanguage}[2]{{%
 \expandafter\ifx\csname l@#1\endcsname\relax
 \typeout{** WARNING: IEEEtran.bst: No hyphenation pattern has been}%
@@ -21,125 +20,124 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
-\bibitem{Zhao2003}
-W.~Zhao, R.~Chellappa, P.~J. Phillips, and A.~Rosenfeld, ``Face recognition: A
-  literature survey,'' \emph{ACM Computing Surveys}, vol.~35, no.~4, pp.
-  399--458, 2003.
+\bibitem{graimann2010brain}
+B.~Graimann, B.~Allison, and G.~Pfurtscheller, ``Brain-computer interfaces: A gentle introduction,'' in \emph{Brain-computer interfaces: Revolutionizing human-computer interaction}.\hskip 1em plus 0.5em minus 0.4em\relax Springer, 2010, pp. 1--27.
 
-\bibitem{Collobert2011}
-R.~Collobert, J.~Weston, L.~Bottou, M.~Karlen, K.~Kavukcuoglu, and P.~Kuksa,
-  ``Natural language processing (almost) from scratch,'' \emph{Journal of
-  Machine Learning Research}, vol.~12, pp. 2493--2537, 2011.
+\bibitem{nicolas2012brain}
+L.~F. Nicolas-Alonso and J.~Gomez-Gil, ``Brain computer interfaces, a review,'' \emph{sensors}, vol.~12, no.~2, pp. 1211--1279, 2012.
 
-\bibitem{Wang2015b}
-H.~Wang, N.~Wang, and D.-Y. Yeung, ``Collaborative deep learning for
-  recommender systems,'' in \emph{Proc. 21st {ACM SIGKDD} Int'l Conf. on
-  Knowledge Discovery and Data Mining}, Sydney, Australia, Aug. 2015, pp.
-  1235--1244.
+\bibitem{wu2020transfer}
+D.~Wu, Y.~Xu, and B.-L. Lu, ``Transfer learning for eeg-based brain--computer interfaces: A review of progress made since 2016,'' \emph{IEEE Transactions on Cognitive and Developmental Systems}, vol.~14, no.~1, pp. 4--19, 2020.
 
-\bibitem{drwuVRST2010}
-D.~Wu, C.~G. Courtney, B.~J. Lance, S.~S. Narayanan, M.~E. Dawson, K.~S. Oie,
-  and T.~D. Parsons, ``Optimal arousal identification and classification for
-  affective computing: {V}irtual {R}eality {S}troop {T}ask,'' \emph{{IEEE}
-  Trans. on Affective Computing}, vol.~1, no.~2, pp. 109--118, 2010.
+\bibitem{Liao2012}
+L.-D. Liao, C.-T. Lin, K.~McDowell, A.~Wickenden, K.~Gramann, T.-P. Jung, L.-W. Ko, and J.-Y. Chang, ``Biosensor technologies for augmented brain-computer interfaces in the next decades,'' \emph{Proc. of the {IEEE}}, vol. 100, no.~2, pp. 1553--1566, 2012.
 
-\bibitem{drwuMTALR2021}
-D.~Wu and J.~Huang, ``Affect estimation in {3D} space using multi-task active
-  learning for regression,'' \emph{{IEEE} Trans. on Affective Computing}, 2021,
-  in press.
+\bibitem{Makeig2012}
+S.~Makeig, C.~Kothe, T.~Mullen, N.~Bigdely-Shamlo, Z.~Zhang, and K.~Kreutz-Delgado, ``Evolving signal processing for brain-computer interfaces,'' \emph{Proc. of the {IEEE}}, vol. 100, no. Special Centennial Issue, pp. 1567--1584, 2012.
 
-\bibitem{drwuiGS2019}
-D.~Wu, C.-T. Lin, and J.~Huang, ``Active learning for regression using greedy
-  sampling,'' \emph{Information Sciences}, vol. 474, pp. 90--105, 2019.
+\bibitem{ramoser2000optimal}
+H.~Ramoser, J.~Muller-Gerking, and G.~Pfurtscheller, ``Optimal spatial filtering of single trial eeg during imagined hand movement,'' \emph{IEEE transactions on rehabilitation engineering}, vol.~8, no.~4, pp. 441--446, 2000.
 
-\bibitem{drwuEA2020}
-H.~He and D.~Wu, ``Transfer learning for brain-computer interfaces: A
-  {Euclidean} space data alignment approach,'' \emph{{IEEE} Trans. on
-  Biomedical Engineering}, vol.~67, no.~2, pp. 399--410, 2020.
+\bibitem{Makeig1996a}
+S.~Makeig, A.~J. Bell, T.-P. Jung, and T.~J. Sejnowski, ``Independent component analysis of electroencephalographic data,'' in \emph{Advances in Neural Information Processing Systems}, Denver, CO, Dec. 1996, pp. 145--151.
 
-\bibitem{Bishop1995}
-C.~M. Bishop, \emph{Neural Networks for Pattern Recognition}.\hskip 1em plus
-  0.5em minus 0.4em\relax Oxford, UK: Oxford University Press, 1995.
+\bibitem{Jung2000}
+T.-P. Jung, S.~Makeig, C.~Humphries, T.-W. Lee, M.~J. Mckeown, V.~Iragui, and T.~J. Sejnowski, ``Removing electroencephalographic artifacts by blind source separation,'' \emph{Psychophysiology}, vol.~37, no.~2, pp. 163--178, 2000.
 
-\bibitem{LeCun2015}
-Y.~LeCun, Y.~Bengio, and G.~Hinton, ``Deep learning,'' \emph{Nature}, vol. 521,
-  no. 7553, p. 436, 2015.
+\bibitem{rivet2009xdawn}
+B.~Rivet, A.~Souloumiac, V.~Attina, and G.~Gibert, ``xdawn algorithm to enhance evoked potentials: application to brain--computer interface,'' \emph{IEEE Transactions on Biomedical Engineering}, vol.~56, no.~8, pp. 2035--2043, 2009.
 
-\bibitem{He2016}
-K.~He, X.~Zhang, S.~Ren, and J.~Sun, ``Deep residual learning for image
-  recognition,'' in \emph{Proc. {IEEE} Conf. on Computer Vision and Pattern
-  Recognition}, Las Vegas, NV, June 2016, pp. 770--778.
+\bibitem{Wang2014b}
+X.-W. Wang, D.~Nie, and B.-L. Lu, ``Emotional state classification from {EEG} data using machine learning approach,'' \emph{Neurocomputing}, vol. 129, pp. 94--106, 2014.
 
-\bibitem{Raju1991}
-G.~Raju, J.~Zhou, and R.~A. Kisner, ``Hierarchical fuzzy control,''
-  \emph{International Journal of Control}, vol.~54, no.~5, pp. 1201--1216,
-  1991.
+\bibitem{Yger2017}
+F.~Yger, M.~Berar, and F.~Lotte, ``Riemannian approaches in brain-computer interfaces: a review,'' \emph{{IEEE} Trans. on Neural Systems and Rehabilitation Engineering}, vol.~25, no.~10, pp. 1753--1762, 2017.
 
-\bibitem{Chen2018b}
-C.~L.~P. {Chen} and Z.~{Liu}, ``Broad learning system: An effective and
-  efficient incremental learning system without the need for deep
-  architecture,'' \emph{IEEE Tran. on Neural Networks and Learning Systems},
-  vol.~29, no.~1, pp. 10--24, 2018.
+\bibitem{Wu2019}
+X.~Wu, W.-L. Zheng, and B.-L. Lu, ``Identifying functional brain connectivity patterns for {EEG}-based emotion recognition,'' in \emph{Proc. 9th Int'l {IEEE/EMBS} Conf. on Neural Engineering}, San Francisco, CA, Mar. 2019, pp. 235--238.
 
-\bibitem{Mendel2017}
-J.~M. Mendel, \emph{Uncertain rule-based fuzzy systems: introduction and new
-  directions}, 2nd~ed.\hskip 1em plus 0.5em minus 0.4em\relax Springer, 2017.
+\bibitem{landers1983effects}
+D.~M. Landers, ``The effects of mental practice on motor skill learning and performance: A meta-analysis.'' \emph{Journal of sport psychology}, vol.~5, no.~1, pp. 25--57, 1983.
 
-\bibitem{Mendel2018}
-J.~M. Mendel, ``Explaining the performance potential of rule-based fuzzy
-  systems as a greater sculpting of the state space,'' \emph{IEEE Trans. on
-  Fuzzy Systems}, vol.~26, no.~4, pp. 2362--2373, 2018.
+\bibitem{denis1985visual}
+M.~Denis, ``Visual imagery and the use of mental practice in the development of motor skills,'' \emph{Canadian Journal of Applied Sport Sciences}, vol.~10, no.~4, pp. 45--165, 1985.
 
-\bibitem{Smola2004}
-A.~J. Smola and B.~Sch{\"o}lkopf, ``A tutorial on support vector regression,''
-  \emph{Statistics and Computing}, vol.~14, no.~3, pp. 199--222, 2004.
+\bibitem{jeannerod1995mental}
+M.~Jeannerod, ``Mental imagery in the motor context,'' \emph{Neuropsychologia}, vol.~33, no.~11, pp. 1419--1432, 1995.
 
-\bibitem{Takagi1985}
-T.~Takagi and M.~Sugeno, ``Fuzzy identification of systems and its application
-  to modeling and control,'' \emph{{IEEE} Trans. on Systems, Man, and
-  Cybernetics}, vol.~15, pp. 116--132, 1985.
+\bibitem{decety1994mapping}
+J.~Decety, D.~Perani, M.~Jeannerod, V.~Bettinardi, B.~Tadary, R.~Woods, J.~C. Mazziotta, and F.~Fazio, ``Mapping motor representations with positron emission tomography,'' \emph{Nature}, vol. 371, no. 6498, pp. 600--602, 1994.
 
-\bibitem{drwuEAAI2006}
-D.~Wu and W.~W. Tan, ``Genetic learning and performance evaluation of type-2
-  fuzzy logic controllers,'' \emph{Engineering Applications of Artificial
-  Intelligence}, vol.~19, no.~8, pp. 829--841, 2006.
+\bibitem{roland1980supplementary}
+P.~E. Roland, B.~Larsen, N.~A. Lassen, and E.~Skinhoj, ``Supplementary motor area and other cortical areas in organization of voluntary movements in man,'' \emph{Journal of neurophysiology}, vol.~43, no.~1, pp. 118--136, 1980.
 
-\bibitem{drwuISA2006}
-D.~Wu and W.~W. Tan, ``A simplified type-2 fuzzy controller for real-time
-  control,'' \emph{{ISA} Trans.}, vol.~15, no.~4, pp. 503--516, 2006.
+\bibitem{rao1993functional}
+S.~M. Rao, J.~Binder, P.~Bandettini, T.~Hammeke, F.~Yetkin, A.~Jesmanowicz, L.~Lisk, G.~Morris, W.~Mueller, L.~Estkowski \emph{et~al.}, ``Functional magnetic resonance imaging of complex human movements,'' \emph{Neurology}, vol.~43, no.~11, pp. 2311--2311, 1993.
 
-\bibitem{Zhou2012}
-Z.-H. Zhou, \emph{Ensemble Methods: Foundations and Algorithms}.\hskip 1em plus
-  0.5em minus 0.4em\relax Boca Raton, FL: {CRC} press, 2012.
+\bibitem{hallett1994involvement}
+M.~Hallett, J.~Fieldman, L.~G. Cohen, N.~Sadato, and A.~Pascual-Leone, ``Involvement of primary motor cortex in motor imagery and mental practice,'' \emph{Behavioral and Brain Sciences}, vol.~17, no.~2, pp. 210--210, 1994.
 
-\bibitem{Efron1993}
-B.~Efron and R.~Tibshirani, \emph{An Introduction to the Bootstrap}.\hskip 1em
-  plus 0.5em minus 0.4em\relax New York, NY: Chapman \& Hall, 1993.
+\bibitem{gandevia1987knowledge}
+S.~Gandevia and J.~Rothwell, ``Knowledge of motor commands and the recruitment of human motoneurons,'' \emph{Brain}, vol. 110, no.~5, pp. 1117--1130, 1987.
 
-\bibitem{Breiman2001}
-L.~Breiman, ``Random forests,'' \emph{Machine Learning}, vol.~45, no.~5, pp.
-  5--32, 2001.
+\bibitem{beisteiner1995mental}
+R.~Beisteiner, P.~H{\"o}llinger, G.~Lindinger, W.~Lang, and A.~Berthoz, ``Mental representations of movements. brain potentials associated with imagination of hand movements,'' \emph{Electroencephalography and Clinical Neurophysiology/Evoked Potentials Section}, vol.~96, no.~2, pp. 183--193, 1995.
 
-\bibitem{Freund1997a}
-Y.~Freund and R.~E. Schapire, ``A decision-theoretic generalization of on-line
-  learning and an application to boosting,'' \emph{Journal of Computer and
-  System Sciences}, vol.~55, no.~1, pp. 119--139, 1997.
+\bibitem{pfurtscheller1997eeg}
+G.~Pfurtscheller, C.~Neuper, D.~Flotzinger, and M.~Pregenzer, ``Eeg-based discrimination between imagination of right and left hand movement,'' \emph{Electroencephalography and clinical Neurophysiology}, vol. 103, no.~6, pp. 642--651, 1997.
 
-\bibitem{Friedman2001}
-J.~H. Friedman, ``Greedy function approximation: a gradient boosting machine,''
-  \emph{Annals of statistics}, vol.~29, no.~5, pp. 1189--1232, 2001.
+\bibitem{gastaut1952etude}
+H.~Gastaut, ``'etude'electrocorticographique de la reactivite des rythmes rolandiques,'' \emph{Rev. neurol.}, vol.~87, pp. 176--182, 1952.
 
-\bibitem{Duda2000}
-R.~O. Duda, P.~E. Hart, and D.~G. Stork, \emph{Pattern Classification}.\hskip
-  1em plus 0.5em minus 0.4em\relax NY: Wiley-Interscience, 2000.
+\bibitem{lang1996electric}
+W.~Lang, D.~Cheyne, P.~H{\"o}llinger, W.~Gerschlager, and G.~Lindinger, ``Electric and magnetic fields of the brain accompanying internal simulation of movement,'' \emph{Cognitive brain research}, vol.~3, no.~2, pp. 125--129, 1996.
 
-\bibitem{Hastie2009}
-T.~Hastie, R.~Tibshirani, and J.~Friedman, \emph{The Elements of Statistical
-  Learning}.\hskip 1em plus 0.5em minus 0.4em\relax Springer, 2009.
+\bibitem{pfurtscheller1997motor}
+G.~Pfurtscheller and C.~Neuper, ``Motor imagery activates primary sensorimotor area in humans,'' \emph{Neuroscience letters}, vol. 239, no. 2-3, pp. 65--68, 1997.
 
-\bibitem{Pedrycz2018}
-W.~{Pedrycz}, ``Granular computing for data analytics: a manifesto of
-  human-centric computing,'' \emph{IEEE/CAA Journal of Automatica Sinica},
-  vol.~5, no.~6, pp. 1025--1034, 2018.
+\bibitem{salmelin1995functional}
+R.~Salmelin, M.~H{\'a}m{\'a}al{\'a}inen, M.~Kajola, and R.~Hari, ``Functional segregation of movement-related rhythmic activity in the human brain,'' \emph{Neuroimage}, vol.~2, no.~4, pp. 237--243, 1995.
+
+\bibitem{toro1994event}
+C.~Toro, G.~Deuschl, R.~Thatcher, S.~Sato, C.~Kufta, and M.~Hallett, ``Event-related desynchronization and movement-related cortical potentials on the ecog and eeg,'' \emph{Electroencephalography and Clinical Neurophysiology/Evoked Potentials Section}, vol.~93, no.~5, pp. 380--389, 1994.
+
+\bibitem{neuper1999enhancement}
+C.~Neuper, A.~Schl{\"o}gl, and G.~Pfurtscheller, ``Enhancement of left-right sensorimotor eeg differences during feedback-regulated motor imagery,'' \emph{Journal of Clinical Neurophysiology}, vol.~16, no.~4, pp. 373--382, 1999.
+
+\bibitem{qiao2019deep}
+W.~Qiao and X.~Bi, ``Deep spatial-temporal neural network for classification of eeg-based motor imagery,'' in \emph{Proceedings of the 2019 international conference on artificial intelligence and computer science}, 2019, pp. 265--272.
+
+\bibitem{tariq2020mu}
+M.~Tariq, P.~M. Trivailo, and M.~Simic, ``Mu-beta event-related (de) synchronization and eeg classification of left-right foot dorsiflexion kinaesthetic motor imagery for bci,'' \emph{Plos one}, vol.~15, no.~3, p. e0230184, 2020.
+
+\bibitem{ma2019deep}
+X.~Ma, S.~Qiu, W.~Wei, S.~Wang, and H.~He, ``Deep channel-correlation network for motor imagery decoding from the same limb,'' \emph{IEEE Transactions on Neural Systems and Rehabilitation Engineering}, vol.~28, no.~1, pp. 297--306, 2019.
+
+\bibitem{mammone2020deep}
+N.~Mammone, C.~Ieracitano, and F.~C. Morabito, ``A deep cnn approach to decode motor preparation of upper limbs from time--frequency maps of eeg signals at source level,'' \emph{Neural Networks}, vol. 124, pp. 357--372, 2020.
+
+\bibitem{alazrai2019deep}
+R.~Alazrai, M.~Abuhijleh, H.~Alwanni, and M.~I. Daoud, ``A deep learning framework for decoding motor imagery tasks of the same hand using eeg signals,'' \emph{IEEE Access}, vol.~7, pp. 109\,612--109\,627, 2019.
+
+\bibitem{sazgar2019overview}
+M.~Sazgar, M.~G. Young, M.~Sazgar, and M.~G. Young, ``Overview of eeg, electrode placement, and montages,'' \emph{Absolute epilepsy and EEG rotation review: Essentials for trainees}, pp. 117--125, 2019.
+
+\bibitem{Kwon2020}
+O.~{Kwon}, M.~{Lee}, C.~{Guan}, and S.~{Lee}, ``Subject-independent brain-computer interfaces based on deep convolutional neural networks,'' \emph{IEEE Trans. on Neural Networks and Learning Systems}, 2020, in press.
+
+\bibitem{mardini2020enhanced}
+W.~Mardini, M.~M.~B. Yassein, R.~Al-Rawashdeh, S.~Aljawarneh, Y.~Khamayseh, and O.~Meqdadi, ``Enhanced detection of epileptic seizure using eeg signals in combination with machine learning classifiers,'' \emph{IEEE Access}, vol.~8, pp. 24\,046--24\,055, 2020.
+
+\bibitem{pandya2020buildout}
+R.~Pandya, S.~Nadiadwala, R.~Shah, and M.~Shah, ``Buildout of methodology for meticulous diagnosis of k-complex in eeg for aiding the detection of alzheimer’s by artificial intelligence,'' \emph{Augmented Human Research}, vol.~5, no.~3, pp. 1--8, 2020.
+
+\bibitem{geng2020novel}
+D.~Geng, D.~Yang, M.~Cai, and L.~Zheng, ``A novel microwave treatment for sleep disorders and classification of sleep stages using multi-scale entropy,'' \emph{Entropy}, vol.~22, no.~3, p. 347, 2020.
+
+\bibitem{wang2018lstm}
+P.~Wang, A.~Jiang, X.~Liu, J.~Shang, and L.~Zhang, ``Lstm-based eeg classification in motor imagery tasks,'' \emph{IEEE transactions on neural systems and rehabilitation engineering}, vol.~26, no.~11, pp. 2086--2095, 2018.
+
+\bibitem{padfield2019eeg}
+N.~Padfield, J.~Zabalza, H.~Zhao, V.~Masero, and J.~Ren, ``Eeg-based brain-computer interfaces using motor-imagery: Techniques and challenges,'' \emph{Sensors}, vol.~19, no.~6, p. 1423, 2019.
 
 \end{thebibliography}
