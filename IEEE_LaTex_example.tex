@@ -1,5 +1,5 @@
 \documentclass[journal,twocolumn]{IEEEtran}
-\usepackage{slashbox,graphicx,times,amsmath,amssymb,cite,subfigure,stfloats,booktabs, url,multirow,afterpage}
+\usepackage{slashbox,graphicx,times,amsmath,amssymb,cite,subfigure,stfloats,booktabs, url,multirow,afterpage, tabularray}
 \usepackage[lined,ruled]{algorithm2e}
 \allowdisplaybreaks
 
@@ -26,12 +26,12 @@ Electroencephalogram-based motor imagery (MI) classification is an important par
 \end{abstract}
 
 \begin{IEEEkeywords}
-Ensemble learning, fuzzy system, patch learning, regression
+Brain-computer interface, motor imagery
 \end{IEEEkeywords}
 
 \IEEEpeerreviewmaketitle
 
-\section{A BRIEF REVIEW OF EEG-BASED BCI SYSTEMS}
+\section{A BRIEF REVIEW OF EEG-BASED BCI SYSTEMS} \cite{wu2020transfer}
 
 A brain-computer interface (BCI) establishes a direct communication pathway that enables the human brain to interact with external devices \cite{graimann2010brain}. Electroencephalogram (EEG), which records the electrical activities on the scalp of the brain, is the most widely used input signal in non-invasive BCIs due to its affordability and convenience \cite{nicolas2012brain}.
 
@@ -71,13 +71,22 @@ A closed-loop EEG-based BCI system, shown in Fig.~\ref{fig:bci_flowchart}, consi
 
 % The remainder of this paper is organized as follows: Section~\ref{sect:PL} introduces the general idea of PL, and illustrates it by a simple regression problem. Section~\ref{sect:PLFS} describes in detail how PL can be implemented by fuzzy systems. Section~\ref{sect:experiments} presents five experiments on PL using fuzzy systems to demonstrate its feasibility. Section~\ref{sect:limitations} points out some limitations of the current PL approach, and hence opportunities for future research. Finally, Section~\ref{sect:conclusion} draws conclusions.
 
-\section{Neurophysiological Basis of Motor Imagery} \label{sect:PL}
+\section{Neurophysiological Basis of Motor Imagery} \label{sect:PL} \cite{pfurtscheller2001motor, decety1996neurophysiological}
 
-Motor imagery can be seen as mental rehearsal of a motor act without any overt motor output. This type of phenomenal experience imply that the subject feels himself performing a given action. It corresponds to the so-called internal imagery (or first person perspective) of sport psychologists \cite{landers1983effects}. Motor imagery may be experienced in two ways, or perspectives. The first person perspective which is supposed to rely on motor-kinesthetic information processing, and the third person perspective which would rely more on visuospatial processing. To my knowledge, no neurophysiological or neuroimaging studies concerned with this distinction has been reported. However, a few experiments in cognitive psychology have suggested the relevance to consider the distinction between visual and kinesthetic imagery \cite{denis1985visual}.
+Motor imagery can be seen as mental rehearsal of a motor act without any overt motor output. This type of phenomenal experience imply that the subject feels himself performing a given action. It corresponds to the so-called internal imagery (or first person perspective) of sport psychologists \cite{landers1983effects}.
+
+\begin{figure}[htbp]  % 图片浮动体，h 表示尽可能在此处插入图片
+  \centering  % 图片居中
+  \includegraphics[width=\linewidth]{figures/fig4.eps}  % 插入图片，width 可以设置图片的宽度
+  \caption{A taxonomy of brain signal acquisition showing different brain signal recording techniques based on the type of brain activity.}  % 图片标题
+  \label{fig:record_techs}  % 给图片设置标签，方便引用
+\end{figure}
+
+During motor imagery, the central nervous system generates continuous patterns of neural activity that vary over time, known as neural oscillations or brain waves. When engaging in such mental activities, neurons in the brain communicate with each other, leading to changes in electrical currents and blood flow. These changes can be measured using various techniques: brain currents can be detected through electrical and magnetic fields, while cerebral blood flow can be monitored using optical and magnetic properties, as illustrated in Fig. ~ref{fig:record_techs} [15].
 
 Converging evidence from several sources indicates that mental imagination of movements involves similar brain regions/functions which are involved in programming and preparing such movements \cite{jeannerod1995mental}. According to this view, the main difference between performance and imagery is that in the latter case execution would be blocked at some cortico-spinal level \cite{decety1994mapping}.
 
-Functional brain imaging studies monitoring changes in regional cerebral blood flow (rCBF) revealed indeed similar patterns of activity during motor imagery and actual movement performance. An increase of the rCBF has mainly been located in the supplementary motor area during imagination of sequential finger movements \cite{roland1980supplementary}. Moreover, recent positron emission tomography (PET) \cite{decety1994mapping} and functional magnetic resonance imaging (fMRI) studies \cite{rao1993functional} revealed activation of a number of cortical and subcortical areas, including, e.g., the premotor cortex, the anterior cingulate gyrus, superior and inferior parietal areas, and the cerebellum. Thus, activation has been observed in various structures involved in the early stage of motor control (i.e., motor programming), but not in the primary sensorimotor cortex. More recent fMRI studies, in contrast, detected some activation in the primary motor cortex during motor imagery, though to a lesser extent than during actual motor performance \cite{hallett1994involvement}. Increased motor cortex activation during motor imagery has been supported by studies using transcranial magnetic stimulation in showing an increase of motor responses during mental imagination of movements \cite{gandevia1987knowledge}.
+As expected, functional brain imaging studies monitoring changes in regional cerebral blood flow (rCBF) revealed indeed similar patterns of activity during motor imagery and actual movement performance. An increase of the rCBF has mainly been located in the supplementary motor area during imagination of sequential finger movements \cite{roland1980supplementary}. Moreover, recent positron emission tomography (PET) \cite{decety1994mapping} and functional magnetic resonance imaging (fMRI) studies \cite{rao1993functional} revealed activation of a number of cortical and subcortical areas, including, e.g., the premotor cortex, the anterior cingulate gyrus, superior and inferior parietal areas, and the cerebellum. Thus, activation has been observed in various structures involved in the early stage of motor control (i.e., motor programming), but not in the primary sensorimotor cortex. More recent fMRI studies, in contrast, detected some activation in the primary motor cortex during motor imagery, though to a lesser extent than during actual motor performance \cite{hallett1994involvement}. Increased motor cortex activation during motor imagery has been supported by studies using transcranial magnetic stimulation in showing an increase of motor responses during mental imagination of movements \cite{gandevia1987knowledge}.
 
 Several EEG studies further confirm the notion that motor imagery can activate primary sensorimotor areas \cite{beisteiner1995mental}. It induces changes in the sensory-motor rhythms (SMR) of corresponding areas of the cerebral cortex, which primarily involve modulations of the $\mu$ rhythm (8-12 Hz) and the $\beta$ rhythm (14-30 Hz) \cite{jeannerod1995mental}. Specifically, when an MI starts, these rhythmic activities decrease, resulting in event-related desynchronization (ERD); at the end of an MI, these rhythmic activities increase, resulting in event-related synchronization (ERS) \cite{pfurtscheller1997eeg}.
 
@@ -228,6 +237,24 @@ Besides this, MI also applies to different parts of the body such as the movemen
 % \caption{PL using fuzzy systems.} \label{alg:PLFS}
 % \end{algorithm}
 
+\begin{table}[h]
+\centering
+\caption{Types of brain waves.}
+\label{tab:freq_bands}
+\begin{tblr}{
+  width = \linewidth,
+  colspec = {Q[85]Q[113]Q[160]Q[135]Q[160]Q[283]},
+  hline{1-2,7} = {-}{},
+}
+Type of waves & Frequency band (Hz) & MI-related frequency bands (Hz) & Amplitude (\$\textbackslash{}mu\$ v) & Lobe of brain                     & Available in                                                     \\
+Delta         & 1-3                 & -                               & 20-200                               & Cortex/Thalamus                   & It appears when we are energetic after waking up.                \\
+Theta         & 4-7                 & -                               & 10                                   & Hippocampal                       & It occurs when we are disappointed.                              \\
+Alpha         & 8-13                & 8-12                            & 2-100                                & Parietal occipital                & It occurs when our mind is alert.                                \\
+Beta          & 13-30               & 16-24                           & 5-10                                 & Frontal                           & It occurs in the most active state like in reasoning.            \\
+Gamma         & 30-100              & 30-35                           & -                                    & Between frontal and parietal lobe & It occurs when we combine different senses like sound and sight. 
+\end{tblr}
+\end{table}
+
 
 
 % \begin{table}[h] \centering \setlength{\tabcolsep}{1.5mm}
@@ -243,8 +270,8 @@ Besides this, MI also applies to different parts of the body such as the movemen
 % \end{table}
 
 
-
-\section{Experimental Paradigm} \label{sect:conclusion}
+% Part III
+\section{Experimental Paradigm} \label{sect:conclusion} \cite{pfurtscheller2001motor}
 
 To effectively decode EEG signals of MI, BCI research typically employs a variety of experimental setups designed to simulate and record the MI process. Below is a typical setup for an MI-based BCI experiment.
 
@@ -254,11 +281,6 @@ Two different types of feedback are used: 1. discrete delayed feedback and 2. co
 % When the performance of a machine learning model is not satisfactory, there are different strategies to improve it, including designing a deeper, wider, and/or more nonlinear model, and ensemble learning (aggregate multiple base/weak learners in parallel or in series). This paper has proposed a novel strategy, \emph{patch learning}, to improve the performance of a machine learning model. It first identifies a few patches from the initial model, which contribute the most to the learning error. Then, a (local) patch model is trained for each such patch, using only training examples falling into the patch. Finally, a global model is trained using training data that do not fall into any patch. To use the PL model, we first determine if the input falls into any patch. If yes, then the corresponding patch model is used to compute its output. Otherwise, the global model is used. Five experiments on different regression problems verified the effectiveness of the proposed PL approach: as more patch models are added, the overall RMSE decreases. We also defined a loss function for determining the optimal number of patches, considering the trade-off between RMSE and model complexity.
 
 % It should be emphasized that although this paper focuses on PL using fuzzy systems, the idea is generic: any machine learning algorithm can be used as the patch model, and the patch models can also be trained using different machine learning algorithms.
-
-\section{Data Acquisition}
-
-\subsection{EEG recordings}
-
 \begin{figure}[htbp]  % 图片浮动体，h 表示尽可能在此处插入图片
   \centering  % 图片居中
   \includegraphics[width=\linewidth]{figures/fig2.eps}  % 插入图片，width 可以设置图片的宽度
@@ -266,15 +288,20 @@ Two different types of feedback are used: 1. discrete delayed feedback and 2. co
   \label{fig:10-20}  % 给图片设置标签，方便引用
 \end{figure}
 
-EEG captures physiological activities of the body by recording electrical signals which are the produced postsynaptic potentials by cortical neurons \cite{sazgar2019overview}. The electrical signals are recorded via conducting electrodes that are placed on the scalp according to the well-known 10-20 international placement system as stated in Fig.~\ref{fig:10-20}, motor imagery related electrodes are identified in blue color \cite{Kwon2020}. Each electrode records a one-dimensional vector of raw EEG data. The signals are obtained on the three-dimensional scalp surface through volume conduction across multiple brain tissue \cite{sazgar2019overview}. Hence, EEG signals are prone to artifacts originating from different parts of the body like the eye, head, neck, or any other muscle. Moreover, the power cable of the recording device and electrode displacement might both cause some artifacts. This form of recording EEG produces weak, non-stationary, and low signal-to-noise ratio signals. Consequently, it complicates the classification and interpretation of signals belonging to a particular case of consideration.
+
+% Part IV
+\section{Data Acquisition}
+\subsection{EEG recordings} \cite{al2021deep}
+
+EEG captures physiological activities of the body by recording electrical signals which are the produced postsynaptic potentials by cortical neurons \cite{sazgar2019overview}. The electrical signals are recorded via conducting electrodes that are placed on the scalp according to the well-known 10-20 international placement system as stated in Fig.~\ref{fig:10-20}, motor imagery related electrodes are identified in blue color \cite{Kwon2020}. Each electrode records a one-dimensional vector of raw EEG data. The signals are obtained on the three-dimensional scalp surface through volume conduction across multiple brain tissue \cite{sazgar2019overview}. Hence, EEG signals are prone to artifacts originating from different parts of the body like the eye, head, neck, or any other muscle. Moreover, the power cable of the recording device and electrode displacement might both cause some artifacts. Because the ionic current produced inside the brain is recorded on the scalp, obstructions (such as the skull) significantly reduce the quality of the signal. The recorded EEG signal is only about 5\% of the actual brain signal [45]. This form of recording EEG produces weak, non-stationary, and low signal-to-noise ratio signals. Consequently, it complicates the classification and interpretation of signals belonging to a particular case of consideration.
 
 Despite the inherent drawbacks in raw EEG, it has some advantages over other neurological imaging techniques. It characterized by low cost, portability, and causes no side effects because of its non-invasive style \cite{qiao2019deep}. Thus, EEG has a variety of applications whether as a screening method or for hypothesis-based diagnostics. Depending on the shape of waves, e.g. rapid spikes waves or slow waves, several forms of brain disorders can be assessed, such as epilepsy \cite{mardini2020enhanced}, tumors \cite{mardini2020enhanced}, Alzheimer \cite{pandya2020buildout}, sleep disorder \cite{geng2020novel}, etc.
 
-Basically, the amplitude and frequency values in EEG signals are used for discriminating various physiological activities. The amplitude is normally fluctuating in microvolts. The frequency range in EEG signals can be split into several bands as shown in Table 1 \cite{wang2018lstm}. The most popular motor imagery frequency bands are also stated in the table. It should be noted that when the Alpha band is recorded from the sensorimotor cortex then it is called mu band. The Gamma band can be recorded consistently using internal electrodes in order to better capture it as it is being weak at the scalp \cite{padfield2019eeg}. Slightly different frequency bands or ranges may be found in the literature.
+Basically, the amplitude and frequency values in EEG signals are used for discriminating various physiological activities. The amplitude is normally fluctuating in microvolts. The frequency range in EEG signals can be split into several bands as shown in Table ~\ref{tab:freq_bands} \cite{wang2018lstm}. The most popular motor imagery frequency bands are also stated in the table. It should be noted that when the Alpha band is recorded from the sensorimotor cortex then it is called mu band. The Gamma band can be recorded consistently using internal electrodes in order to better capture it as it is being weak at the scalp \cite{padfield2019eeg}. Slightly different frequency bands or ranges may be found in the literature.
 
 EEG signals are complex in their nature and there exists acute dependency of signal quality on the mental state of the user. Studies proved that the classification accuracy of an intelligent system for a certain task was better at the beginning of the trial than the accuracy at the end of that trial \cite{padfield2019eeg}. Therefore, recording or selecting an EEG dataset is crucial for training, validating, and testing machine learning models.
 
-\subsection{Acquisition Process}
+\subsection{Acquisition Process} \cite{light2010electroencephalography}
 
 \begin{enumerate}
 \item \emph{Preparation}.
@@ -300,7 +327,17 @@ Once all the electrode signals appear acceptable, begin recording and start the 
 
 \end{enumerate}
 
-\section{Data Processing}
+
+\begin{figure}[htbp]  % 图片浮动体，h 表示尽可能在此处插入图片
+  \centering  % 图片居中
+  \includegraphics[width=\linewidth]{figures/fig3.eps}  % 插入图片，width 可以设置图片的宽度
+  \caption{A block diagram for the general BCI system.}  % 图片标题
+  \label{fig:bci_loop}  % 给图片设置标签，方便引用
+\end{figure}
+
+
+% Part V
+\section{Signal Processing} \cite{al2021deep}
 \subsection{Preprocessing of raw data}
 Raw EEG signals usually contain plenty of undesirable background noise that requires elimination before beginning the real analysis. Also, sometimes it is desirable to enhance the raw EEG to better fit the requirements. For those reasons, one or more of the listed below preprocessing methods \cite{tayeb2019validating, tang2020motor, ludwig2017investigation, reddy2019electroencephalogram} might be applied.
 
@@ -309,7 +346,7 @@ Raw EEG signals usually contain plenty of undesirable background noise that requ
   \item High-pass filtering with a low cutoff frequency to remove baseline drift.
   \item Band-pass filtering to select the desirable band(s).
   \item Clipping the amplitude of EEG signals either by forcing it to be within a specific range or based on the mean and the standard deviation.
-  \item Canceling several samples from the beginning and\or from the end of the signal to remove possible acute artifacts.
+  \item Canceling several samples from the beginning and/or from the end of the signal to remove possible acute artifacts.
   \item Normalizing the data to zero mean and unit variance using z-score. This can speed up the convergence and avoid trapping by local minima.
   \item Downsampling the signal for speeding up the computation and reducing memory storage.
   \item Selection of specific electrodes based on the goal of the application.
@@ -317,6 +354,40 @@ Raw EEG signals usually contain plenty of undesirable background noise that requ
   \item Artifact rejection such as the electrooculogram (EOG) and the electromyogram (EMG) artifacts. This can be achieved in different ways such as a thresholding-based method or data-driven method like the Independent Component Analysis (ICA).
   \item Referencing using either an electrode (Cz and Fz are often employed as reference electrodes) or the average of signals from all electrodes. Common average referencing (CAR) and Laplacian are widely used spatial filters. Referencing helps to eliminate some of the background noise.
 \end{itemize}
+
+% \usepackage{tabularray}
+\begin{table}
+\centering
+\caption{A summery list of signal processing techniques for features extraction, selection, and classification.}
+\label{tab:summary}
+\begin{tblr}{
+  width = \linewidth,
+  colspec = {Q[179]Q[296]Q[460]},
+  hline{1,5,8,12} = {-}{},
+  hline{2-4,6-7,9-11} = {2-3}{},
+}
+Feature extraction & Time-domain                     & {Autoregressive (AR)\\Adaptive autoregressive\\Root-mean-square (RMS)\\Integreated EEG (IEEG)}                                                                 \\
+                    & Frequency-domain                & {Fast Fourier transform (FFT)\\Welch's method\\Local characteristic-scale decomposition (LCD)}                                                                 \\
+                    & Time-frequency domain           & {Short-time Fourier transform (STFT)\\Wavelet transform (WT)\\Discrete wavelet transform (DWT)}                                                                \\
+                    & Spatial domain                  & {Common spatial pattern (CSP)\\Common spatio-spectral pattern (CSSP)\\Common sparse spatio-spectral patterns (CSSSP)\\Sub-band common spatial pattern (SBCSP)} \\
+Feature selection  & Statistical transformation      & {Principal component analysis (PCA)\\Independent component analysis (ICA)}                                                                                     \\
+                    & Filter bank                     & {Filter bank CSP (FBCSP)\\Discriminant filter bank CSP (DFBCSP)\\Sparse filter bank CSP (SFBCSP)}                                                              \\
+                    & Evolutionary algorithms (EAs)   & {Particle swarm optimization (PSO)\\Differential evolution (DE)\\Artificial bee colony (ABC)\\Ant colony optimization(ACO)\\Genetic algorithms (GAs)}          \\
+Classification     & Linear                          & {Support-vector machines (SVMs)\\Linear discriminant analysis (LDA)\\Naive Bayes Logistic regression (LR)}                                                     \\
+                    & Nonlinear                       & {Bayes quadratic\\Hidden Markov model (HMM)}                                                                                                                   \\
+                    & Nearest neighbor                & k-nearest neighbor analysis (k-NN)                                                                                                                             \\
+                    & Artificial neural network (ANN) & {Multi-layer perceptron (MLP)\\Radial basis function (RBF)\\Deep neural network (DNN)~}                                                                        
+\end{tblr}
+\end{table}
+
+\subsection{Processing features}
+The processed EEG data go through feature extraction, feature selection, and feature classification phases in order to achieve a decision after that. According to \cite{wang2018lstm}, the types of usually used EEG features in BCI systems can be grouped into manually selected, statistical, and data-driven adaptive features. Those three phases intensively employed numerous traditional signal processing approaches. Table ~\ref{tab:summary} summarizes the most widely used signal processing approaches for dealing with features in EEG applications. Based on the fact that EEG signals are dynamic and highly complex \cite{lee2019application}, selecting a set of tools for dealing with features would be crucial.
+
+Feature extraction can be achieved based on time, frequency, and/or spatial information contained in the signals. Extracting features depending only on temporal information discards spectral information, likewise, if features are extracted based on only spectral information then the temporal information will be discarded. Hence, either of these techniques is considered weak in extracting salient features. Timefrequency approaches are more vigorous since they relate temporal information with spectral information into each single extracted feature \cite{lee2019application}. It must be kept in mind the differences among the time-frequency approaches. For example, STFT is considered a static method in terms of time and frequency resolution because of the fixed-length window used along with the signal analysis; while wavelet transform delivers dynamic features due to the used multiresolution window \cite{herff2020potential}. Relying on time-frequency approaches is beneficial in the analysis because of the nonstationary nature of EEG signals. Spatial domain approaches can be combined with time and/or frequency domain approaches aiming at increasing the classification accuracy. With the spatial domain approaches the most effective EEG channels can be identified \cite{yilmaz2020diversity} and used with higher weights than those less effective channels.
+
+Normally, high dimensional feature sets are extracted from EEG data. For this, statistical transformation techniques such as PCA and ICA are used for dimensionality reduction and feature selection, however, these techniques are computationally demanding and they may decrease the classification accuracy \cite{lu2016deep}. Evolutionary algorithms (EAs) approaches involve optimization methods for selecting features from large sets of features, thus EAs could manage the high dimensionality problem \cite{tan2020dimensionality}. The use of filter bank approaches such as CSP had a high impact on dealing with features in EEG data \cite{padfield2019eeg}. Neural network (NN) as a wealth approach uses a framework that combines all of the three phases extraction, selection, and classification into a single pipeline. Despite the lengthy training stage in NN, new unseen data can be analyzed as soon as the network parameters are fixed \cite{wang2018lstm}. This results in more efficient computations which in turn permits using NN in online EEG analysis.
+
+A large number of studies \cite{baig2017differential, kevric2017comparison, dai2019eeg, kumar2017improved, zhang2019novel} used more than one approach in each of the three phases extraction, selection, and classification. Noteworthy, many BCI systems do not involve selection phase, however, those systems that involve a selection procedure seek for salient features to achieve higher accuracy.
 
 \section*{Acknowledgement}
 This research was supported by the National Natural Science Foundation of China Grant 61873321.
@@ -326,14 +397,14 @@ This research was supported by the National Natural Science Foundation of China 
 \bibliographystyle{IEEEtran}\bibliography{drwubib}
 
 
-\begin{IEEEbiography}[{\includegraphics[height=1in,clip,keepaspectratio]{Wu}}]{Dongrui~Wu} (S'05-M'09-SM'14) received the BE degree in automatic control from the University of Science and Technology of China in 2003, the ME degree in electrical engineering from the National University of Singapore in 2005, and the PhD degree in electrical engineering from the University of Southern California in 2009. He is now Professor in the School of Artificial Intelligence and Automation, Huazhong University of Science and Technology, Wuhan, China, and Deputy Director of the Key Laboratory of Image Processing and Intelligent Control, Ministry of Education. His research interests include affective computing, brain-computer interface, computational intelligence, and machine learning. He has more than 110 publications, including a book entitled \emph{Perceptual Computing} (Wiley-IEEE Press, 2010).
+% \begin{IEEEbiography}[{\includegraphics[height=1in,clip,keepaspectratio]{Wu}}]{Dongrui~Wu} (S'05-M'09-SM'14) received the BE degree in automatic control from the University of Science and Technology of China in 2003, the ME degree in electrical engineering from the National University of Singapore in 2005, and the PhD degree in electrical engineering from the University of Southern California in 2009. He is now Professor in the School of Artificial Intelligence and Automation, Huazhong University of Science and Technology, Wuhan, China, and Deputy Director of the Key Laboratory of Image Processing and Intelligent Control, Ministry of Education. His research interests include affective computing, brain-computer interface, computational intelligence, and machine learning. He has more than 110 publications, including a book entitled \emph{Perceptual Computing} (Wiley-IEEE Press, 2010).
 
-Prof. Wu received the IEEE Computational Intelligence Society Outstanding PhD Dissertation Award in 2012, the IEEE TRANSACTIONS ON FUZZY SYSTEMS Outstanding Paper Award in 2014, the NAFIPS Early Career Award in 2014, the IEEE Systems, Man and Cybernetics (SMC) Society Early Career Award in 2017, and the IEEE SMC Society Best Associate Editor Award in 2018. He was also a finalist of another three Best Paper Awards. He was/is an Associate Editor of the IEEE TRANSACTIONS ON FUZZY SYSTEMS (2011-2018), the IEEE TRANSACTIONS ON HUMAN-MACHINE SYSTEMS (2014-), the IEEE COMPUTATIONAL INTELLIGENCE MAGAZINE (2017-), and the IEEE TRANSACTIONS ON NEURAL SYSTEMS AND REHABILITATION ENGINEERING (2019-).
-\end{IEEEbiography}
+% Prof. Wu received the IEEE Computational Intelligence Society Outstanding PhD Dissertation Award in 2012, the IEEE TRANSACTIONS ON FUZZY SYSTEMS Outstanding Paper Award in 2014, the NAFIPS Early Career Award in 2014, the IEEE Systems, Man and Cybernetics (SMC) Society Early Career Award in 2017, and the IEEE SMC Society Best Associate Editor Award in 2018. He was also a finalist of another three Best Paper Awards. He was/is an Associate Editor of the IEEE TRANSACTIONS ON FUZZY SYSTEMS (2011-2018), the IEEE TRANSACTIONS ON HUMAN-MACHINE SYSTEMS (2014-), the IEEE COMPUTATIONAL INTELLIGENCE MAGAZINE (2017-), and the IEEE TRANSACTIONS ON NEURAL SYSTEMS AND REHABILITATION ENGINEERING (2019-).
+% \end{IEEEbiography}
 
-\begin{IEEEbiography}[{\includegraphics[width=1in,clip,keepaspectratio]{Mendel}}]{Jerry M. Mendel} (LF'04) received the Ph.D. degree in electrical engineering from the Polytechnic Institute of Brooklyn, Brooklyn, NY, in 1963. Currently, he is Emeritus Professor of Electrical Engineering at the University of Southern California in Los Angeles,  where he has been since 1974. He is also Tianjin 1000-Talents Foreign Experts Plan Endowment Professor and Honorary Dean of the College of Artificial Intelligence, Tianjin Normal University, Tianjin, China.
+% \begin{IEEEbiography}[{\includegraphics[width=1in,clip,keepaspectratio]{Mendel}}]{Jerry M. Mendel} (LF'04) received the Ph.D. degree in electrical engineering from the Polytechnic Institute of Brooklyn, Brooklyn, NY, in 1963. Currently, he is Emeritus Professor of Electrical Engineering at the University of Southern California in Los Angeles,  where he has been since 1974. He is also Tianjin 1000-Talents Foreign Experts Plan Endowment Professor and Honorary Dean of the College of Artificial Intelligence, Tianjin Normal University, Tianjin, China.
 
-He has published over 570 technical papers and is author and/or co-author of 13 books, including Uncertain Rule-based Fuzzy Systems: Introduction and New Directions, 2nd ed. (Springer 2017), Perceptual Computing: Aiding People in Making Subjective Judgments (Wiley \& IEEE Press, 2010), and Introduction to Type-2 Fuzzy Logic Control: Theory and Application (Wiley \& IEEE Press, 2014). He is a Life Fellow of the IEEE, a Distinguished Member of the IEEE Control Systems Society, and a Fellow of the International Fuzzy Systems Association. He was President of the IEEE Control Systems Society in 1986, a member of the Administrative Committee of the IEEE Computational Intelligence Society for nine years, and Chairman of its Fuzzy Systems Technical Committee and the Computing With Words Task Force of that TC. Among his awards are the 1983 Best Transactions Paper Award of the IEEE Geoscience and Remote Sensing Society, the 1992 Signal Processing Society Paper Award, the 2002 and 2014 Transactions on Fuzzy Systems Outstanding Paper Awards, a 1984 IEEE Centennial Medal, an IEEE Third Millenium Medal, a Fuzzy Systems Pioneer Award (2008) from the IEEE Computational Intelligence Society for ``fundamental theoretical contributions and seminal results in fuzzy systems"; and, 2015 USC Viterbi School of Engineering Senior Research Award. His present research interests include: type-2 fuzzy logic systems and computing with words.
-\end{IEEEbiography}
+% He has published over 570 technical papers and is author and/or co-author of 13 books, including Uncertain Rule-based Fuzzy Systems: Introduction and New Directions, 2nd ed. (Springer 2017), Perceptual Computing: Aiding People in Making Subjective Judgments (Wiley \& IEEE Press, 2010), and Introduction to Type-2 Fuzzy Logic Control: Theory and Application (Wiley \& IEEE Press, 2014). He is a Life Fellow of the IEEE, a Distinguished Member of the IEEE Control Systems Society, and a Fellow of the International Fuzzy Systems Association. He was President of the IEEE Control Systems Society in 1986, a member of the Administrative Committee of the IEEE Computational Intelligence Society for nine years, and Chairman of its Fuzzy Systems Technical Committee and the Computing With Words Task Force of that TC. Among his awards are the 1983 Best Transactions Paper Award of the IEEE Geoscience and Remote Sensing Society, the 1992 Signal Processing Society Paper Award, the 2002 and 2014 Transactions on Fuzzy Systems Outstanding Paper Awards, a 1984 IEEE Centennial Medal, an IEEE Third Millenium Medal, a Fuzzy Systems Pioneer Award (2008) from the IEEE Computational Intelligence Society for ``fundamental theoretical contributions and seminal results in fuzzy systems"; and, 2015 USC Viterbi School of Engineering Senior Research Award. His present research interests include: type-2 fuzzy logic systems and computing with words.
+% \end{IEEEbiography}
 
 \end{document}

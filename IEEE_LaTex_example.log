@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.2.18)  21 FEB 2025 21:06
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.2.18)  22 FEB 2025 11:15
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -265,16 +265,113 @@ Package: afterpage 2023/07/04 v1.08 After-Page Package (DPC)
 \AP@output=\toks24
 \AP@partial=\box59
 \AP@footins=\box60
+) (c:/texlive/2024/texmf-dist/tex/latex/tabularray/tabularray.sty (c:/texlive/2024/texmf-dist/tex/latex/l3kernel/expl3.sty
+Package: expl3 2025-01-18 L3 programming layer (loader) 
+ (c:/texlive/2024/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
+File: l3backend-pdftex.def 2024-05-08 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count302
+\l__pdf_internal_box=\box61
+))
+Package: tabularray 2024-02-16 v2024A Typeset tabulars and arrays with LaTeX3
+\l__tblr_a_int=\count303
+\l__tblr_c_int=\count304
+\l__tblr_r_int=\count305
+\l__tblr_d_dim=\dimen194
+\l__tblr_h_dim=\dimen195
+\l__tblr_o_dim=\dimen196
+\l__tblr_p_dim=\dimen197
+\l__tblr_q_dim=\dimen198
+\l__tblr_r_dim=\dimen199
+\l__tblr_s_dim=\dimen256
+\l__tblr_t_dim=\dimen257
+\l__tblr_v_dim=\dimen258
+\l__tblr_w_dim=\dimen259
+\l__tblr_a_box=\box62
+\l__tblr_b_box=\box63
+\l__tblr_c_box=\box64
+\l__tblr_d_box=\box65
+\g__tblr_table_count_int=\count306
+\c@rownum=\count307
+\c@colnum=\count308
+\c@rowcount=\count309
+\c@colcount=\count310
+\abovesep=\dimen260
+\belowsep=\dimen261
+\leftsep=\dimen262
+\rightsep=\dimen263
+\g_tblr_level_int=\count311
+\g__tblr_data_row_key_count_int=\count312
+\g__tblr_data_column_key_count_int=\count313
+\g__tblr_data_cell_key_count_int=\count314
+\g__tblr_array_int=\count315
+\l__tblr_key_count_int=\count316
+\l__tblr_key_quotient_int=\count317
+\l__tblr_key_quotient_two_int=\count318
+\l__tblr_key_remainder_int=\count319
+\g__tblr_data_str_value_count_int=\count320
+\rulewidth=\dimen264
+\l__tblr_strut_dp_dim=\dimen265
+\l__tblr_strut_ht_dim=\dimen266
+\g__tblr_cell_wd_dim=\dimen267
+\g__tblr_cell_ht_dim=\dimen268
+\g__tblr_cell_head_dim=\dimen269
+\g__tblr_cell_foot_dim=\dimen270
+\l__column_target_dim=\dimen271
+\l__tblr_caption_box=\box66
+\l__tblr_caption_left_box=\box67
+\l__tblr_row_head_box=\box68
+\l__tblr_row_foot_box=\box69
+\l__tblr_row_head_foot_dim=\dimen272
+\tablewidth=\dimen273
+\l__tblr_table_firsthead_box=\box70
+\l__tblr_table_middlehead_box=\box71
+\l__tblr_table_lasthead_box=\box72
+\l__tblr_table_firstfoot_box=\box73
+\l__tblr_table_middlefoot_box=\box74
+\l__tblr_table_lastfoot_box=\box75
+\l__tblr_remain_height_dim=\dimen274
+\l__tblr_long_from_int=\count321
+\l__tblr_long_to_int=\count322
+\l__tblr_curr_i_int=\count323
+\l__tblr_prev_i_int=\count324
+\l__tblr_table_page_int=\count325
+\l__tblr_table_head_box=\box76
+\l__tblr_table_foot_box=\box77
+\l__tblr_table_head_foot_dim=\dimen275
+\l__tblr_table_head_body_foot_dim=\dimen276
+\l__tblr_table_box=\box78
+\l__tblr_table_hlines_box=\box79
+\l__tblr_hline_box=\box80
+\l__tblr_row_box=\box81
+\l__tblr_col_o_wd_dim=\dimen277
+\l__tblr_col_b_wd_dim=\dimen278
+\l__tblr_hline_leftskip_dim=\dimen279
+\l__tblr_hline_rightskip_dim=\dimen280
+\l__tblr_row_ht_dim=\dimen281
+\l__tblr_row_dp_dim=\dimen282
+\l__tblr_row_abovesep_dim=\dimen283
+\l__tblr_row_belowsep_dim=\dimen284
+\l__tblr_row_vlines_box=\box82
+\l__tblr_vline_box=\box83
+\l__tblr_cell_box=\box84
+\l__row_upper_dim=\dimen285
+\l__row_lower_dim=\dimen286
+\l__row_vpace_dim=\dimen287
+\l__tblr_vline_aboveskip_dim=\dimen288
+\l__tblr_vline_belowskip_dim=\dimen289
+\l__tblr_cell_wd_dim=\dimen290
+\l__tblr_cell_ht_dim=\dimen291
+\l__tblr_diag_box=\box85
 ) (c:/texlive/2024/texmf-dist/tex/latex/algorithm2e/algorithm2e.sty
 Package: algorithm2e 2017/07/18 v5.2 algorithms environments
-\c@AlgoLine=\count302
+\c@AlgoLine=\count326
  (c:/texlive/2024/texmf-dist/tex/latex/base/ifthen.sty
 Package: ifthen 2024/03/16 v1.1e Standard LaTeX ifthen package (DPC)
 )
 \algocf@hangindent=\skip63
  (c:/texlive/2024/texmf-dist/tex/latex/ifoddpage/ifoddpage.sty
 Package: ifoddpage 2022/10/18 v1.2 Conditionals for odd/even page detection
-\c@checkoddpage=\count303
+\c@checkoddpage=\count327
 ) (c:/texlive/2024/texmf-dist/tex/latex/tools/xspace.sty
 Package: xspace 2014/10/28 v1.13 Space after command names (DPC,MH)
 ) (c:/texlive/2024/texmf-dist/tex/latex/relsize/relsize.sty
@@ -288,37 +385,33 @@ Package: relsize 2013/03/29 ver 4.1
 \skiplength=\skip69
 \algomargin=\skip70
 \skipalgocfslide=\skip71
-\algowidth=\dimen194
-\inoutsize=\dimen195
-\inoutindent=\dimen196
-\interspacetitleruled=\dimen197
-\interspacealgoruled=\dimen198
-\interspacetitleboxruled=\dimen199
+\algowidth=\dimen292
+\inoutsize=\dimen293
+\inoutindent=\dimen294
+\interspacetitleruled=\dimen295
+\interspacealgoruled=\dimen296
+\interspacetitleboxruled=\dimen297
 \algocf@ruledwidth=\skip72
-\algocf@inoutbox=\box61
-\algocf@inputbox=\box62
+\algocf@inoutbox=\box86
+\algocf@inputbox=\box87
 \AlCapSkip=\skip73
 \AlCapHSkip=\skip74
 \algoskipindent=\skip75
-\algocf@nlbox=\box63
-\algocf@hangingbox=\box64
-\algocf@untilbox=\box65
+\algocf@nlbox=\box88
+\algocf@hangingbox=\box89
+\algocf@untilbox=\box90
 \algocf@skipuntil=\skip76
-\algocf@capbox=\box66
+\algocf@capbox=\box91
 \algocf@lcaptionbox=\skip77
 \algoheightruledefault=\skip78
 \algoheightrule=\skip79
 \algotitleheightruledefault=\skip80
 \algotitleheightrule=\skip81
-\c@algocfline=\count304
-\c@algocfproc=\count305
-\c@algocf=\count306
-\algocf@algoframe=\box67
-\algocf@algobox=\box68
-) (c:/texlive/2024/texmf-dist/tex/latex/l3backend/l3backend-pdftex.def
-File: l3backend-pdftex.def 2024-05-08 L3 backend support: PDF output (pdfTeX)
-\l__color_backend_stack_int=\count307
-\l__pdf_internal_box=\box69
+\c@algocfline=\count328
+\c@algocfproc=\count329
+\c@algocf=\count330
+\algocf@algoframe=\box92
+\algocf@algobox=\box93
 ) (./IEEE_LaTex_example.aux)
 \openout1 = `IEEE_LaTex_example.aux'.
 
@@ -340,16 +433,16 @@ LaTeX Font Info:    ... okay on input line 12.
 -- Lines per column: 58 (exact).
 (c:/texlive/2024/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
-\scratchcounter=\count308
-\scratchdimen=\dimen256
-\scratchbox=\box70
-\nofMPsegments=\count309
-\nofMParguments=\count310
+\scratchcounter=\count331
+\scratchdimen=\dimen298
+\scratchbox=\box94
+\nofMPsegments=\count332
+\nofMParguments=\count333
 \everyMPshowfont=\toks25
-\MPscratchCnt=\count311
-\MPscratchDim=\dimen257
-\MPnumerator=\count312
-\makeMPintoPDFobject=\count313
+\MPscratchCnt=\count334
+\MPscratchDim=\dimen299
+\MPnumerator=\count335
+\makeMPintoPDFobject=\count336
 \everyMPtoPDFconversion=\toks26
 ) (c:/texlive/2024/texmf-dist/tex/latex/epstopdf-pkg/epstopdf-base.sty
 Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
@@ -415,6 +508,354 @@ File: Fig2b-eps-converted-to.pdf Graphic file (type pdf)
 <use Fig2b-eps-converted-to.pdf>
 Package pdftex.def Info: Fig2b-eps-converted-to.pdf  used on input line 94.
 (pdftex.def)             Requested size: 118.4403pt x 88.45183pt.
+> Step: init table outer spec.
+> Step: parse table options.
+> Step: split table.
+> Step: init table inner spec.
+> Step: parse table inner spec.
+> Step: execute table commands.
+> Step: calculate cell and line sizes.
+LaTeX Font Info:    Trying to load font information for TS1+ptm on input line 246.
+(c:/texlive/2024/texmf-dist/tex/latex/psnfss/ts1ptm.fd
+File: ts1ptm.fd 2001/06/04 font definitions for TS1/ptm.
+)
+LaTeX Font Info:    Trying to load font information for OMS+ptm on input line 246.
+ (c:/texlive/2024/texmf-dist/tex/latex/psnfss/omsptm.fd
+File: omsptm.fd 
+)
+LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <8> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 246.
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Type
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 of
+ []
+
+
+Overfull \hbox (3.28578pt too wide) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 waves 
+ []
+
+
+Overfull \hbox (11.9171pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Frequency
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 band
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 MI-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 related
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 fre-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 quency
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 bands
+ []
+
+
+Overfull \hbox (8.26208pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Amplitude
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 (\TS1/ptm/m/n/8 $\OMS/cmsy/m/n/8 n\OT1/ptm/m/n/8 mu\TS1/ptm/m/n/8 $
+ []
+
+
+Underfull \hbox (badness 6658) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Lobe of
+ []
+
+
+Overfull \hbox (0.98157pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Delta 
+ []
+
+
+Overfull \hbox (24.66223pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Cortex/Thalamus 
+ []
+
+
+Overfull \hbox (1.86966pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Theta 
+ []
+
+
+Overfull \hbox (12.33438pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Hippocampal 
+ []
+
+
+Underfull \hbox (badness 1354) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 It oc-curs when
+ []
+
+
+Underfull \hbox (badness 7613) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 we are dis-ap-
+ []
+
+
+Overfull \hbox (3.20569pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Alpha 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Parietal
+ []
+
+
+Underfull \hbox (badness 1354) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 It oc-curs when
+ []
+
+
+Underfull \hbox (badness 2626) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 like in rea-son-
+ []
+
+
+Overfull \hbox (8.98157pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Gamma 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 30-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Between
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 frontal
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 and
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 pari-etal
+ []
+
+
+Underfull \hbox (badness 1354) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 It oc-curs when
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 we com-bine
+ []
+
+
+Underfull \hbox (badness 3271) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 dif-fer-ent senses
+ []
+
+
+Underfull \hbox (badness 1755) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 like sound and
+ []
+
+> Step: build the whole table.
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Type
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 of
+ []
+
+
+Overfull \hbox (3.28578pt too wide) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 waves 
+ []
+
+
+Overfull \hbox (11.9171pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Frequency
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 band
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 MI-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 related
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 fre-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 quency
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 bands
+ []
+
+
+Overfull \hbox (8.26208pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Amplitude
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 (\TS1/ptm/m/n/8 $\OMS/cmsy/m/n/8 n\OT1/ptm/m/n/8 mu\TS1/ptm/m/n/8 $
+ []
+
+
+Underfull \hbox (badness 6658) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Lobe of
+ []
+
+
+Overfull \hbox (0.98157pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Delta 
+ []
+
+
+Overfull \hbox (24.66223pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Cortex/Thalamus 
+ []
+
+
+Overfull \hbox (1.86966pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Theta 
+ []
+
+
+Overfull \hbox (12.33438pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Hippocampal 
+ []
+
+
+Underfull \hbox (badness 1354) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 It oc-curs when
+ []
+
+
+Underfull \hbox (badness 7613) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 we are dis-ap-
+ []
+
+
+Overfull \hbox (3.20569pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Alpha 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Parietal
+ []
+
+
+Underfull \hbox (badness 1354) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 It oc-curs when
+ []
+
+
+Underfull \hbox (badness 2626) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 like in rea-son-
+ []
+
+
+Overfull \hbox (8.98157pt too wide) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Gamma 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 30-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 Between
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 frontal
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 and
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 pari-etal
+ []
+
+
+Underfull \hbox (badness 1354) in paragraph at lines 246--246
+[]\OT1/ptm/m/n/8 It oc-curs when
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 we com-bine
+ []
+
+
+Underfull \hbox (badness 3271) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 dif-fer-ent senses
+ []
+
+
+Underfull \hbox (badness 1755) in paragraph at lines 246--246
+\OT1/ptm/m/n/8 like sound and
+ []
+
 
 
 [2 <./Fig2a-eps-converted-to.pdf> <./Fig2b-eps-converted-to.pdf>]
@@ -425,99 +866,231 @@ Package epstopdf Info: Source file: <figures/fig2.eps>
 (epstopdf)                    date: 2025-02-21 21:06:36
 (epstopdf)                    size: 129593 bytes
 (epstopdf)             Command: <repstopdf --outfile=figures/fig2-eps-converted-to.pdf figures/fig2.eps>
-(epstopdf)             \includegraphics on input line 264.
+(epstopdf)             \includegraphics on input line 277.
 Package epstopdf Info: Output file is already uptodate.
-<figures/fig2-eps-converted-to.pdf, id=27, 482.80376pt x 479.7925pt>
+<figures/fig2-eps-converted-to.pdf, id=28, 482.80376pt x 479.7925pt>
 File: figures/fig2-eps-converted-to.pdf Graphic file (type pdf)
 <use figures/fig2-eps-converted-to.pdf>
-Package pdftex.def Info: figures/fig2-eps-converted-to.pdf  used on input line 264.
+Package pdftex.def Info: figures/fig2-eps-converted-to.pdf  used on input line 277.
 (pdftex.def)             Requested size: 252.0pt x 250.43062pt.
 
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
 
 
 
 [3 <./figures/fig2-eps-converted-to.pdf>]
 
-(./IEEE_LaTex_example.bbl
+Package epstopdf Info: Source file: <figures/fig3.eps>
+(epstopdf)                    date: 2025-02-22 09:24:07
+(epstopdf)                    size: 147651 bytes
+(epstopdf)             Output file: <figures/fig3-eps-converted-to.pdf>
+(epstopdf)                    date: 2025-02-22 10:42:17
+(epstopdf)                    size: 100486 bytes
+(epstopdf)             Command: <repstopdf --outfile=figures/fig3-eps-converted-to.pdf figures/fig3.eps>
+(epstopdf)             \includegraphics on input line 324.
+Package epstopdf Info: Output file is already uptodate.
+<figures/fig3-eps-converted-to.pdf, id=34, 720.6925pt x 409.53pt>
+File: figures/fig3-eps-converted-to.pdf Graphic file (type pdf)
+<use figures/fig3-eps-converted-to.pdf>
+Package pdftex.def Info: figures/fig3-eps-converted-to.pdf  used on input line 324.
+(pdftex.def)             Requested size: 252.0pt x 143.19391pt.
 
-[4]
+
+[4 <./figures/fig3-eps-converted-to.pdf>]
+> Step: init table outer spec.
+> Step: parse table options.
+> Step: split table.
+> Step: init table inner spec.
+> Step: parse table inner spec.
+> Step: execute table commands.
+> Step: calculate cell and line sizes.
+
+Underfull \hbox (badness 5133) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Feature ex-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+\OT1/ptm/m/n/8 Local characteristic-scale
+ []
+
+
+Underfull \hbox (badness 3118) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Time-frequency do-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Short-time Fourier trans-form
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+\OT1/ptm/m/n/8 Discrete wavelet trans-form
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Feature
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Statistical
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Principal com-po-nent anal-y-sis
+ []
+
+
+Underfull \hbox (badness 3000) in paragraph at lines 371--371
+\OT1/ptm/m/n/8 Discriminant fil-ter bank CSP
+ []
+
+
+Underfull \hbox (badness 2818) in paragraph at lines 371--371
+\OT1/ptm/m/n/8 Sparse fil-ter bank CSP (SF-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Evolutionary
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Particle swarm op-ti-miza-tion
+ []
+
+
+Overfull \hbox (2.20743pt too wide) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Classification 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Support-vector ma-chines
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+\OT1/ptm/m/n/8 Linear dis-crim-i-nant anal-y-sis
+ []
+
+> Step: build the whole table.
+
+Underfull \hbox (badness 5133) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Feature ex-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+\OT1/ptm/m/n/8 Local characteristic-scale
+ []
+
+
+Underfull \hbox (badness 3118) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Time-frequency do-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Short-time Fourier trans-form
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+\OT1/ptm/m/n/8 Discrete wavelet trans-form
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Feature
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Statistical
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Principal com-po-nent anal-y-sis
+ []
+
+
+Underfull \hbox (badness 3000) in paragraph at lines 371--371
+\OT1/ptm/m/n/8 Discriminant fil-ter bank CSP
+ []
+
+
+Underfull \hbox (badness 2818) in paragraph at lines 371--371
+\OT1/ptm/m/n/8 Sparse fil-ter bank CSP (SF-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Evolutionary
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Particle swarm op-ti-miza-tion
+ []
+
+
+Overfull \hbox (2.20743pt too wide) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Classification 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+[]\OT1/ptm/m/n/8 Support-vector ma-chines
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 371--371
+\OT1/ptm/m/n/8 Linear dis-crim-i-nant anal-y-sis
+ []
+
+
+
+
+Underfull \vbox (badness 10000) has occurred while \output is active []
+
+
+
+[5] (./IEEE_LaTex_example.bbl
+
+
+
+[6]
 
 )
-Package epstopdf Info: Source file: <Wu.eps>
-(epstopdf)                    date: 2019-05-04 10:48:06
-(epstopdf)                    size: 372044 bytes
-(epstopdf)             Output file: <Wu-eps-converted-to.pdf>
-(epstopdf)                    date: 2025-02-20 19:08:08
-(epstopdf)                    size: 295862 bytes
-(epstopdf)             Command: <repstopdf --outfile=Wu-eps-converted-to.pdf Wu.eps>
-(epstopdf)             \includegraphics on input line 312.
-Package epstopdf Info: Output file is already uptodate.
-<Wu-eps-converted-to.pdf, id=36, 413.545pt x 441.65pt>
-File: Wu-eps-converted-to.pdf Graphic file (type pdf)
-<use Wu-eps-converted-to.pdf>
-Package pdftex.def Info: Wu-eps-converted-to.pdf  used on input line 312.
-(pdftex.def)             Requested size: 67.67036pt x 72.26999pt.
-Package epstopdf Info: Source file: <Wu.eps>
-(epstopdf)                    date: 2019-05-04 10:48:06
-(epstopdf)                    size: 372044 bytes
-(epstopdf)             Output file: <Wu-eps-converted-to.pdf>
-(epstopdf)                    date: 2025-02-20 19:08:08
-(epstopdf)                    size: 295862 bytes
-(epstopdf)             Command: <repstopdf --outfile=Wu-eps-converted-to.pdf Wu.eps>
-(epstopdf)             \includegraphics on input line 312.
-Package epstopdf Info: Output file is already uptodate.
-File: Wu-eps-converted-to.pdf Graphic file (type pdf)
-<use Wu-eps-converted-to.pdf>
-Package pdftex.def Info: Wu-eps-converted-to.pdf  used on input line 312.
-(pdftex.def)             Requested size: 67.67036pt x 72.26999pt.
-Package epstopdf Info: Source file: <Mendel.eps>
-(epstopdf)                    date: 2018-07-29 00:27:48
-(epstopdf)                    size: 366500 bytes
-(epstopdf)             Output file: <Mendel-eps-converted-to.pdf>
-(epstopdf)                    date: 2025-02-20 19:08:11
-(epstopdf)                    size: 287166 bytes
-(epstopdf)             Command: <repstopdf --outfile=Mendel-eps-converted-to.pdf Mendel.eps>
-(epstopdf)             \includegraphics on input line 317.
-Package epstopdf Info: Output file is already uptodate.
-<Mendel-eps-converted-to.pdf, id=39, 1402.23875pt x 1269.74374pt>
-File: Mendel-eps-converted-to.pdf Graphic file (type pdf)
-<use Mendel-eps-converted-to.pdf>
-Package pdftex.def Info: Mendel-eps-converted-to.pdf  used on input line 317.
-(pdftex.def)             Requested size: 72.26999pt x 65.42838pt.
-Package epstopdf Info: Source file: <Mendel.eps>
-(epstopdf)                    date: 2018-07-29 00:27:48
-(epstopdf)                    size: 366500 bytes
-(epstopdf)             Output file: <Mendel-eps-converted-to.pdf>
-(epstopdf)                    date: 2025-02-20 19:08:11
-(epstopdf)                    size: 287166 bytes
-(epstopdf)             Command: <repstopdf --outfile=Mendel-eps-converted-to.pdf Mendel.eps>
-(epstopdf)             \includegraphics on input line 317.
-Package epstopdf Info: Output file is already uptodate.
-File: Mendel-eps-converted-to.pdf Graphic file (type pdf)
-<use Mendel-eps-converted-to.pdf>
-Package pdftex.def Info: Mendel-eps-converted-to.pdf  used on input line 317.
-(pdftex.def)             Requested size: 72.26999pt x 65.42838pt.
 
-
-[5 <./Wu-eps-converted-to.pdf> <./Mendel-eps-converted-to.pdf>] (./IEEE_LaTex_example.aux)
+[7] (./IEEE_LaTex_example.aux)
  ***********
 LaTeX2e <2024-11-01> patch level 2
 L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 5235 strings out of 473201
- 84920 string characters out of 5720299
- 506571 words of memory out of 5000000
- 28426 multiletter control sequences out of 15000+600000
- 593224 words of font info for 95 fonts, out of 8000000 for 9000
+ 7211 strings out of 473201
+ 137387 string characters out of 5720299
+ 601264 words of memory out of 5000000
+ 30382 multiletter control sequences out of 15000+600000
+ 600177 words of font info for 115 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 57i,10n,65p,1811b,344s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmb8a.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on IEEE_LaTex_example.pdf (5 pages, 989758 bytes).
+ 65i,8n,96p,1811b,1008s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmb8a.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
+Output written on IEEE_LaTex_example.pdf (7 pages, 532623 bytes).
 PDF statistics:
- 74 PDF objects out of 1000 (max. 8388607)
- 38 compressed objects within 1 object stream
+ 83 PDF objects out of 1000 (max. 8388607)
+ 47 compressed objects within 1 object stream
  0 named destinations out of 1000 (max. 500000)
- 67 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 38 words of extra memory for PDF output out of 10000 (max. 10000000)
 

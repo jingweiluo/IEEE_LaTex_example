@@ -20,14 +20,14 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
+\bibitem{wu2020transfer}
+D.~Wu, Y.~Xu, and B.-L. Lu, ``Transfer learning for eeg-based brain--computer interfaces: A review of progress made since 2016,'' \emph{IEEE Transactions on Cognitive and Developmental Systems}, vol.~14, no.~1, pp. 4--19, 2020.
+
 \bibitem{graimann2010brain}
 B.~Graimann, B.~Allison, and G.~Pfurtscheller, ``Brain-computer interfaces: A gentle introduction,'' in \emph{Brain-computer interfaces: Revolutionizing human-computer interaction}.\hskip 1em plus 0.5em minus 0.4em\relax Springer, 2010, pp. 1--27.
 
 \bibitem{nicolas2012brain}
 L.~F. Nicolas-Alonso and J.~Gomez-Gil, ``Brain computer interfaces, a review,'' \emph{sensors}, vol.~12, no.~2, pp. 1211--1279, 2012.
-
-\bibitem{wu2020transfer}
-D.~Wu, Y.~Xu, and B.-L. Lu, ``Transfer learning for eeg-based brain--computer interfaces: A review of progress made since 2016,'' \emph{IEEE Transactions on Cognitive and Developmental Systems}, vol.~14, no.~1, pp. 4--19, 2020.
 
 \bibitem{Liao2012}
 L.-D. Liao, C.-T. Lin, K.~McDowell, A.~Wickenden, K.~Gramann, T.-P. Jung, L.-W. Ko, and J.-Y. Chang, ``Biosensor technologies for augmented brain-computer interfaces in the next decades,'' \emph{Proc. of the {IEEE}}, vol. 100, no.~2, pp. 1553--1566, 2012.
@@ -55,6 +55,12 @@ F.~Yger, M.~Berar, and F.~Lotte, ``Riemannian approaches in brain-computer inter
 
 \bibitem{Wu2019}
 X.~Wu, W.-L. Zheng, and B.-L. Lu, ``Identifying functional brain connectivity patterns for {EEG}-based emotion recognition,'' in \emph{Proc. 9th Int'l {IEEE/EMBS} Conf. on Neural Engineering}, San Francisco, CA, Mar. 2019, pp. 235--238.
+
+\bibitem{pfurtscheller2001motor}
+G.~Pfurtscheller and C.~Neuper, ``Motor imagery and direct brain-computer communication,'' \emph{Proceedings of the IEEE}, vol.~89, no.~7, pp. 1123--1134, 2001.
+
+\bibitem{decety1996neurophysiological}
+J.~Decety, ``The neurophysiological basis of motor imagery,'' \emph{Behavioural brain research}, vol.~77, no. 1-2, pp. 45--52, 1996.
 
 \bibitem{landers1983effects}
 D.~M. Landers, ``The effects of mental practice on motor skill learning and performance: A meta-analysis.'' \emph{Journal of sport psychology}, vol.~5, no.~1, pp. 25--57, 1983.
@@ -119,6 +125,9 @@ N.~Mammone, C.~Ieracitano, and F.~C. Morabito, ``A deep cnn approach to decode m
 \bibitem{alazrai2019deep}
 R.~Alazrai, M.~Abuhijleh, H.~Alwanni, and M.~I. Daoud, ``A deep learning framework for decoding motor imagery tasks of the same hand using eeg signals,'' \emph{IEEE Access}, vol.~7, pp. 109\,612--109\,627, 2019.
 
+\bibitem{al2021deep}
+A.~Al-Saegh, S.~A. Dawwd, and J.~M. Abdul-Jabbar, ``Deep learning for motor imagery eeg-based classification: A review,'' \emph{Biomedical Signal Processing and Control}, vol.~63, p. 102172, 2021.
+
 \bibitem{sazgar2019overview}
 M.~Sazgar, M.~G. Young, M.~Sazgar, and M.~G. Young, ``Overview of eeg, electrode placement, and montages,'' \emph{Absolute epilepsy and EEG rotation review: Essentials for trainees}, pp. 117--125, 2019.
 
@@ -139,5 +148,50 @@ P.~Wang, A.~Jiang, X.~Liu, J.~Shang, and L.~Zhang, ``Lstm-based eeg classificati
 
 \bibitem{padfield2019eeg}
 N.~Padfield, J.~Zabalza, H.~Zhao, V.~Masero, and J.~Ren, ``Eeg-based brain-computer interfaces using motor-imagery: Techniques and challenges,'' \emph{Sensors}, vol.~19, no.~6, p. 1423, 2019.
+
+\bibitem{light2010electroencephalography}
+G.~A. Light, L.~E. Williams, F.~Minow, J.~Sprock, A.~Rissling, R.~Sharp, N.~R. Swerdlow, and D.~L. Braff, ``Electroencephalography (eeg) and event-related potentials (erps) with human participants,'' \emph{Current protocols in neuroscience}, vol.~52, no.~1, pp. 6--25, 2010.
+
+\bibitem{tayeb2019validating}
+Z.~Tayeb, J.~Fedjaev, N.~Ghaboosi, C.~Richter, L.~Everding, X.~Qu, Y.~Wu, G.~Cheng, and J.~Conradt, ``Validating deep neural networks for online decoding of motor imagery movements from eeg signals,'' \emph{Sensors}, vol.~19, no.~1, p. 210, 2019.
+
+\bibitem{tang2020motor}
+X.~Tang, W.~Li, X.~Li, W.~Ma, and X.~Dang, ``Motor imagery eeg recognition based on conditional optimization empirical mode decomposition and multi-scale convolutional neural network,'' \emph{Expert Systems with Applications}, vol. 149, p. 113285, 2020.
+
+\bibitem{ludwig2017investigation}
+S.~A. Ludwig and J.~Kong, ``Investigation of different classifiers and channel configurations of a mobile p300-based brain--computer interface,'' \emph{Medical \& biological engineering \& computing}, vol.~55, pp. 2143--2154, 2017.
+
+\bibitem{reddy2019electroencephalogram}
+T.~K. Reddy, V.~Arora, S.~Kumar, L.~Behera, Y.-K. Wang, and C.-T. Lin, ``Electroencephalogram based reaction time prediction with differential phase synchrony representations using co-operative multi-task deep neural networks,'' \emph{IEEE Transactions on Emerging Topics in Computational Intelligence}, vol.~3, no.~5, pp. 369--379, 2019.
+
+\bibitem{lee2019application}
+H.~K. Lee and Y.-S. Choi, ``Application of continuous wavelet transform and convolutional neural network in decoding motor imagery brain-computer interface,'' \emph{Entropy}, vol.~21, no.~12, p. 1199, 2019.
+
+\bibitem{herff2020potential}
+C.~Herff, D.~J. Krusienski, and P.~Kubben, ``The potential of stereotactic-eeg for brain-computer interfaces: current progress and future directions,'' \emph{Frontiers in neuroscience}, vol.~14, p. 123, 2020.
+
+\bibitem{yilmaz2020diversity}
+B.~H. Yilmaz, C.~M. Yilmaz, and C.~Kose, ``Diversity in a signal-to-image transformation approach for eeg-based motor imagery task classification,'' \emph{Medical \& biological engineering \& computing}, vol.~58, pp. 443--459, 2020.
+
+\bibitem{lu2016deep}
+N.~Lu, T.~Li, X.~Ren, and H.~Miao, ``A deep learning scheme for motor imagery classification based on restricted boltzmann machines,'' \emph{IEEE transactions on neural systems and rehabilitation engineering}, vol.~25, no.~6, pp. 566--576, 2016.
+
+\bibitem{tan2020dimensionality}
+P.~Tan, X.~Wang, and Y.~Wang, ``Dimensionality reduction in evolutionary algorithms-based feature selection for motor imagery brain-computer interface,'' \emph{Swarm and Evolutionary Computation}, vol.~52, p. 100597, 2020.
+
+\bibitem{baig2017differential}
+M.~Z. Baig, N.~Aslam, H.~P. Shum, and L.~Zhang, ``Differential evolution algorithm as a tool for optimal feature subset selection in motor imagery eeg,'' \emph{Expert Systems with Applications}, vol.~90, pp. 184--195, 2017.
+
+\bibitem{kevric2017comparison}
+J.~Kevric and A.~Subasi, ``Comparison of signal decomposition methods in classification of eeg signals for motor-imagery bci system,'' \emph{Biomedical Signal Processing and Control}, vol.~31, pp. 398--406, 2017.
+
+\bibitem{dai2019eeg}
+M.~Dai, D.~Zheng, R.~Na, S.~Wang, and S.~Zhang, ``Eeg classification of motor imagery using a novel deep learning framework,'' \emph{Sensors}, vol.~19, no.~3, p. 551, 2019.
+
+\bibitem{kumar2017improved}
+S.~Kumar, A.~Sharma, and T.~Tsunoda, ``An improved discriminative filter bank selection approach for motor imagery eeg signal classification using mutual information,'' \emph{BMC bioinformatics}, vol.~18, pp. 125--137, 2017.
+
+\bibitem{zhang2019novel}
+R.~Zhang, Q.~Zong, L.~Dou, and X.~Zhao, ``A novel hybrid deep learning scheme for four-class motor imagery classification,'' \emph{Journal of neural engineering}, vol.~16, no.~6, p. 066004, 2019.
 
 \end{thebibliography}
