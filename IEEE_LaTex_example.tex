@@ -10,22 +10,30 @@
 
 
 \begin{document}
-\title{Patch Learning}
+\title{Exploring Large Language Models for EEG Classification through Active Prompting with Purity-Guided Unique-Round Exemplars (PURE)}
 
-\author{Dongrui~Wu,~\IEEEmembership{Fellow,~IEEE} and Jerry M. Mendel,~\IEEEmembership{Life Fellow, IEEE}
-\thanks{D.~Wu is with the Key Laboratory of Image Processing and Intelligent Control (Huazhong University of Science and Technology), Ministry of Education, China. He is also with the School of Artificial Intelligence and Automation, Huazhong University of Science and Technology, Wuhan, China. Email: drwu@hust.edu.cn.}
-\thanks{J.M. Mendel is with the Ming Hsieh Department of Electrical Engineering, University of Southern California, Los Angeles, CA, USA. He is also with the College of Artificial Intelligence, Tianjin Normal University, Tianjin, China. Email: mendel@sipi.usc.edu.}}
+% \author{Dongrui~Wu,~\IEEEmembership{Fellow,~IEEE} and Jerry M. Mendel,~\IEEEmembership{Life Fellow, IEEE}
+\author{Jingwei~Luo
 
-\markboth{IEEE Transactions on Fuzzy Systems, 2023}%
+% \thanks{D.~Wu is with the Key Laboratory of Image Processing and Intelligent Control (Huazhong University of Science and Technology), Ministry of Education, China. He is also with the School of Artificial Intelligence and Automation, Huazhong University of Science and Technology, Wuhan, China. Email: drwu@hust.edu.cn.}
+% \thanks{J.M. Mendel is with the Ming Hsieh Department of Electrical Engineering, University of Southern California, Los Angeles, CA, USA. He is also with the College of Artificial Intelligence, Tianjin Normal University, Tianjin, China. Email: mendel@sipi.usc.edu.}}
+\thanks{J.~Luo is with the Key Laboratory of Image Processing and Intelligent Control (Huazhong University of Science and Technology), Ministry of Education, China. He is also with the School of Artificial Intelligence and Automation, Huazhong University of Science and Technology, Wuhan, China. Email: d202481524@hust.edu.cn.}}
+
+% \markboth{IEEE Transactions on Fuzzy Systems, 2023}%
+\markboth{}%
 {Shell \MakeLowercase{\textit{et al.}}: Bare Demo of IEEEtran.cls for IEEE Journals}
 \maketitle
 
 \begin{abstract}
-There have been different strategies to improve the performance of a machine learning model, e.g., increasing the depth, width, and/or nonlinearity of the model, and using ensemble learning to aggregate multiple base/weak learners in parallel or in series. This paper proposes a novel strategy called patch learning (PL) for this problem. It consists of three steps: 1) train an initial global model using all training data; 2) identify  from the initial global model the patches which contribute the most to the learning error, and train a (local) patch model for each such patch; and, 3) update the global model using training data that do not fall into any patch. To use a PL model, we first determine if the input falls into any patch. If yes, then the corresponding patch model is used to compute the output. Otherwise, the global model is used. We explain in detail how PL can be implemented using fuzzy systems. Five regression problems on 1D/2D/3D curve fitting, nonlinear system identification, and chaotic time-series prediction, verified its effectiveness. To our knowledge, the PL idea has not appeared in the literature before, and it opens up a promising new line of research in machine learning.
+With the rapid scaling of large language models (LLMs), their emergent abilities have exhibited an impressive spectrum of capabilities. Among these, in-context few-shot learning—where models effectively generalize from only a handful of examples—has elicited notable interest, inspiring a surge of research into it. However, these efforts have primarily focused on textual and visual modalities, with limited exploration of complex numerical data such as Electroencephalography (EEG) signal.
+While a few recent works have explored fine-tuning LLMs for brain-computer interface (BCI) tasks, to the best of our knowledge, none have directly leveraged prompt engineering—a simple yet powerful approach—to unlock LLMs’ in-context learning ability for EEG-based classification.
+In this paper, we propose a novel method that integrates domain-specific feature extraction with a purity-guided active selection strategy to identify a small set of informative exemplars from a large sample pool. For example, in Motor Imagery (MI) tasks, we apply common spatial pattern (CSP) filtering to extract discriminative EEG features. We then compute the proportion of each sample’s k-nearest neighbors that share the same label, rank all samples by this ratio in descending order, and select the top-ranked ones with the highest local same label purity.
+These high-purity exemplars are then embedded in prompts as demonstrations, enabling LLMs to perform EEG classification in a few-shot setting—without any gradient-based parameter updates. Notably, our exemplar selection is performed only once, unlike conventional Natural Language Processing (NLP) tasks where exemplars must be re-selected for each test instance. This significantly reduces computational cost and inference latency.
+Extensive experiments across multiple EEG datasets, BCI paradigms, and LLM models demonstrate that our method consistently outperforms random selection baselines, delivering superior accuracy and stability. Furthermore, performance improves with more powerful LLM (e.g., DeepSeek-V3), and in some cases, our approach even surpasses state-of-the-art supervised models.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Ensemble learning, fuzzy system, patch learning, regression
+Active Learning, Prompt Engineering, In-Context Learning, EEG Classification, Motor Imagery, Few-Shot Prompting
 \end{IEEEkeywords}
 
 \IEEEpeerreviewmaketitle
