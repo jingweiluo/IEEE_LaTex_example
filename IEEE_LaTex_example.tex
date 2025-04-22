@@ -10,7 +10,7 @@
 
 
 \begin{document}
-\title{Exploring Large Language Models for EEG Classification through Active Prompting with Purity-Guided Unique-Round Exemplars (PURE)}
+\title{Exploring Large Language Models for EEG Classification through Active Prompting with Purity-Guided Unique-Round Exemple Selection (PURE)}
 
 % \author{Dongrui~Wu,~\IEEEmembership{Fellow,~IEEE} and Jerry M. Mendel,~\IEEEmembership{Life Fellow, IEEE}
 \author{Jingwei~Luo
@@ -107,6 +107,94 @@ EEG-based classification tasks cover a wide range of scenarios, such as motor im
 
 \cite{jiang2024large} introduced a 0.369B-parameter model trained on a large collection of EEG data spanning multiple paradigms and tasks, which represents one of the largest models in the EEG domain to date. Nonetheless, its performance and ease of use in downstream tasks still lag far behind that of LLMs. Due to the modality gap, LLMs cannot be directly applied to EEG-based tasks. To the best of our knowledge, no prior work has directly applied prompt engineering to EEG classification tasks.
 
+
+
+\section{Method}
+In our setting, we start with a large pool of labeled training samples. Our objective is to select a small subset of these samples to serve as in-context examples within the prompt, aiming to best activates the few-shot capabilities of a LLM and maximizes its performance on the test set. Throughout the entire prediction process, we do not update the model’s parameters, ensuring the simplicity of the overall workflow. Before introducing our method, we begin by re-examining traditional sample selection approaches from two perspectives.
+
+\subsection{Per-Instance Selection Compared to One-Time Selection}
+In studies on ICL, particularly those in the fields of NLP and CV \cite{liu-etal-2022-makes, zhang2023makes}, most existing works perform example selection separately for each test instance, often using methods such as $k$NN or clustering to identify similar and representative examples. We refer to this approach as per-instance selection.
+
+However, in numerical data classification tasks, using a $k$NN-based per-instance selection strategy can easily bias the LLM toward predicting the majority label among the selected examples. This often causes the model to behave similarly to a standard $k$NN classifier, thereby undermining the unique advantages of LLMs.
+
+In fact, in order to demonstrate that the ability of LLMs is not solely driven by $k$NN, \cite{liu-etal-2022-makes} introduces a baseline where $k$NN alone is used for prediction. The results show that $k$NN performs significantly worse than $k$NN+LLM. However, many of the tasks considered involve open-ended output spaces—for example, text generation tasks. As described in \cite{liu-etal-2022-makes}, “for text generation tasks, the target $y_1$ associated with the first retrieved example is directly used as the predicted output. ” Therefore, the mismatch between the retrieved target and the true output is almost inevitable, even when the examples are close in the embedding space.
+
+Thus, the relatively poor performance of $k$NN in such tasks is expected and does not invalidate the potential overlap between $k$NN and LLM. If this bias is relatively subtle in non-classification tasks, it becomes especially evident in classification tasks.
+
+Subsequent experiments further confirm this observation. Although $k$NN-based per-instance selection can achieve reasonably good prediction accuracy, its performance is often similar to that of a standard $k$NN classifier. In most cases, unless a very large model is used, it usually performs worse than $k$NN. Moreover, the cost of per-instance selection is substantial. It requires actively selecting examples for each test sample individually, often involving multiple iterations per selection. This results in high computational and time costs.
+
+To address these issues, we propose a one-time selection approach. Instead of selecting examples repeatedly for each test instance, we select a fixed set of examples once from the training set at the beginning and use this same set for all subsequent predictions. This method offers significant advantages over per-instance selection in terms of efficiency and scalability, particularly in the following two aspects:
+\begin{enumerate}
+\item \emph{Reduced computational overhead}. It eliminates the need for repeated per-instance selection, avoiding the iterative process for each test sample.
+\item \emph{Improved batch efficiency}. Since all test samples share the same in-context examples, we can batch multiple test inputs into a single prompt and obtain multiple predictions with one API call. In contrast, per-instance selection requires constructing one prompt per test instance, yielding only a single prediction at a time.
+\end{enumerate}
+Furthermore, in terms of prediction accuracy, our experiments show that performance improves as the size and capability of the LLM increase. On some datasets, the one-time selection strategy even outperforms state-of-the-art methods.
+
+\subsection{Gold Criteria for Demonstrations}
+Once the one-time selection strategy is adopted, the notion of similarity—which has served as a primary criterion in most prior few-shot demonstration selection methods—no longer applies, as there is no specific test instance to serve as a reference for measuring similarity. This calls for a major shift: we must focus on samples that best represent the entire input space rather than resemble an individual instance.
+
+In conventional classification frameworks, constructing a robust decision boundary is critical for achieving strong generalization performance. Accordingly, three core criteria are widely adopted in active learning:
+\begin{enumerate}
+\item \emph{Informativeness}. Informativeness quantifies how challenging a sample is for the model to classify, typically indicating that it carries substantial information. Informative samples are expected to exert a notable influence on the refinement of the decision boundary. This criterion can be measured using various approaches, such as model uncertainty (e.g., predictive entropy, distance to the decision boundary, or confidence scores), expected model change, or expected error reduction.
+\item \emph{Representativeness}. Representativeness measures how well a sample reflects the overall distribution of the input space, often based on its similarity to other samples \cite{Settles2009}. Representative samples are typically not outliers. A common strategy is to perform $k$-means clustering over the unlabeled pool and select samples closest to cluster centroids as proxies for the underlying data structure. In regression tasks, representativeness aids in capturing input space structure; however, for classification tasks, it plays a secondary role to informativeness in defining the decision boundary.
+\item \emph{Diversity}. Diversity ensures that selected samples span a wide range of the input space, rather than clustering in a narrow region. In classification, this generally involves selecting samples along the decision boundary to maximize coverage. Techniques such as greedy sampling and $k$-means clustering are frequently employed to enhance sample diversity.
+\end{enumerate}
+
+However, when applying LLMs to EEG-based classification tasks, it remains unclear whether these principles still apply. To address this, we conducted a series of experiments to examine how effectively various selection strategies can activate the few-shot learning capabilities of LLMs.
+
+Concretely, we evaluate three selection methods: (1) random selection as a baseline, (2) entropy-based selection, which identifies the most informative examples based on prediction uncertainty, and (3) k-means clustering, which selects examples that are both representative and diverse. For all methods involving distance computations, the Euclidean distance is used. Experiments are conducted on the well-established BCI Competition IV 2a dataset, focusing on a binary-class motor imagery task. The training and test sets each contain 144 trials, drawn from two separate sessions, with balanced class distributions.
+
+Additionally, since only a small number of examples are used in few-shot prompting, we adopt a class-balanced selection strategy in all experiments to prevent the selected examples from being dominated by a single class, which could bias the LLM’s predictions. All methods are repeated 25 times, and the results are reported in Table 1.
+
+As shown in Table 1, using k-means-selected samples as in-context examples leads to overall better prediction performance than random selection. This indicates that strategies based on representativeness and diversity are also effective for in-context example selection in LLMs. However, contrary to our expectations, using the most informative samples—those with the highest entropy—as in-context examples yields surprisingly poor results, with an average accuracy of only XX\%, significantly lower than that of random selection. This suggests that information-based selection strategies, which are among the most effective in traditional classification models, may completely fail in the context of in-context learning with large language models.
+
+To better understand which types of samples contribute most to model performance, an additional set of experiments was conducted. Each sample in the training set was individually used as the sole in-context example, and the corresponding prediction accuracy was recorded. Based on these results, all samples were ranked by performance, and the top 10 most effective ones were selected. Their distribution was then analyzed using t-SNE, as shown in Figure 1 (Subject 8). Interestingly, these high-performing samples are not located near the decision boundary; on the contrary, most lie far from it. This pattern was consistently observed across multiple subjects.
+
+Motivated by this observation, we took the opposite approach by selecting the least informative samples—those predicted by the model with the highest confidence. Using the same evaluation procedure, the results are reported in Table 2. Remarkably, these low-entropy samples not only outperform random selection but also achieve better performance than the k-means-based selection strategy. Furthermore, to mitigate the risk of selecting outlier samples, we leveraged the known label information and proposed a local same-label purity method. This strategy further enhances the performance of the LLM, as demonstrated in subsequent experiments.
+
+We hypothesize that, for classification tasks involving numerical data, few-shot prompting in LLMs relies more on analyzing the intrinsic characteristics of the data itself, rather than constructing a deep neural network as in fine-tuning. Consequently, more prototypical and easily classifiable examples may better represent the underlying characteristics of each class, thereby enabling more accurate predictions. In contrast, highly informative examples—those near the decision boundary and more difficult to classify—may introduce ambiguity and offer less effective guidance during inference.
+
+\subsection{Purity-based Unique-Round Example Selection (PURE)}
+Based on the preceding observations, we propose PURE (Purity-based Unique-Round Example Selection), a cost-effective strategy for selecting in-context examples in EEG-based tasks. The overall procedure is illustrated in Figure 2.
+
+We begin by applying standard preprocessing to the raw EEG signals, followed by task-specific hand-crafted feature extraction informed by domain knowledge. Specifically, for MI tasks, the EEG signals are band-pass filtered into 4 sub-bands within the 8–24 Hz range, each with a 4 Hz bandwidth. The CSP algorithm is then applied to each sub-band to extract 2 features, resulting in an 8-dimensional feature vector for each trial.
+
+Next, for each feature vector in the training set, we identify its $k$ nearest neighbors and compute the proportion of neighbors that share the same class label—this value is referred to as the local same-label purity. The pseudocode of PURE is given in Algorithm 1. All training samples are then ranked based on their purity scores, and the top-$n$ most “pure” samples are selected as in-context examples. This purity-based selection strategy not only identifies the most prototypical samples within each class but also helps to avoid outliers, as samples surrounded by neighbors from different classes tend to receive lower purity scores and are thus less likely to be selected.
+
+Moreover, although the method does not explicitly enforce diversity, we empirically observe that augmenting it with greedy diversity sampling degrades performance, suggesting that purity alone is a more effective criterion in this context.
+
+Finally, the selected examples, along with their corresponding labels, are combined with task descriptions, background context, and explicit output instructions to construct the full in-context prompt, which is then provided to the LLM alongside the test input.
+
+\begin{algorithm}[ht]
+  \caption{Purity-based Unique-Round Example Selection (PURE)}
+  \KwIn{
+      Training data $X = \{x_i\}_{i=1}^N$, \\
+      Labels $Y = \{y_i\}_{i=1}^N$, \\
+      Number of classes $C$, \\
+      Number of samples to select $n$, \\
+      Neighborhood size $k$
+  }
+  \KwOut{A list of selected sample indices with balanced class distribution}
+  
+  Ensure $n$ is divisible by $C$ \\
+  Reshape $x_i$ to vectors and encode $y_i$ into numeric labels \\
+  \ForEach{$x_i \in X$}{
+      Compute distances between $x_i$ and all other samples \\
+      Find $k$ nearest neighbors of $x_i$ (excluding itself) \\
+      Compute same-label purity score:
+      \[
+      \text{purity}(x_i) = \frac{\text{Number of same-label neighbors}}{k}
+      \]
+  }
+  Group all samples by class label \\
+  Sort each group in descending order of purity score \\
+  \ForEach{class $c = 1$ to $C$}{
+      Select top $n / C$ samples with highest purity \\
+      Add their indices to output list
+  }
+  \Return{Selected sample indices}
+\end{algorithm}
+  
 
 
 \section{PL: The General Idea} \label{sect:PL}
