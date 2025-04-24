@@ -34,7 +34,7 @@ Extensive experiments across multiple EEG datasets, BCI paradigms, and LLM model
 \end{abstract}
 
 \begin{IEEEkeywords}
-Active Learning, Prompt Engineering, In-Context Learning, EEG Classification, Motor Imagery, Few-Shot Prompting
+EEG classification,active learning,prompt engineering,in-context learning,motor imagery,few-shot prompting
 \end{IEEEkeywords}
 
 \IEEEpeerreviewmaketitle
@@ -156,6 +156,7 @@ Motivated by this observation, we took the opposite approach by selecting the le
 We hypothesize that, for classification tasks involving numerical data, few-shot prompting in LLMs relies more on analyzing the intrinsic characteristics of the data itself, rather than constructing a deep neural network as in fine-tuning. Consequently, more prototypical and easily classifiable examples may better represent the underlying characteristics of each class, thereby enabling more accurate predictions. In contrast, highly informative examples—those near the decision boundary and more difficult to classify—may introduce ambiguity and offer less effective guidance during inference.
 
 \subsection{Purity-based Unique-Round Example Selection (PURE)}
+\label{subsec:PURE}
 Based on the preceding observations, we propose PURE (Purity-based Unique-Round Example Selection), a cost-effective strategy for selecting in-context examples in EEG-based tasks. The overall procedure is illustrated in Figure~\ref{fig:flowchart}.
 
 We begin by applying standard preprocessing to the raw EEG signals, followed by task-specific hand-crafted feature extraction informed by domain knowledge. Specifically, for MI tasks, the EEG signals are band-pass filtered into 4 sub-bands within the 8–24 Hz range, each with a 4 Hz bandwidth. The CSP algorithm is then applied to each sub-band to extract 2 features, resulting in an 8-dimensional feature vector for each trial.
@@ -220,10 +221,10 @@ Finally, the selected examples, along with their corresponding labels, are combi
   Paradigm& & Subjects & Channels & Rate (Hz) & (seconds) & per Subject &  \\
   \midrule
   \multirow{4}{*}{MI}&BNCI2014001 & 9 & 22 & 250 & 4  & 288 &  left hand, right hand \\
-  &BNCI2014004 & 9 & 3 & 250 & 4 & 680-760 &  left hand, right hand \\
+  &BNCI2014004 & 9 & 3 & 250 & 4.5 & 680-760 &  left hand, right hand \\
   &BNCI2014002 & 14 & 15 & 512 & 5 & 160 &  right hand, both feet \\
-  &BNCI2015001 & 12(9) & 13 & 512 & 5 & 400-600 &  right hand, both feet \\
-  &Weibo2014 & 10 & 60(22) & 200 & 4 & 140-160 &  right hand, both feet \\
+  &BNCI2015001 & 12(9) & 13 & 512 & 5 & 400/600 &  right hand, both feet \\
+  &Weibo2014 & 10 & 60(22) & 200 & 4 & 140, 160 &  right hand, both feet \\
   \midrule
   Sleep&Sleep-EdfX& 9 & 2 & 100 & 30 & 1025 &  W, N1, N2, N3, REM \\
   \midrule
@@ -291,6 +292,41 @@ To extract frequency-domain features, four bandpass filters were applied to isol
   \item \emph{TUH EEG Epilepsy Corpus}.
   This dataset is a subset of the TUEG collection and includes 100 subjects diagnosed with epilepsy and 100 non-epileptic subjects, as determined by certified neurologists. Since our task involves classifying between epileptic and non-epileptic cases, the experiments were conducted in a cross-subject setting. Specifically, we selected 5 subjects from each group and used 1 session per subject to construct the experimental dataset.
 
+\end{enumerate}
+
+% 实验部分
+\section{Experiments}
+Extensive experiments are performed in this section to validate the effectiveness of PURE.
+
+\subsection{Comparing Method}
+\begin{enumerate}
+\item \emph{BL}, which randomly selects all $M$ samples.
+\item \emph{CTD}, which applies the $k$-means algorithm within each class and selects centroids.
+\item \emph{RD} \cite{wu2018pool}, which starts by selecting the centroid of each class as the initial point. Then, iteratively performs additional rounds of clustering on each class and selects the centroid of the largest cluster not yet covered by the previously selected points.
+\item \emph{SVM-near}, which trains a SVM classifier on the training set and selects, from each class, the sample closest to the decision boundary.
+\item \emph{SVM-far}, which in contrast to the above method, selects the sample farthest to the decision boundary within each class.
+\item \emph{PURE}, which selects the highest-purity samples from each class as describe in section~\ref{subsec:PURE}
+\end{enumerate}
+
+\subsection{Experimental Setup}
+To comprehensively evaluate our method, we conducted experiments under three different settings on the MI datasets: (1) within-subject cross-session, (2) within-subject 5-fold cross-validation, and (3) cross-subject. For the sleep dataset, only the last two settings were considered, and for the epilepsy dataset, only the cross-subject setting was evaluated. For the cross-session setting, each experiment was repeated 25 times. For the two 5-fold settings, each experiment was repeated 5 times without fixing the random seed used for data partitioning. The average classification accuracy was adopted as the performance metric.
+
+\begin{enumerate}
+  \item \emph{Within-Subject Cross-Session:}
+  In this setting, we used the training and testing splits predefined by each dataset. This approach avoids session leakage while ensuring realistic session-wise generalization. However, the ratio between training and testing samples varies across datasets. Specifically:
+  \begin{itemize}
+    \item \textbf{BNCI2014001}: One session is used for training and another for testing, each containing 144 trials.
+    \item \textbf{BNCI2014004}: Five sessions are available, with the first three used for training and the last two for testing.
+    \item \textbf{BNCI2014002}: A single session with eight runs; the first five runs are used for training and the remaining three for testing. Each run contains 10 trials for right-hand (RH) and 10 for feet imagery.
+    \item \textbf{BNCI2015001}: Most subjects have one training session and one testing session, totaling 400 trials. Subjects 8 and 9 have three sessions, where the first two are used for training and the last one for testing.
+    \item \textbf{Weibo2014}: This dataset contains only one session, but since the distribution and quantity of both classes are balanced between the first and second halves, the first half is used for training and the second half for testing.
+  \end{itemize}
+
+  \item \emph{Within-Subject 5-Fold Cross-Validation:}
+  For this setting, we employed the \texttt{StratifiedKFold} utility from Scikit-learn. All trials of each subject were shuffled and split into five folds, ensuring that the class proportions in each fold matched those of the full dataset. This approach also maintains a consistent ratio of training to testing samples across all datasets.
+
+  \item \emph{Cross-Subject:}
+  A leave-one-subject-out 5-fold cross-validation strategy was adopted. In each fold, one subject was reserved for testing, and the remaining subjects were combined as the training set. To mitigate inter-subject variability in EEG distributions, Euclidean Alignment (EA) \cite{he2019transfer} was applied to the data from each subject.
 \end{enumerate}
 
 
