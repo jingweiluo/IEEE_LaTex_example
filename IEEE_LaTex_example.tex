@@ -1,6 +1,7 @@
 \documentclass[journal,twocolumn]{IEEEtran}
 \usepackage{slashbox,graphicx,times,amsmath,amssymb,cite,subfigure,stfloats,booktabs, url,multirow,afterpage}
 \usepackage[lined,ruled]{algorithm2e}
+\usepackage{pifont}
 \allowdisplaybreaks
 
 \makeatletter
@@ -144,57 +145,154 @@ However, when applying LLMs to EEG-based classification tasks, it remains unclea
 
 Concretely, we evaluate three selection methods: (1) random selection as a baseline, (2) entropy-based selection, which identifies the most informative examples based on prediction uncertainty, and (3) k-means clustering, which selects examples that are both representative and diverse. For all methods involving distance computations, the Euclidean distance is used. Experiments are conducted on the well-established BCI Competition IV 2a dataset, focusing on a binary-class motor imagery task. The training and test sets each contain 144 trials, drawn from two separate sessions, with balanced class distributions.
 
-Additionally, since only a small number of examples are used in few-shot prompting, we adopt a class-balanced selection strategy in all experiments to prevent the selected examples from being dominated by a single class, which could bias the LLM’s predictions. All methods are repeated 25 times, and the results are reported in Table 1.
+Additionally, since only a small number of examples are used in few-shot prompting, we adopt a class-balanced selection strategy in all experiments to prevent the selected examples from being dominated by a single class, which could bias the LLM’s predictions. All methods are repeated 25 times, and the results are reported in Table~ref{tab:pre-exp}.
 
-As shown in Table 1, using k-means-selected samples as in-context examples leads to overall better prediction performance than random selection. This indicates that strategies based on representativeness and diversity are also effective for in-context example selection in LLMs. However, contrary to our expectations, using the most informative samples—those with the highest entropy—as in-context examples yields surprisingly poor results, with an average accuracy of only XX\%, significantly lower than that of random selection. This suggests that information-based selection strategies, which are among the most effective in traditional classification models, may completely fail in the context of in-context learning with large language models.
+As shown in Table~ref{tab:pre-exp}, using k-means-selected samples as in-context examples leads to overall better prediction performance than random selection. This indicates that strategies based on representativeness and diversity are also effective for in-context example selection in LLMs. However, contrary to our expectations, using the most informative samples—those with the highest entropy—as in-context examples yields surprisingly poor results, with an average accuracy of only XX\%, significantly lower than that of random selection. This suggests that information-based selection strategies, which are among the most effective in traditional classification models, may completely fail in the context of in-context learning with large language models.
 
-To better understand which types of samples contribute most to model performance, an additional set of experiments was conducted. Each sample in the training set was individually used as the sole in-context example, and the corresponding prediction accuracy was recorded. Based on these results, all samples were ranked by performance, and the top 10 most effective ones were selected. Their distribution was then analyzed using t-SNE, as shown in Figure 1 (Subject 8). Interestingly, these high-performing samples are not located near the decision boundary; on the contrary, most lie far from it. This pattern was consistently observed across multiple subjects.
+To better understand which types of samples contribute most to model performance, an additional set of experiments was conducted. Each sample in the training set was individually used as the sole in-context example, and the corresponding prediction accuracy was recorded. Based on these results, all samples were ranked by performance, and the top 10 most effective ones were selected. Their distribution was then analyzed using t-SNE, as shown in Figure~ref{fig:tsne} (Subject 8). Interestingly, these high-performing samples are not located near the decision boundary; on the contrary, most lie far from it. This pattern was consistently observed across multiple subjects.
 
-Motivated by this observation, we took the opposite approach by selecting the least informative samples—those predicted by the model with the highest confidence. Using the same evaluation procedure, the results are reported in Table 2. Remarkably, these low-entropy samples not only outperform random selection but also achieve better performance than the k-means-based selection strategy. Furthermore, to mitigate the risk of selecting outlier samples, we leveraged the known label information and proposed a local same-label purity method. This strategy further enhances the performance of the LLM, as demonstrated in subsequent experiments.
+Motivated by this observation, we took the opposite approach by selecting the least informative samples—those predicted by the model with the highest confidence. Using the same evaluation procedure, the results are reported in Table~ref{tab:pre-exp}. Remarkably, these low-entropy samples not only outperform random selection but also achieve better performance than the k-means-based selection strategy. Furthermore, to mitigate the risk of selecting outlier samples, we leveraged the known label information and proposed a local same-label purity method. This strategy further enhances the performance of the LLM, as demonstrated in subsequent experiments.
 
 We hypothesize that, for classification tasks involving numerical data, few-shot prompting in LLMs relies more on analyzing the intrinsic characteristics of the data itself, rather than constructing a deep neural network as in fine-tuning. Consequently, more prototypical and easily classifiable examples may better represent the underlying characteristics of each class, thereby enabling more accurate predictions. In contrast, highly informative examples—those near the decision boundary and more difficult to classify—may introduce ambiguity and offer less effective guidance during inference.
 
 \subsection{Purity-based Unique-Round Example Selection (PURE)}
-Based on the preceding observations, we propose PURE (Purity-based Unique-Round Example Selection), a cost-effective strategy for selecting in-context examples in EEG-based tasks. The overall procedure is illustrated in Figure 2.
+Based on the preceding observations, we propose PURE (Purity-based Unique-Round Example Selection), a cost-effective strategy for selecting in-context examples in EEG-based tasks. The overall procedure is illustrated in Figure~\ref{fig:flowchart}.
 
 We begin by applying standard preprocessing to the raw EEG signals, followed by task-specific hand-crafted feature extraction informed by domain knowledge. Specifically, for MI tasks, the EEG signals are band-pass filtered into 4 sub-bands within the 8–24 Hz range, each with a 4 Hz bandwidth. The CSP algorithm is then applied to each sub-band to extract 2 features, resulting in an 8-dimensional feature vector for each trial.
 
-Next, for each feature vector in the training set, we identify its $k$ nearest neighbors and compute the proportion of neighbors that share the same class label—this value is referred to as the local same-label purity. The pseudocode of PURE is given in Algorithm 1. All training samples are then ranked based on their purity scores, and the top-$n$ most “pure” samples are selected as in-context examples. This purity-based selection strategy not only identifies the most prototypical samples within each class but also helps to avoid outliers, as samples surrounded by neighbors from different classes tend to receive lower purity scores and are thus less likely to be selected.
+Next, for each feature vector in the training set, we identify its $k$ nearest neighbors and compute the proportion of neighbors that share the same class label—this value is referred to as the local same-label purity. The pseudocode of PURE is given in Algorithm~\ref{alg:PURE}. All training samples are then ranked based on their purity scores, and the top-$n$ most “pure” samples are selected as in-context examples. This purity-based selection strategy not only identifies the most prototypical samples within each class but also helps to avoid outliers, as samples surrounded by neighbors from different classes tend to receive lower purity scores and are thus less likely to be selected.
 
 Moreover, although the method does not explicitly enforce diversity, we empirically observe that augmenting it with greedy diversity sampling degrades performance, suggesting that purity alone is a more effective criterion in this context.
 
 Finally, the selected examples, along with their corresponding labels, are combined with task descriptions, background context, and explicit output instructions to construct the full in-context prompt, which is then provided to the LLM alongside the test input.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth, clip]{Fig1a.eps}
+  \caption{tsne}
+  \label{fig:tsne} % 引用用的标签
+\end{figure}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth, clip]{Fig1b.eps}
+  \caption{flowchart}
+  \label{fig:flowchart} % 引用用的标签
+\end{figure}
+
 \begin{algorithm}[ht]
   \caption{Purity-based Unique-Round Example Selection (PURE)}
+  \label{alg:PURE}
   \KwIn{
-      Training data $X = \{x_i\}_{i=1}^N$, \\
-      Labels $Y = \{y_i\}_{i=1}^N$, \\
-      Number of classes $C$, \\
-      Number of samples to select $n$, \\
-      Neighborhood size $k$
+      N labeled samples, $\{\mathbf{x}_n\}_{n=1}^N$, where $\mathbf{x}_n \in \mathbf{R}^d$;\\
+      \hspace*{3.1em} $C$, number of classes; \\
+      \hspace*{3.1em} $M$, number of samples to select; \\
+      \hspace*{3.1em} $K$, neighborhood size
   }
-  \KwOut{A list of selected sample indices with balanced class distribution}
+  \KwOut{A list of selected sample indices with balanced class distribution $L$.}
   
-  Ensure $n$ is divisible by $C$ \\
-  Reshape $x_i$ to vectors and encode $y_i$ into numeric labels \\
-  \ForEach{$x_i \in X$}{
-      Compute distances between $x_i$ and all other samples \\
-      Find $k$ nearest neighbors of $x_i$ (excluding itself) \\
+  Ensure $M$ is divisible by $C$; \\
+
+  \ForEach{sample $n = 1$ to $N$}{
+      Compute distances between $\mathbf{x}_n$ and all other samples; \\
+      Find $K$ nearest neighbors of $\mathbf{x}_n$ (excluding itself); \\
       Compute same-label purity score:
       \[
-      \text{purity}(x_i) = \frac{\text{Number of same-label neighbors}}{k}
+      \text{purity}(\mathbf{x}_n) = \frac{\text{Number of same-label neighbors}}{K}
       \]
   }
-  Group all samples by class label \\
-  Sort each group in descending order of purity score \\
+  Group all samples by class label; \\
+  Sort each group in descending order of purity score; \\
   \ForEach{class $c = 1$ to $C$}{
-      Select top $n / C$ samples with highest purity \\
-      Add their indices to output list
+      Select top $M / C$ samples with highest purity; \\
+      Add their indices to output list $L$;
   }
-  \Return{Selected sample indices}
+  \Return{Selected sample indices list $L$.}
 \end{algorithm}
+
+
+\begin{table*}[htpb] \centering
+  \caption{Summary of the seven EEG datasets.}
+  \label{tab:datasets}
+  \begin{tabular}{c|c|c|c|c|c|c|c}
+  \toprule
+  BCI&\multirow{2}{*}{Dataset} & Number of & Number of & Sampling & Trial Length & Number of Trials  & \multirow{2}{*}{Class Labels} \\
+  Paradigm& & Subjects & Channels & Rate (Hz) & (seconds) & per Subject &  \\
+  \midrule
+  \multirow{4}{*}{MI}&BNCI2014001 & 9 & 22 & 250 & 4  & 288 &  left hand, right hand \\
+  &BNCI2014004 & 9 & 3 & 250 & 4 & 680-760 &  left hand, right hand \\
+  &BNCI2014002 & 14 & 15 & 512 & 5 & 160 &  right hand, both feet \\
+  &BNCI2015001 & 12(9) & 13 & 512 & 5 & 400-600 &  right hand, both feet \\
+  &Weibo2014 & 10 & 60(22) & 200 & 4 & 140-160 &  right hand, both feet \\
+  \midrule
+  Sleep&Sleep-EdfX& 9 & 2 & 100 & 30 & 1025 &  W, N1, N2, N3, REM \\
+  \midrule
+  Epilepsy&TUEP&10&23&250&30&390&epilepsy, non-epilepsy \\
+  \bottomrule
+  \end{tabular}
+\end{table*}
+
+\begin{table}
+  \centering
+  \caption{Results of random, informativeness and representativeness}
+  \label{tab:pre-exp}
+  \begin{tabular}{c|c}
+    \toprule
+    Method               & accuracy \\
+    \midrule
+    random               & 0.541 \\
+    informativeness      & 0.343 \\
+    representativeness   & 0.583 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
   
+\section{Datasets}
+This section introduces five MI datasets, one sleep dataset, and one epilepsy dataset used in our experiments.
+\subsection{MI Datasets}
+All MI datasets used in our experiments are binary classification tasks and were obtained using the MOABB framework \cite{jayaram2018moabb}. Specifically, two datasets from BCI Competition IV (2a and 2b) \cite{tangermann2012review} contain left-vs-right hand imagery, while the other three—BNCI2014002, BNCI2015001, and Weibo2014—contain right-hand vs. feet imagery.
+
+Their experimental paradigms were similar: In each session, a subject sat comfortably in an armchair positioned in front of a computer screen. At the beginning of each trial, a fixation cross appeared on a black background, accompanied by a short auditory warning tone. After a brief delay, a directional cue in the form of an arrow pointing left, right, down, or up appeared on the screen, corresponding to one of the four MI classes: left hand, right hand, foot, or tongue. This cue remained visible throughout the task period and served as a prompt for the subject to begin the corresponding MI task. Subject performed the imagery task until the fixation cross disappeared. Each trial ended with a brief black screen before the next trial began \cite{tangermann2012review}.
+
+\begin{enumerate}
+  \item \emph{Left Hand vs. Right Hand Datasets}. 
+  Dataset 2a comprises recordings from 9 subjects, with EEG signals collected from 22 channels at a sampling rate of 250 Hz. Although the original paradigm involves four MI tasks (left hand, right hand, feet, and tongue), only the left- and right-hand trials are used in our experiments. Each subject completed two sessions on different days, with 72 trials per class per session, totaling 144 trials per session.
+
+  Dataset 2b also includes 9 subjects but uses only 3 bipolar EEG channels (C3, Cz, and C4), sampled at 250 Hz. Each subject participated in 5 sessions: the first 2 (screening) without feedback, and the last 3 with real-time feedback. During the feedback sessions, a smiley face was displayed and changed color based on the accuracy of the subject’s imagined movement.
+
+  \item \emph{Right Hand vs. Feet Datasets}.
+  BNCI2014002 includes 14 participants and follows a similar paradigm to 2a. Each subject completed 1 session with 8 runs (5 for training and 3 for evaluation), totaling 160 trials.
+
+  BNCI2015001 adopts the Graz two-class synchronous MI paradigm, using EEG recorded from 3 Laplacian derivations. Data were sampled at 512 Hz and filtered using a 0.5–100 Hz bandpass filter with a 50 Hz notch filter. The last 3 subjects were excluded due to poor performance.
+
+  Weibo2014 contains data from 10 right-handed participants who underwent a one week training phase prior to EEG recording. EEG was collected from 64 channels placed according to the international 10–20 system, bandpass filtered between 0.5–50 Hz, and downsampled to 200 Hz. Each participant completed 9 blocks of trials involving 6 MI tasks. Only right-hand and feet trials were used for binary classification in this study. From the original 60 usable channels, we selected 21 MI-related channels: FC3, FC1, FCz, FC2, FC4, C5, C3, C1, Cz, C2, C4, C6, CP3, CP1, CPz, CP2, CP4, P3, P1, P2, and P4.
+
+\end{enumerate}
+
+\subsection{Sleep Datasets}
+The Sleep-EDF Expanded (Sleep-EDFx) dataset is intended for sleep research, particularly for sleep stage classification. It contains 197 full-night polysomnographic (PSG) recordings, including EEG (Fpz–Cz and Pz–Oz), EOG, EMG, and event markers. Corresponding hypnograms (sleep stage annotations) were manually scored by trained technicians following the Rechtschaffen and Kales manual and are provided alongside the recordings.
+
+The data originate from two studies: the Sleep Cassette Study and the Sleep Telemetry Study. The main difference is that the Sleep Cassette Study investigates the effect of age on sleep in a home environment over 2 nights (approximately 20 hours each), while the Sleep Telemetry Study examines the effect of temazepam (a sleep medication) in a hospital setting over 2 nights (approximately 9 hours each), using a high-quality telemetry system.
+
+In our experiments, we focused on data from the Sleep Cassette Study and used only EEG channels for a five-stage sleep classification task. Due to the large volume of data, we selected recordings from 9 subjects, using 1 night of data per subject.
+
+During the signal processing and feature extraction stages, EEG data from the Sleep-EDFx dataset were first bandpass filtered between 0.5 Hz and 35 Hz. Since the recordings span an entire night and include prolonged wake periods at the beginning and end, only the first and last 30 minutes of wakefulness were retained to reduce redundancy. Sleep stages were labeled according to the AASM standard and grouped into five classes: Wake (W), N1, N2, N3, and REM. Each trial was segmented into non-overlapping 30-second epochs.
+
+To extract frequency-domain features, four bandpass filters were applied to isolate the following frequency bands: 0.5–4 Hz, 4–8 Hz, 8–12 Hz, and 12–16 Hz. For each band, the root mean square (RMS) power was computed on a per-channel basis, defined as the mean of the squared signal amplitude across all samples within the trial. This process yielded a feature representation with shape (N,C×B), where N is the number of trials, C is the number of EEG channels, and B=4 is the number of frequency bands.
+
+\subsection{Epilepsy Datasets}
+\begin{enumerate}
+  \item \emph{CHB-MIT Scalp EEG Database}. 
+  This dataset comprises EEG recordings from 22 pediatric subjects (5 males, aged 3–22 years, and 17 females, aged 1.5–19 years) with intractable seizures. Subjects were monitored over multiple days following the withdrawal of anti-seizure medication to capture seizure activity and evaluate their suitability for surgical intervention. In total, 182 seizures were annotated with precise onset and offset timings.
+
+  All signals were sampled at 256 Hz with 16-bit resolution. Most recordings contain 23 EEG channels, though a few have 24 or 26. Electrode placement follows the International 10–20 system for EEG acquisition.
+
+  \item \emph{TUH EEG Epilepsy Corpus}.
+  This dataset is a subset of the TUEG collection and includes 100 subjects diagnosed with epilepsy and 100 non-epileptic subjects, as determined by certified neurologists. Since our task involves classifying between epileptic and non-epileptic cases, the experiments were conducted in a cross-subject setting. Specifically, we selected 5 subjects from each group and used 1 session per subject to construct the experimental dataset.
+
+\end{enumerate}
+
 
 
 \section{PL: The General Idea} \label{sect:PL}
