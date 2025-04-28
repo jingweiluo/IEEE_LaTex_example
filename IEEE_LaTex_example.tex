@@ -147,7 +147,7 @@ Concretely, we evaluate three selection methods: (1) random selection as a basel
 
 Additionally, since only a small number of examples are used in few-shot prompting, we adopt a class-balanced selection strategy in all experiments to prevent the selected examples from being dominated by a single class, which could bias the LLM’s predictions. All methods are repeated 25 times, and the results are reported in Table~ref{tab:pre-exp}.
 
-As shown in Table~ref{tab:pre-exp}, using k-means-selected samples as in-context examples leads to overall better prediction performance than random selection. This indicates that strategies based on representativeness and diversity are also effective for in-context example selection in LLMs. However, contrary to our expectations, using the most informative samples—those with the highest entropy—as in-context examples yields surprisingly poor results, with an average accuracy of only XX\%, significantly lower than that of random selection. This suggests that information-based selection strategies, which are among the most effective in traditional classification models, may completely fail in the context of in-context learning with large language models.
+As shown in Table~ref{tab:pre-exp}, using k-means-selected samples as in-context examples leads to overall better prediction performance than random selection. This indicates that strategies based on representativeness and diversity are also effective for in-context example selection in LLMs. However, contrary to our expectations, using the most informative samples—those with the highest entropy—as in-context examples yields surprisingly poor results, with an 51.00 \\ accuracy of only XX\%, significantly lower than that of random selection. This suggests that information-based selection strategies, which are among the most effective in traditional classification models, may completely fail in the context of in-context learning with large language models.
 
 To better understand which types of samples contribute most to model performance, an additional set of experiments was conducted. Each sample in the training set was individually used as the sole in-context example, and the corresponding prediction accuracy was recorded. Based on these results, all samples were ranked by performance, and the top 10 most effective ones were selected. Their distribution was then analyzed using t-SNE, as shown in Figure~ref{fig:tsne} (Subject 8). Interestingly, these high-performing samples are not located near the decision boundary; on the contrary, most lie far from it. This pattern was consistently observed across multiple subjects.
 
@@ -296,7 +296,7 @@ To extract frequency-domain features, four bandpass filters were applied to isol
 
 % 实验部分
 \section{Experiments}
-Extensive experiments are performed in this section to validate the effectiveness of PURE.
+Extensive experiments are conducted in this section to validate the effectiveness of PURE. We use the Qwen-2.5-14B-Instruct-1M model as the LLM, and apply two demonstrations per category, resulting in a total of four ICL demonstrations for the MI binary classification dataset, ten for the sleep five-class classification task, and four for the epilepsy binary classification dataset.
 
 \subsection{Comparing Method}
 \begin{enumerate}
@@ -304,12 +304,12 @@ Extensive experiments are performed in this section to validate the effectivenes
 \item \emph{CTD}, which applies the $k$-means algorithm within each class and selects centroids.
 \item \emph{RD} \cite{wu2018pool}, which starts by selecting the centroid of each class as the initial point. Then, iteratively performs additional rounds of clustering on each class and selects the centroid of the largest cluster not yet covered by the previously selected points.
 \item \emph{SVM-near}, which trains a SVM classifier on the training set and selects, from each class, the sample closest to the decision boundary.
-\item \emph{SVM-far}, which in contrast to the above method, selects the sample farthest to the decision boundary within each class.
+\item \emph{SVM-far}, which in contrast to the above method, selects the sample farthest to the decision boundary within each class. To mitigate the impact of outliers, the method further filters candidates by checking the proportion of same-label samples among their five nearest neighbors.
 \item \emph{PURE}, which selects the highest-purity samples from each class as describe in section~\ref{subsec:PURE}
 \end{enumerate}
 
 \subsection{Experimental Setup}
-To comprehensively evaluate our method, we conducted experiments under three different settings on the MI datasets: (1) within-subject cross-session, (2) within-subject 5-fold cross-validation, and (3) cross-subject. For the sleep dataset, only the last two settings were considered, and for the epilepsy dataset, only the cross-subject setting was evaluated. For the cross-session setting, each experiment was repeated 25 times. For the two 5-fold settings, each experiment was repeated 5 times without fixing the random seed used for data partitioning. The average classification accuracy was adopted as the performance metric.
+To comprehensively evaluate our method, we conducted experiments under three different settings on the MI datasets: (1) within-subject cross-session, (2) within-subject five-fold cross-validation, and (3) cross-subject. For the sleep dataset, only the last two settings were considered, and for the epilepsy dataset, only the cross-subject setting was evaluated. For the cross-session setting, each experiment was repeated 25 times. For the two five-fold settings, each experiment was repeated 5 times without fixing the random seed used for data partitioning. The 51.00 \\ classification accuracy was adopted as the performance metric.
 
 \begin{enumerate}
   \item \emph{Within-Subject Cross-Session:}
@@ -322,12 +322,259 @@ To comprehensively evaluate our method, we conducted experiments under three dif
     \item \textbf{Weibo2014}: This dataset contains only one session, but since the distribution and quantity of both classes are balanced between the first and second halves, the first half is used for training and the second half for testing.
   \end{itemize}
 
-  \item \emph{Within-Subject 5-Fold Cross-Validation:}
+  \item \emph{Within-Subject five-Fold Cross-Validation:}
   For this setting, we employed the \texttt{StratifiedKFold} utility from Scikit-learn. All trials of each subject were shuffled and split into five folds, ensuring that the class proportions in each fold matched those of the full dataset. This approach also maintains a consistent ratio of training to testing samples across all datasets.
 
   \item \emph{Cross-Subject:}
-  A leave-one-subject-out 5-fold cross-validation strategy was adopted. In each fold, one subject was reserved for testing, and the remaining subjects were combined as the training set. To mitigate inter-subject variability in EEG distributions, Euclidean Alignment (EA) \cite{he2019transfer} was applied to the data from each subject.
+  A leave-one-subject-out five-fold cross-validation strategy was adopted. In each fold, one subject was reserved for testing, and the remaining subjects were combined as the training set. To mitigate inter-subject variability in EEG distributions, Euclidean Alignment (EA) \cite{he2019transfer} was applied to the data from each subject.
 \end{enumerate}
+
+\subsection{Results Analysis}
+Tables~\ref{tab:2014001-result}, ~\ref{tab:2014002-result}, ~\ref{tab:2014004-result}, ~\ref{tab:2015001-result}, and~\ref{tab:weibo2014-result} presents the within-subject and cross-subject classification accuracies on the five MI datasets, respectively.We can observe that:
+
+\begin{enumerate}
+  \item \textbf{Active selection of ICL demonstrations significantly outperforms random selection.} In both within-subject and cross-subject settings, actively selected demonstrations consistently lead to a better prompting effect on the LLM, resulting in higher prediction accuracy and more stable outputs compared to random selection.
+  
+  \item \textbf{High-informativeness samples yield the worst prompting effect in ICL.} Contrary to conventional expectations in traditional machine learning, selecting the most informative samples leads to an inferior prompting effect on the LLM, even worse than random selection. This suggests a fundamental difference between how LLMs and traditional classifiers benefit from informative instances.
+  
+  \item \textbf{Low-informativeness, high-confidence samples achieve the best prompting effect.} Demonstrations with low informativeness and high model confidence, as exemplified by SVM-far and PURE, result in superior prompting effects. We hypothesize that when classifying complex numerical data, LLMs primarily rely on statistical distributional patterns rather than constructing deep decision boundaries. Therefore, more prototypical and easily distinguishable examples are more effective in guiding the model, whereas highly ambiguous samples fail to provide meaningful distinctions.
+  
+  \item \textbf{PURE consistently outperforms SVM-far.} Although SVM-far has been optimized to avoid outlier selection and shows competitive performance, PURE still achieves better overall prompting effects across datasets and experimental conditions.
+  
+  \item \textbf{PURE achieves consistent superiority across multiple datasets and paradigms.} Our proposed method PURE consistently outperforms random selection across all experiments and achieves optimal results in the majority of cases. Specifically, in the within-subject setting, PURE improves over random selection by 8.04\%, 8.19\%, 6.03\%, 0\%, and 0\% across the five MI datasets, by 0\% on the sleep dataset, and by 0\% on the epilepsy dataset. In the cross-subject setting, PURE achieves similar improvements: 10.17\%, 6.32\%, 5.35\%, 0\%, and 0\% across the five MI datasets, 0\% on the sleep dataset, and 0\% on the epilepsy dataset.  
+  
+  \item \textbf{Representativeness- and diversity-based methods (RD and CTD) also outperform random selection} Although RD and CTD perform slightly worse than PURE overall, they consistently outperform random selection across all experiments. Notably, in cross-subject settings, their performance significantly improves, achieving results comparable to or even exceeding PURE on several MI datasets. Moreover, since these methods do not strictly rely on label information (labels are only used to maintain class balance), they exhibit broader applicability to scenarios where label information is limited or unavailable.
+\end{enumerate}
+
+\subsection{Impact of the Number of Demonstration Samples}
+In the preceding experiments, we selected two samples per category as demonstrations. In this subsection, we investigate the impact of varying the number of demonstration samples on performance. The experiments are conducted on the BNCI2014001 dataset. Figure~\ref{fig:num_demos} presents the performance trends as the number of demonstration samples increases, from which we observe the following:
+\begin{enumerate}
+  \item The performance of the LLM improves as the number of demonstration samples increases.
+  \item As the number of demonstration samples increases, the marginal performance gains progressively decrease, and the results across different selection methods tend to converge.
+  \item The results of random selection exhibit large fluctuations across repeated trials, indicating significant instability. This further reflects the sensitivity of LLMs to the choice of demonstrations.
+  \item PURE consistently outperforms random and other selection methods across different numbers of demonstrations, and exhibits the smallest variance across repeated experiments, indicating the highest stability.
+\end{enumerate}
+
+\subsection{Impact of Different Models}
+To further assess the generalizability of the proposed method, we evaluated its performance on alternative LLMs. Specifically, DeepSeek-V3 was selected for comparative analysis. Experiments were conducted on the BNCI2015-002 dataset, and the corresponding results are presented in Table~\ref{tab:deepseek_res}. The following observations can be made:
+
+\begin{enumerate}
+\item Active selection methods consistently outperform random selection across different LLMs.
+\item The relative performance hierarchy among all methods remains consistent with previous experiments, confirming the robustness of active selection strategies across different model architectures.
+\item Employing larger and more powerful models leads to a consistent improvement in accuracy for all methods.Remarkably, on certain datasets, the results surpass the state-of-the-art performance achieved by conventional deep neural networks, highlighting the considerable potential of LLM-based ICL few-shot learning approaches in non-text domains such as EEG signal analysis.
+\end{enumerate}
+
+\section{Conclusions and Future Research}
+In this work, we explored the feasibility of leveraging large language models (LLMs) for EEG signal classification through in-context few-shot prompting. The motivation for this study arises from the following key considerations. Although LLMs have demonstrated remarkable in-context learning (ICL) capabilities in NLP and CV tasks, their application to EEG classification remains largely unexplored. Moreover, as many state-of-the-art LLMs are accessible only through Model-as-a-Service (MaaS) platforms without fine-tuning access, few-shot prompting emerges as a more practical and generalizable approach for leveraging these models. In addition, the scarcity of EEG data compared to text and images severely limits the feasibility of training large domain-specific models, highlighting the importance of bridging this gap by adapting powerful pre-trained LLMs to EEG signal analysis.
+
+To address the unique challenges posed by EEG signals, we incorporated domain-specific feature extraction to obtain compact and discriminative representations, substantially reducing token overhead and enhancing classification performance. Furthermore, we introduced a purity-guided active selection strategy that identifies a small set of high-confidence exemplars with strong intra-class consistency based on local same-label purity. Finally, unlike conventional NLP prompting strategies that select examples for each test instance individually, our method selects a fixed exemplar set once from the training pool, significantly reducing computational cost and inference latency.
+
+Extensive experiments across multiple EEG datasets, BCI paradigms, and LLM architectures demonstrated the effectiveness and robustness of the proposed method. The active selection strategy consistently outperformed random selection, delivering superior accuracy and stability. Moreover, performance improved with the use of more powerful LLMs, and in some cases, surpassed the results of traditional deep neural networks, highlighting the considerable potential of LLM-based in-context learning approaches for EEG signal analysis and other non-text domains.
+
+Our future research will extend the proposed method to a broader range of EEG paradigms and classification tasks. We plan to further optimize the prompt structure and incorporate curriculum learning concepts by using demonstrations of varying difficulty levels to explore the impact of exemplar ordering on model performance. These efforts aim to enhance the few-shot prompting capability of LLMs for EEG classification tasks.
+
+Moreover, we envision integrating LLMs with lightweight, plugin-style EEG models. This hybrid architecture would leverage the powerful reasoning and generalization abilities of LLMs while utilizing the precise, parameter-tunable nature of small models trained on high-informativeness samples. Unlike conventional fine-tuning approaches, this design allows for the combination of closed-source LLMs with EEG-specific adaptation without modifying the LLM's parameters, substantially reducing training costs and enhancing practical applicability.
+
+
+
+\begin{table*}[htpb] \centering
+  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014001. The best performance in each subject is marked in bold, and the second best underlined.}
+  \label{tab:2014001-result}
+  \resizebox{0.9\linewidth}{!}{
+  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+  \toprule
+  \multicolumn{11}{c}{Within-subject classification} \\
+  \midrule
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+  \midrule
+  BL & 49.31 & 49.03 & 67.64 & 56.11 & 48.19 & 55.28 & 52.22 & 56.81 & 83.47 & 57.56 \\
+  RD & 55.42 & 48.89 & 77.92 & 64.44 & 48.06 & 53.19 & 54.31 & 71.11 & 80.14 & 61.50 \\
+  CTD & 56.81 & 44.17 & 71.53 & 62.92 & 50.28 & 51.81 & 54.58 & 76.25 & 86.11 & 61.61 \\
+  SVM-near & 38.89 & 50.00 & 45.00 & 53.06 & 50.56 & 47.36 & 48.19 & 46.11 & 71.53 & 50.08 \\
+  SVM-far & 58.89 & 47.64 & 75.00 & 61.11 & 52.78 & 55.69 & 57.22 & 73.06 & 85.00 & \underline{62.93} \\
+  PURE & 67.08 & 51.94 & 68.61 & 68.75 & 52.50 & 59.44 & 58.19 & 77.22 & 86.67 & \textbf{65.60 (↑8.04)} \\
+  \midrule
+  \multicolumn{11}{c}{Cross-subject classification} \\
+  \midrule
+  BL & 48.68 & 50.42 & 66.25 & 59.93 & 53.33 & 55.83 & 45.69 & 53.68 & 38.54 & 52.48 \\
+  RD & 61.25 & 51.18 & 74.44 & 64.65 & 57.50 & 61.81 & 67.64 & 70.69 & 52.85 & \underline{62.45} \\
+  CTD & 58.13 & 50.14 & 63.54 & 63.82 & 56.53 & 54.03 & 63.47 & 74.44 & 76.53 & 62.29 \\
+  SVM-near & 37.15 & 47.50 & 52.99 & 59.65 & 48.82 & 43.26 & 36.11 & 42.43 & 26.67 & 43.84 \\
+  SVM-far & 60.76 & 47.85 & 66.67 & 61.18 & 54.37 & 61.53 & 58.75 & 72.08 & 74.10 & 61.92 \\
+  PURE & 60.76 & 52.15 & 70.07 & 60.76 & 54.79 & 62.92 & 62.64 & 68.89 & 70.83 & \textbf{62.65 (↑10.17)} \\
+  \bottomrule
+  \end{tabular}
+  }
+\end{table*}
+
+\begin{table*}[htpb] \centering
+  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014002. The best performance in each subject is marked in bold, and the second best underlined.}
+  \label{tab:2014002-result}
+  \resizebox{0.9\linewidth}{!}{
+  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c}
+  \toprule
+  \multicolumn{16}{c}{Within-subject classification} \\
+  \midrule
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & S10 & S11 & S12 & S13 & S14 & Avg. \\
+  \midrule
+  BL & 61.33 & 75.00 & 72.67 & 60.67 & 59.33 & 68.33 & 84.00 & 64.00 & 88.00 & 54.67 & 47.67 & 57.00 & 47.33 & 52.67 & 63.76 \\
+  RD & 65.00 & 74.67 & 76.67 & 68.00 & 60.67 & 84.00 & 89.67 & 71.67 & 88.67 & 56.33 & 73.67 & 47.33 & 49.00 & 57.67 & 68.79 \\
+  CTD & 66.67 & 78.67 & 80.33 & 61.33 & 66.00 & 83.00 & 90.00 & 51.67 & 94.33 & 56.00 & 67.00 & 54.33 & 45.33 & 54.00 & 67.76 \\
+  SVM-near & 37.33 & 47.67 & 20.67 & 47.67 & 41.00 & 89.00 & 59.67 & 60.00 & 72.33 & 53.33 & 81.33 & 61.67 & 44.33 & 56.67 & 55.19 \\
+  SVM-far & 71.00 & 69.33 & 77.33 & 75.33 & 64.67 & 82.33 & 86.67 & 70.00 & 92.33 & 54.00 & 81.00 & 61.33 & 50.33 & 52.33 & \underline{70.57} \\
+  PURE & 63.33 & 74.67 & 88.33 & 77.67 & 61.67 & 83.00 & 88.67 & 71.67 & 90.00 & 55.00 & 79.00 & 70.00 & 46.33 & 58.00 & \textbf{71.95 (↑8.19)} \\
+  \midrule
+  \multicolumn{16}{c}{Cross-subject classification} \\
+  \midrule
+  BL & 55.50 & 60.50 & 60.62 & 56.75 & 55.88 & 62.38 & 60.63 & 62.63 & 80.25 & 61.88 & 59.50 & 55.75 & 56.13 & 48.75 & 59.80 \\
+  RD & 56.63 & 69.00 & 86.75 & 61.37 & 67.50 & 71.88 & 85.50 & 70.37 & 61.25 & 64.50 & 61.75 & 65.00 & 57.25 & 44.75 & 65.96 \\
+  CTD & 55.63 & 68.75 & 85.88 & 63.00 & 66.63 & 73.00 & 85.25 & 67.00 & 82.25 & 65.25 & 62.25 & 67.62 & 55.50 & 48.88 & \textbf{67.64 (↑7.84)} \\
+  SVM-near & 56.50 & 29.38 & 26.75 & 45.88 & 40.00 & 67.37 & 32.00 & 66.87 & 36.75 & 45.50 & 63.87 & 38.12 & 44.12 & 53.25 & 46.17 \\
+  SVM-far & 56.50 & 64.50 & 81.75 & 57.13 & 59.12 & 67.87 & 81.75 & 61.50 & 83.63 & 56.37 & 62.50 & 60.88 & 53.75 & 53.38 & 64.33 \\
+  PURE & 57.38 & 66.25 & 86.75 & 55.13 & 62.75 & 69.12 & 85.00 & 62.38 & 85.13 & 60.75 & 65.50 & 66.25 & 51.38 & 51.88 & \underline{66.12} \\
+  \bottomrule
+  \end{tabular}
+  }
+\end{table*}
+
+\begin{table*}[htpb] \centering
+  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014004. The best performance in each subject is marked in bold, and the second best underlined.}
+  \label{tab:2014004-result}
+  \resizebox{0.9\linewidth}{!}{
+  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+  \toprule
+  \multicolumn{11}{c}{Within-subject classification} \\
+  \midrule
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+  \midrule
+  BL & 51.44 & 55.00 & 51.00 & 65.31 & 54.94 & 47.62 & 50.44 & 58.94 & 51.31 & 54.00 \\
+  RD & 55.44 & 49.57 & 55.40 & 75.25 & 54.00 & 62.62 & 52.81 & 71.50 & 52.81 & 58.82 \\
+  CTD & 49.19 & 56.93 & 52.87 & 65.81 & 50.00 & 52.19 & 54.88 & 56.94 & 54.31 & 54.79 \\
+  SVM-near & 49.31 & 56.93 & 51.40 & 47.25 & 51.25 & 45.94 & 42.87 & 52.75 & 42.81 & 48.95 \\
+  SVM-far & 53.25 & 56.29 & 54.00 & 77.25 & 55.50 & 54.69 & 49.75 & 75.94 & 57.06 & \underline{59.30} \\
+  PURE & 51.67 & 50.14 & 53.67 & 76.88 & 61.44 & 57.25 & 52.87 & 78.25 & 58.13 & \textbf{60.03 (↑6.03)} \\
+  \midrule
+  \multicolumn{11}{c}{Cross-subject classification} \\
+  \midrule
+  BL & 50.92 & 49.79 & 50.56 & 54.73 & 51.84 & 49.83 & 51.53 & 52.13 & 54.44 & 51.75 \\
+  RD & 54.89 & 52.35 & 50.44 & 64.81 & 50.19 & 57.50 & 50.14 & 56.76 & 48.17 & 53.92 \\
+  CTD & 47.00 & 48.26 & 50.11 & 45.08 & 46.73 & 51.61 & 49.72 & 46.76 & 52.56 & 48.65 \\
+  SVM-near & 45.36 & 48.85 & 49.14 & 41.84 & 47.35 & 48.33 & 48.17 & 59.89 & 48.67 & 48.62 \\
+  SVM-far & 59.11 & 52.88 & 50.00 & 68.27 & 53.14 & 55.19 & 52.00 & 61.47 & 52.36 & \underline{56.05} \\
+  PURE & 57.00 & 52.56 & 52.64 & 69.05 & 55.51 & 57.14 & 53.25 & 64.76 & 52.03 & \textbf{57.10 (↑5.35)} \\
+  \bottomrule
+  \end{tabular}
+  }
+\end{table*}
+
+\begin{table*}[htpb] \centering
+  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2015001. The best performance in each subject is marked in bold, and the second best underlined.}
+  \label{tab:2015001-result}
+  \resizebox{0.9\linewidth}{!}{
+  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+  \toprule
+  \multicolumn{11}{c}{Within-subject classfication} \\
+  \midrule
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+  \midrule
+  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  \midrule
+  \multicolumn{11}{c}{Cross-subject classfication} \\
+  \midrule
+  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  \bottomrule
+  \end{tabular}
+  }
+\end{table*}
+
+\begin{table*}[htpb] \centering
+  \caption{Within-subject and cross-subject classification accuracies (\%) on Weibo2014. The best performance in each subject is marked in bold, and the second best underlined.}
+  \label{tab:weibo2014-result}
+  \resizebox{0.9\linewidth}{!}{
+  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+  \toprule
+  \multicolumn{11}{c}{Within-subject classfication} \\
+  \midrule
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+  \midrule
+  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  \midrule
+  \multicolumn{11}{c}{Cross-subject classfication} \\
+  \midrule
+  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  \bottomrule
+  \end{tabular}
+  }
+\end{table*}
+
+% 睡眠
+\begin{table*}[htpb] \centering
+  \caption{Within-subject and cross-subject classification accuracies (\%) on Sleep-edfx. The best performance in each subject is marked in bold, and the second best underlined.}
+  \label{tab:sleep-edfx-result}
+  \resizebox{0.9\linewidth}{!}{
+  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+  \toprule
+  \multicolumn{11}{c}{Within-subject classfication} \\
+  \midrule
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+  \midrule
+  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  \midrule
+  \multicolumn{11}{c}{Cross-subject classfication} \\
+  \midrule
+  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  \bottomrule
+  \end{tabular}
+  }
+\end{table*}
+
+% within-subject cross-model MI
+\begin{figure*}[htbp]         \centering
+  \includegraphics[width=1.0\linewidth,clip]{Fig5}
+  \caption{Performance of different methods with various LLMs on five MI datasets.} \label{fig:cross-model}
+\end{figure*}
+
+% 不同demo数量
+\begin{figure*}[htbp]         \centering
+  \includegraphics[width=1.0\linewidth,clip]{Fig6}
+  \caption{Performance under different numbers of in-context demonstrations on five MI datasets using BL, RD, and PURE methods. The LLM used here is our base model: Qwen-2.5-14b-instruct-1m} \label{fig:diff-demo-num}
+\end{figure*}
+
+
+
+
+
+
 
 
 
