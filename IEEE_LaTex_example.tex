@@ -11,7 +11,7 @@
 
 
 \begin{document}
-\title{Exploring Large Language Models for EEG Classification through Active Prompting with Purity-Guided Unique-Round Exemple Selection (PURE)}
+\title{Exploring LLMs for EEG Classification through Active Prompting with Purity-Guided Unique-Round Example Selection (PURE)}
 
 % \author{Dongrui~Wu,~\IEEEmembership{Fellow,~IEEE} and Jerry M. Mendel,~\IEEEmembership{Life Fellow, IEEE}
 \author{Jingwei~Luo
@@ -28,8 +28,8 @@
 \begin{abstract}
 With the rapid scaling of large language models (LLMs), their emergent abilities have exhibited an impressive spectrum of capabilities. Among these, in-context few-shot learning—where models effectively generalize from only a handful of examples—has elicited notable interest, inspiring a surge of research into it. However, these efforts have primarily focused on textual and visual modalities, with limited exploration of complex numerical data such as Electroencephalography (EEG) signal.
 While a few recent works have explored fine-tuning LLMs for brain-computer interface (BCI) tasks, to the best of our knowledge, none have directly leveraged prompt engineering—a simple yet powerful approach—to unlock LLMs’ in-context learning ability for EEG-based classification. Notably, as many large-scale models are only available through Model-as-a-Service (MaaS) APIs, which prohibit user-side fine-tuning, prompt engineering becomes the only viable means to exploit the capabilities of these powerful but closed-source models.
-In this paper, we propose a novel method that integrates domain-specific feature extraction with a purity-guided active selection strategy to identify a small set of informative exemplars from a large sample pool. For example, in Motor Imagery (MI) tasks, we apply common spatial pattern (CSP) filtering to extract discriminative EEG features. We then compute the proportion of each sample’s $k$-nearest neighbors that share the same label, rank all samples by this ratio in descending order, and select the top-ranked ones with the highest local same-label purity.
-These high-purity exemplars are then embedded in prompts as demonstrations, enabling LLMs to perform EEG classification in a few-shot setting—without any gradient-based parameter updates. Notably, our exemplar selection is performed only once, unlike conventional Natural Language Processing (NLP) tasks where exemplars must be re-selected for each test instance. This significantly reduces computational cost and inference latency.
+In this paper, we propose a novel method that integrates domain-specific feature extraction with a purity-guided active selection strategy to identify a small set of informative examples from a large sample pool. For example, in Motor Imagery (MI) tasks, we apply common spatial pattern (CSP) filtering to extract discriminative EEG features. We then compute the proportion of each sample’s $k$-nearest neighbors that share the same label, rank all samples by this ratio in descending order, and select the top-ranked ones with the highest local same-label purity.
+These high-purity examples are then embedded in prompts as demonstrations, enabling LLMs to perform EEG classification in a few-shot setting—without any gradient-based parameter updates. Notably, our example selection is performed only once, unlike conventional Natural Language Processing (NLP) tasks where examples must be re-selected for each test instance. This significantly reduces computational cost and inference latency.
 Extensive experiments across multiple EEG datasets, BCI paradigms, and LLM models demonstrate that our method consistently outperforms random selection baselines, delivering superior accuracy and stability. Furthermore, performance improves with more powerful LLM (e.g., DeepSeek-V3), and in some cases, our approach even surpasses state-of-the-art supervised models.
 \end{abstract}
 
@@ -41,28 +41,30 @@ EEG classification,active learning,prompt engineering,in-context learning,motor 
 
 \section{Introduction}
 
-Transformer-based pre-trained large language models (LLMs) have achieved remarkable progress across a wide range of natural language processing (NLP) tasks \cite{}. As their size increases, these models gain the ability to perform in-context learning (ICL), where a small number of demonstration examples provided at inference time enable the model to achieve state-of-the-art (SOTA) or near-SOTA performance—without any parameter updates \cite{}.
-However, in many real-world applications, language alone is insufficient. Different tasks often rely on non-linguistic modalities to convey information, and textual inputs may not fully capture the necessary signals. To bridge this gap, various efforts have been made to integrate LLMs with other modalities such as images \cite{}, audio \cite{}, video \cite{}, and physical actions \cite{}. Nevertheless, applying LLMs to EEG signals presents a distinct set of challenges. EEG data suffers from limited high-quality annotations, especially aligned EEG-text pairs. Furthermore, EEG signals are inherently non-stationary, exhibit high inter-subject variability, and possess a low signal-to-noise ratio—making few-shot learning with raw EEG data particularly difficult.
+Transformer-based \cite{vaswani2017attention} pre-trained large language models (LLMs) have achieved remarkable progress across a wide range of natural language processing (NLP) tasks. As their size increases, these models gain the ability to perform in-context learning (ICL), where a small number of demonstration examples provided at inference time enable the model to achieve state-of-the-art (SOTA) or near-SOTA performance—without any parameter updates \cite{brown2020language}.
 
-An alternative strategy is to embed numerical signals into textual templates, allowing LLMs to process them as prompts. Prior studies have explored such methods for structured data like tables or medical records \cite{}, where values typically carry semantic meaning and can be easily verbalized. In contrast, EEG signals lack inherent semantic interpretability. For instance, the number “16” in a clinical record may indicate a meaningful age, whereas the same value in EEG data might simply represent an arbitrary signal amplitude at a specific time point, devoid of symbolic meaning.
+However, in many real-world applications, language alone is insufficient. Different tasks often rely on non-linguistic modalities to convey information, and textual inputs may not fully capture the necessary signals. To bridge this gap, various efforts have been made to integrate LLMs with other modalities such as images \cite{radford2021learning, alayrac2022flamingo}, audio \cite{borsos2023audiolm}, video \cite{Zhang2023VideoLLaMAAI}, and physical actions \cite{Brohan2023RT2VM}. Nevertheless, applying LLMs to EEG signals presents a distinct set of challenges. EEG data suffers from limited high-quality annotations, especially aligned EEG-text pairs. Furthermore, EEG signals are inherently non-stationary, exhibit high inter-subject variability, and possess a low signal-to-noise ratio—making few-shot learning with raw EEG data particularly difficult.
+
+An alternative strategy is to embed numerical signals into textual templates, allowing LLMs to process them as prompts. Prior studies have explored such methods for structured data like tables \cite{hegselmann2023tabllm} or medical records \cite{liu2023large}, where values typically carry semantic meaning and can be easily verbalized. In contrast, EEG signals lack inherent semantic interpretability. For instance, the number “16” in a clinical record may indicate a meaningful age, whereas the same value in EEG data might simply represent an arbitrary signal amplitude at a specific time point, devoid of symbolic meaning.
+
 In addition, EEG data is high-dimensional and temporally dense. A 2-second EEG trial sampled at 256 Hz across 8 channels yields 4,096 numerical values. Directly inputting such dense, unstructured data into an LLM consumes excessive tokens and hinders the model’s ability to learn meaningful patterns. As a result, grounding LLMs in low-semantic, large-scale numerical domains like EEG remains underexplored.
 
-To address these challenges, incorporating domain knowledge to extract discriminative and compact features from raw EEG signals is both essential and effective. In our experiments on MI tasks—which primarily elicit event-related desynchronization (ERD) and synchronization (ERS) patterns in the $\mu$ (8–13 Hz) and $\beta$ (13–30 Hz) frequency bands over the sensorimotor cortex, particularly around electrodes C3 and C4—we drew inspiration from the Filter Bank Common Spatial Pattern (FBCSP) framework \cite{}. Specifically, we found that applying bandpass filtering in the 8–24 Hz range, dividing the spectrum into four 4-Hz sub-bands, and extracting two CSP features from each sub-band significantly enhanced classification performance.
+To address these challenges, incorporating domain knowledge to extract discriminative and compact features from raw EEG signals is both essential and effective. In our experiments on MI tasks—which primarily elicit event-related desynchronization (ERD) and synchronization (ERS) patterns in the $\mu$ (8–13 Hz) and $\beta$ (13–30 Hz) frequency bands over the sensorimotor cortex, particularly around electrodes C3 and C4—we drew inspiration from the Filter Bank Common Spatial Pattern (FBCSP) framework \cite{4634130}. Specifically, we found that applying bandpass filtering in the 8–24 Hz range, dividing the spectrum into four 4-Hz sub-bands, and extracting two CSP features from each sub-band significantly enhanced classification performance.
 
-Just as in NLP tasks, selecting appropriate in-context examples is crucial for model performance \cite{}. Prior work has proposed selecting examples based on semantic similarity \cite{} or using clustering to balance similarity and diversity \cite{}. These methods aim to identify examples that are both informative and representative, maximizing the full potential of large language models.
+Just as in NLP tasks, selecting appropriate in-context examples is crucial for model performance \cite{dong-etal-2024-survey}. Prior work has proposed selecting examples based on semantic similarity \cite{liu-etal-2022-makes} or using clustering to balance similarity and diversity \cite{li-etal-2024-self-prompting}. These methods aim to identify examples that are both informative and representative, maximizing the full potential of large language models.
 However, we find that such strategies are not directly effective for EEG signal classification. Based on extensive experimentation and analysis, we propose a new example selection method tailored for EEG features and other types of complex numerical data. Our method differs from standard NLP in-context selection approaches in two key ways.
 
-First, instead of selecting exemplars for each test instance individually as commonly done in NLP, we select a fixed set of examples from the training pool once at first, and reuse them for all test samples. This significantly reduces computational overhead.
-Second, in the context of EEG signal classification, we find that prompting the LLM with class-consistent, low-entropy exemplars from each category consistently improves accuracy. In contrast, using high-entropy, hard-to-predict samples results in poor performance, while mid-level examples—such as those near the cluster center—fall somewhere in between.
+First, instead of selecting examples for each test instance individually as commonly done in NLP, we select a fixed set of examples from the training pool once at first, and reuse them for all test samples. This significantly reduces computational overhead.
+Second, in the context of EEG signal classification, we find that prompting the LLM with class-consistent, low-entropy examples from each category consistently improves accuracy. In contrast, using high-entropy, hard-to-predict samples results in poor performance, while mid-level examples—such as those near the cluster center—fall somewhere in between.
 
-Based on these observations, we propose a simple yet effective algorithm that selects high-confidence exemplars by estimating local same-label purity—defined as the proportion of same-label neighbors within a $k$-nearest neighborhood. This selection strategy identifies exemplars with the highest intra-class consistency for prompting, and achieves significantly better and more stable performance than random selection across multiple BCI paradigms and EEG datasets.
+Based on these observations, we propose a simple yet effective algorithm that selects high-confidence examples by estimating local same-label purity—defined as the proportion of same-label neighbors within a $k$-nearest neighborhood. This selection strategy identifies examples with the highest intra-class consistency for prompting, and achieves significantly better and more stable performance than random selection across multiple BCI paradigms and EEG datasets.
 
 In summary, our contributions in this paper are:
 \begin{enumerate}
 \item To the best of our knowledge, this work is the first to directly explore the feasibility of using LLMs for classifying EEG signals via in-context few-shot prompting, thereby extending the application of LLMs to complex, low-semantic numerical domains beyond natural language.
 \item We incorporate domain knowledge to extract compact and task-relevant features from raw EEG signals. This not only reduces the number of input tokens substantially but also improves classification performance, making the LLM-based prompting pipeline more effective and computationally feasible.
-\item Unlike prior work in NLP that performs example selection per test instance, we introduce a fixed exemplar set that is selected once from the training pool and reused across all test samples. This strategy significantly reduces computational cost and inference latency.
-\item We propose a novel exemplar selection strategy based on local same-label purity, which identifies low-entropy, class-consistent samples as prompts. Our findings challenge common assumptions in prompt construction and demonstrate that such exemplars consistently lead to superior and more stable performance across multiple BCI paradigms and EEG datasets.
+\item Unlike prior work in NLP that performs example selection per test instance, we introduce a fixed example set that is selected once from the training pool and reused across all test samples. This strategy significantly reduces computational cost and inference latency.
+\item We propose a novel example selection strategy based on local same-label purity, which identifies low-entropy, class-consistent samples as prompts. Our findings challenge common assumptions in prompt construction and demonstrate that such examples consistently lead to superior and more stable performance across multiple BCI paradigms and EEG datasets.
 \end{enumerate}
 
 % Machine learning has been widely used in our everyday life, e.g., face recognition \cite{Zhao2003}, natural language processing \cite{Collobert2011}, recommender systems \cite{Wang2015b}, affective computing \cite{drwuVRST2010,drwuMTALR2021}, brain-computer interfaces \cite{drwuiGS2019,drwuEA2020}, etc. However, training a high-performance machine learning model is usually a challenging and iterative process, relying on experience and trial-and-error: a simple model is first designed; if its performance is not satisfactory, then some remedies are taken to enhance it.
@@ -141,6 +143,22 @@ In conventional classification frameworks, constructing a robust decision bounda
 \item \emph{Diversity}. Diversity ensures that selected samples span a wide range of the input space, rather than clustering in a narrow region. In classification, this generally involves selecting samples along the decision boundary to maximize coverage. Techniques such as greedy sampling and $k$-means clustering are frequently employed to enhance sample diversity.
 \end{enumerate}
 
+\begin{table}
+  \centering
+  \caption{Results of random, informativeness and representativeness}
+  \label{tab:pre-exp}
+  \begin{tabular}{c|c}
+    \toprule
+    Method               & accuracy \\
+    \midrule
+    random               & 0.541 \\
+    informativeness      & 0.343 \\
+    representativeness   & 0.583 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+
 However, when applying LLMs to EEG-based classification tasks, it remains unclear whether these principles still apply. To address this, we conducted a series of experiments to examine how effectively various selection strategies can activate the few-shot learning capabilities of LLMs.
 
 Concretely, we evaluate three selection methods: (1) random selection as a baseline, (2) entropy-based selection, which identifies the most informative examples based on prediction uncertainty, and (3) k-means clustering, which selects examples that are both representative and diverse. For all methods involving distance computations, the Euclidean distance is used. Experiments are conducted on the well-established BCI Competition IV 2a dataset, focusing on a binary-class motor imagery task. The training and test sets each contain 144 trials, drawn from two separate sessions, with balanced class distributions.
@@ -149,11 +167,25 @@ Additionally, since only a small number of examples are used in few-shot prompti
 
 As shown in Table~ref{tab:pre-exp}, using k-means-selected samples as in-context examples leads to overall better prediction performance than random selection. This indicates that strategies based on representativeness and diversity are also effective for in-context example selection in LLMs. However, contrary to our expectations, using the most informative samples—those with the highest entropy—as in-context examples yields surprisingly poor results, with an 51.00 \\ accuracy of only XX\%, significantly lower than that of random selection. This suggests that information-based selection strategies, which are among the most effective in traditional classification models, may completely fail in the context of in-context learning with large language models.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth, clip]{Fig8}
+  \caption{A t-SNE visualization of the training samples from subject 8 of the BNCI2014001 dataset, with different colors representing two distinct classes. Red squares indicate the samples selected through point-by-point evaluation with the LLM, which achieved the best prediction results when used as demonstrations.}
+  \label{fig:tsne} % 引用用的标签
+\end{figure}
+
 To better understand which types of samples contribute most to model performance, an additional set of experiments was conducted. Each sample in the training set was individually used as the sole in-context example, and the corresponding prediction accuracy was recorded. Based on these results, all samples were ranked by performance, and the top 10 most effective ones were selected. Their distribution was then analyzed using t-SNE, as shown in Figure~ref{fig:tsne} (Subject 8). Interestingly, these high-performing samples are not located near the decision boundary; on the contrary, most lie far from it. This pattern was consistently observed across multiple subjects.
 
 Motivated by this observation, we took the opposite approach by selecting the least informative samples—those predicted by the model with the highest confidence. Using the same evaluation procedure, the results are reported in Table~ref{tab:pre-exp}. Remarkably, these low-entropy samples not only outperform random selection but also achieve better performance than the k-means-based selection strategy. Furthermore, to mitigate the risk of selecting outlier samples, we leveraged the known label information and proposed a local same-label purity method. This strategy further enhances the performance of the LLM, as demonstrated in subsequent experiments.
 
 We hypothesize that, for classification tasks involving numerical data, few-shot prompting in LLMs relies more on analyzing the intrinsic characteristics of the data itself, rather than constructing a deep neural network as in fine-tuning. Consequently, more prototypical and easily classifiable examples may better represent the underlying characteristics of each class, thereby enabling more accurate predictions. In contrast, highly informative examples—those near the decision boundary and more difficult to classify—may introduce ambiguity and offer less effective guidance during inference.
+
+\begin{figure*}[htbp]
+  \centering
+  \includegraphics[width=1.0\linewidth, clip]{Fig7.eps}
+  \caption{Flowchart of EEG-based classification using LLM few-shot prompting.}
+  \label{fig:flowchart} % 引用用的标签
+\end{figure*}
 
 \subsection{Purity-based Unique-Round Example Selection (PURE)}
 \label{subsec:PURE}
@@ -166,20 +198,6 @@ Next, for each feature vector in the training set, we identify its $k$ nearest n
 Moreover, although the method does not explicitly enforce diversity, we empirically observe that augmenting it with greedy diversity sampling degrades performance, suggesting that purity alone is a more effective criterion in this context.
 
 Finally, the selected examples, along with their corresponding labels, are combined with task descriptions, background context, and explicit output instructions to construct the full in-context prompt, which is then provided to the LLM alongside the test input.
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\linewidth, clip]{Fig1a.eps}
-  \caption{tsne}
-  \label{fig:tsne} % 引用用的标签
-\end{figure}
-
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.9\linewidth, clip]{Fig1b.eps}
-  \caption{flowchart}
-  \label{fig:flowchart} % 引用用的标签
-\end{figure}
 
 \begin{algorithm}[ht]
   \caption{Purity-based Unique-Round Example Selection (PURE)}
@@ -233,21 +251,6 @@ Finally, the selected examples, along with their corresponding labels, are combi
   \end{tabular}
 \end{table*}
 
-\begin{table}
-  \centering
-  \caption{Results of random, informativeness and representativeness}
-  \label{tab:pre-exp}
-  \begin{tabular}{c|c}
-    \toprule
-    Method               & accuracy \\
-    \midrule
-    random               & 0.541 \\
-    informativeness      & 0.343 \\
-    representativeness   & 0.583 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
   
 \section{Datasets}
 This section introduces five MI datasets, one sleep dataset, and one epilepsy dataset used in our experiments.
@@ -283,16 +286,15 @@ During the signal processing and feature extraction stages, EEG data from the Sl
 To extract frequency-domain features, four bandpass filters were applied to isolate the following frequency bands: 0.5–4 Hz, 4–8 Hz, 8–12 Hz, and 12–16 Hz. For each band, the root mean square (RMS) power was computed on a per-channel basis, defined as the mean of the squared signal amplitude across all samples within the trial. This process yielded a feature representation with shape (N,C×B), where N is the number of trials, C is the number of EEG channels, and B=4 is the number of frequency bands.
 
 \subsection{Epilepsy Datasets}
-\begin{enumerate}
-  \item \emph{CHB-MIT Scalp EEG Database}. 
-  This dataset comprises EEG recordings from 22 pediatric subjects (5 males, aged 3–22 years, and 17 females, aged 1.5–19 years) with intractable seizures. Subjects were monitored over multiple days following the withdrawal of anti-seizure medication to capture seizure activity and evaluate their suitability for surgical intervention. In total, 182 seizures were annotated with precise onset and offset timings.
+% \begin{enumerate}
+%   \item \emph{CHB-MIT Scalp EEG Database}. 
+%   This dataset comprises EEG recordings from 22 pediatric subjects (5 males, aged 3–22 years, and 17 females, aged 1.5–19 years) with intractable seizures. Subjects were monitored over multiple days following the withdrawal of anti-seizure medication to capture seizure activity and evaluate their suitability for surgical intervention. In total, 182 seizures were annotated with precise onset and offset timings.
+%   All signals were sampled at 256 Hz with 16-bit resolution. Most recordings contain 23 EEG channels, though a few have 24 or 26. Electrode placement follows the International 10–20 system for EEG acquisition.
+%   \item \emph{TUH EEG Epilepsy Corpus}.
+%   This dataset is a subset of the TUEG collection and includes 100 subjects diagnosed with epilepsy and 100 non-epileptic subjects, as determined by certified neurologists. Since our task involves classifying between epileptic and non-epileptic cases, the experiments were conducted in a cross-subject setting. Specifically, we selected 5 subjects from each group and used 1 session per subject to construct the experimental dataset.
+% \end{enumerate}
+The TUH EEG Epilepsy Corpus (TUEP) dataset is a subset of the TUEG collection and includes 100 subjects diagnosed with epilepsy and 100 non-epileptic subjects, as determined by certified neurologists. Since our task involves classifying between epileptic and non-epileptic cases, the experiments were conducted in a cross-subject setting. Specifically, we selected 5 subjects from each group and used 1 session per subject to construct the experimental dataset.
 
-  All signals were sampled at 256 Hz with 16-bit resolution. Most recordings contain 23 EEG channels, though a few have 24 or 26. Electrode placement follows the International 10–20 system for EEG acquisition.
-
-  \item \emph{TUH EEG Epilepsy Corpus}.
-  This dataset is a subset of the TUEG collection and includes 100 subjects diagnosed with epilepsy and 100 non-epileptic subjects, as determined by certified neurologists. Since our task involves classifying between epileptic and non-epileptic cases, the experiments were conducted in a cross-subject setting. Specifically, we selected 5 subjects from each group and used 1 session per subject to construct the experimental dataset.
-
-\end{enumerate}
 
 % 实验部分
 \section{Experiments}
@@ -309,17 +311,18 @@ Extensive experiments are conducted in this section to validate the effectivenes
 \end{enumerate}
 
 \subsection{Experimental Setup}
-To comprehensively evaluate our method, we conducted experiments under three different settings on the MI datasets: (1) within-subject cross-session, (2) within-subject five-fold cross-validation, and (3) cross-subject. For the sleep dataset, only the last two settings were considered, and for the epilepsy dataset, only the cross-subject setting was evaluated. For the cross-session setting, each experiment was repeated 25 times. For the two five-fold settings, each experiment was repeated 5 times without fixing the random seed used for data partitioning. The 51.00 \\ classification accuracy was adopted as the performance metric.
+To comprehensively evaluate our method, we conducted experiments under three different settings. For the MI datasets, we adopted (i) within-subject, cross-session evaluation and (ii) cross-subject evaluation. For the sleep dataset, as only one session per subject is available, we employed (iii) within-subject five-fold cross-validation instead of (i). For the epilepsy dataset, only the cross-subject evaluation was performed, as each subject contains either epilepsy or non-epilepsy EEG signals.
 
+In all three settings, each method was repeated five times to ensure stability. Due to the high variability introduced by random selection, experiments involving random baselines were repeated twenty times, and the average classification accuracy was used as the performance metric.
 \begin{enumerate}
   \item \emph{Within-Subject Cross-Session:}
   In this setting, we used the training and testing splits predefined by each dataset. This approach avoids session leakage while ensuring realistic session-wise generalization. However, the ratio between training and testing samples varies across datasets. Specifically:
   \begin{itemize}
-    \item \textbf{BNCI2014001}: One session is used for training and another for testing, each containing 144 trials.
-    \item \textbf{BNCI2014004}: Five sessions are available, with the first three used for training and the last two for testing.
-    \item \textbf{BNCI2014002}: A single session with eight runs; the first five runs are used for training and the remaining three for testing. Each run contains 10 trials for right-hand (RH) and 10 for feet imagery.
-    \item \textbf{BNCI2015001}: Most subjects have one training session and one testing session, totaling 400 trials. Subjects 8 and 9 have three sessions, where the first two are used for training and the last one for testing.
-    \item \textbf{Weibo2014}: This dataset contains only one session, but since the distribution and quantity of both classes are balanced between the first and second halves, the first half is used for training and the second half for testing.
+    \item BNCI2014001: One session is used for training and another for testing, each containing 144 trials.
+    \item BNCI2014004: Five sessions are available, with the first three used for training and the last two for testing.
+    \item BNCI2014002: A single session with eight runs; the first five runs are used for training and the remaining three for testing. Each run contains 10 trials for right-hand (RH) and 10 for feet imagery.
+    \item BNCI2015001: Most subjects have one training session and one testing session, totaling 400 trials. Subjects 8 and 9 have three sessions, where the first two are used for training and the last one for testing.
+    \item Weibo2014: This dataset contains only one session, but since the distribution and quantity of both classes are balanced between the first and second halves, the first half is used for training and the second half for testing.
   \end{itemize}
 
   \item \emph{Within-Subject five-Fold Cross-Validation:}
@@ -333,48 +336,18 @@ To comprehensively evaluate our method, we conducted experiments under three dif
 Tables~\ref{tab:2014001-result}, ~\ref{tab:2014002-result}, ~\ref{tab:2014004-result}, ~\ref{tab:2015001-result}, and~\ref{tab:weibo2014-result} presents the within-subject and cross-subject classification accuracies on the five MI datasets, respectively.We can observe that:
 
 \begin{enumerate}
-  \item \textbf{Active selection of ICL demonstrations significantly outperforms random selection.} In both within-subject and cross-subject settings, actively selected demonstrations consistently lead to a better prompting effect on the LLM, resulting in higher prediction accuracy and more stable outputs compared to random selection.
+  \item {Active selection of ICL demonstrations significantly outperforms random selection.} In both within-subject and cross-subject settings, actively selected demonstrations consistently lead to a better prompting effect on the LLM, resulting in higher prediction accuracy and more stable outputs compared to random selection.
   
-  \item \textbf{High-informativeness samples yield the worst prompting effect in ICL.} Contrary to conventional expectations in traditional machine learning, selecting the most informative samples leads to an inferior prompting effect on the LLM, even worse than random selection. This suggests a fundamental difference between how LLMs and traditional classifiers benefit from informative instances.
+  \item {High-informativeness samples yield the worst prompting effect in ICL.} Contrary to conventional expectations in traditional machine learning, selecting the most informative samples leads to an inferior prompting effect on the LLM, even worse than random selection. This suggests a fundamental difference between how LLMs and traditional classifiers benefit from informative instances.
   
-  \item \textbf{Low-informativeness, high-confidence samples achieve the best prompting effect.} Demonstrations with low informativeness and high model confidence, as exemplified by SVM-far and PURE, result in superior prompting effects. We hypothesize that when classifying complex numerical data, LLMs primarily rely on statistical distributional patterns rather than constructing deep decision boundaries. Therefore, more prototypical and easily distinguishable examples are more effective in guiding the model, whereas highly ambiguous samples fail to provide meaningful distinctions.
+  \item {Low-informativeness samples achieve the best prompting effect.} Demonstrations with low informativeness and high model confidence, as exemplified by SVM-far and PURE, result in superior prompting effects. We hypothesize that when classifying complex numerical data, LLMs primarily rely on statistical distributional patterns rather than constructing deep decision boundaries. Therefore, more prototypical and easily distinguishable examples are more effective in guiding the model, whereas highly ambiguous samples fail to provide meaningful distinctions.
   
-  \item \textbf{PURE consistently outperforms SVM-far.} Although SVM-far has been optimized to avoid outlier selection and shows competitive performance, PURE still achieves better overall prompting effects across datasets and experimental conditions.
+  \item {PURE consistently outperforms SVM-far.} Although SVM-far has been optimized to avoid outlier selection and shows competitive performance, PURE still achieves better overall prompting effects across datasets and experimental conditions.
   
-  \item \textbf{PURE achieves consistent superiority across multiple datasets and paradigms.} Our proposed method PURE consistently outperforms random selection across all experiments and achieves optimal results in the majority of cases. Specifically, in the within-subject setting, PURE improves over random selection by 8.04\%, 8.19\%, 6.03\%, 0\%, and 0\% across the five MI datasets, by 0\% on the sleep dataset, and by 0\% on the epilepsy dataset. In the cross-subject setting, PURE achieves similar improvements: 10.17\%, 6.32\%, 5.35\%, 0\%, and 0\% across the five MI datasets, 0\% on the sleep dataset, and 0\% on the epilepsy dataset.  
+  \item {PURE achieves consistent superiority across multiple datasets and paradigms.} Our proposed method PURE consistently outperforms random selection across all experiments and achieves optimal results in the majority of cases. Specifically, in the within-subject setting, PURE improves over random selection by 8.04\%, 8.19\%, 6.03\%, 0\%, and 0\% across the five MI datasets, by 0\% on the sleep dataset, and by 0\% on the epilepsy dataset. In the cross-subject setting, PURE achieves similar improvements: 10.17\%, 6.32\%, 5.35\%, 0\%, and 0\% across the five MI datasets, 0\% on the sleep dataset, and 0\% on the epilepsy dataset.  
   
-  \item \textbf{Representativeness- and diversity-based methods (RD and CTD) also outperform random selection} Although RD and CTD perform slightly worse than PURE overall, they consistently outperform random selection across all experiments. Notably, in cross-subject settings, their performance significantly improves, achieving results comparable to or even exceeding PURE on several MI datasets. Moreover, since these methods do not strictly rely on label information (labels are only used to maintain class balance), they exhibit broader applicability to scenarios where label information is limited or unavailable.
+  \item {Representativeness- and diversity-based methods (RD and CTD) also outperform random selection} Although RD and CTD perform slightly worse than PURE overall, they consistently outperform random selection across all experiments. Notably, in cross-subject settings, their performance significantly improves, achieving results comparable to or even exceeding PURE on several MI datasets. Moreover, since these methods do not strictly rely on label information (labels are only used to maintain class balance), they exhibit broader applicability to scenarios where label information is limited or unavailable.
 \end{enumerate}
-
-\subsection{Impact of the Number of Demonstration Samples}
-In the preceding experiments, we selected two samples per category as demonstrations. In this subsection, we investigate the impact of varying the number of demonstration samples on performance. The experiments are conducted on the BNCI2014001 dataset. Figure~\ref{fig:num_demos} presents the performance trends as the number of demonstration samples increases, from which we observe the following:
-\begin{enumerate}
-  \item The performance of the LLM improves as the number of demonstration samples increases.
-  \item As the number of demonstration samples increases, the marginal performance gains progressively decrease, and the results across different selection methods tend to converge.
-  \item The results of random selection exhibit large fluctuations across repeated trials, indicating significant instability. This further reflects the sensitivity of LLMs to the choice of demonstrations.
-  \item PURE consistently outperforms random and other selection methods across different numbers of demonstrations, and exhibits the smallest variance across repeated experiments, indicating the highest stability.
-\end{enumerate}
-
-\subsection{Impact of Different Models}
-To further assess the generalizability of the proposed method, we evaluated its performance on alternative LLMs. Specifically, DeepSeek-V3 was selected for comparative analysis. Experiments were conducted on the BNCI2015-002 dataset, and the corresponding results are presented in Table~\ref{tab:deepseek_res}. The following observations can be made:
-
-\begin{enumerate}
-\item Active selection methods consistently outperform random selection across different LLMs.
-\item The relative performance hierarchy among all methods remains consistent with previous experiments, confirming the robustness of active selection strategies across different model architectures.
-\item Employing larger and more powerful models leads to a consistent improvement in accuracy for all methods.Remarkably, on certain datasets, the results surpass the state-of-the-art performance achieved by conventional deep neural networks, highlighting the considerable potential of LLM-based ICL few-shot learning approaches in non-text domains such as EEG signal analysis.
-\end{enumerate}
-
-\section{Conclusions and Future Research}
-In this work, we explored the feasibility of leveraging large language models (LLMs) for EEG signal classification through in-context few-shot prompting. The motivation for this study arises from the following key considerations. Although LLMs have demonstrated remarkable in-context learning (ICL) capabilities in NLP and CV tasks, their application to EEG classification remains largely unexplored. Moreover, as many state-of-the-art LLMs are accessible only through Model-as-a-Service (MaaS) platforms without fine-tuning access, few-shot prompting emerges as a more practical and generalizable approach for leveraging these models. In addition, the scarcity of EEG data compared to text and images severely limits the feasibility of training large domain-specific models, highlighting the importance of bridging this gap by adapting powerful pre-trained LLMs to EEG signal analysis.
-
-To address the unique challenges posed by EEG signals, we incorporated domain-specific feature extraction to obtain compact and discriminative representations, substantially reducing token overhead and enhancing classification performance. Furthermore, we introduced a purity-guided active selection strategy that identifies a small set of high-confidence exemplars with strong intra-class consistency based on local same-label purity. Finally, unlike conventional NLP prompting strategies that select examples for each test instance individually, our method selects a fixed exemplar set once from the training pool, significantly reducing computational cost and inference latency.
-
-Extensive experiments across multiple EEG datasets, BCI paradigms, and LLM architectures demonstrated the effectiveness and robustness of the proposed method. The active selection strategy consistently outperformed random selection, delivering superior accuracy and stability. Moreover, performance improved with the use of more powerful LLMs, and in some cases, surpassed the results of traditional deep neural networks, highlighting the considerable potential of LLM-based in-context learning approaches for EEG signal analysis and other non-text domains.
-
-Our future research will extend the proposed method to a broader range of EEG paradigms and classification tasks. We plan to further optimize the prompt structure and incorporate curriculum learning concepts by using demonstrations of varying difficulty levels to explore the impact of exemplar ordering on model performance. These efforts aim to enhance the few-shot prompting capability of LLMs for EEG classification tasks.
-
-Moreover, we envision integrating LLMs with lightweight, plugin-style EEG models. This hybrid architecture would leverage the powerful reasoning and generalization abilities of LLMs while utilizing the precise, parameter-tunable nature of small models trained on high-informativeness samples. Unlike conventional fine-tuning approaches, this design allows for the combination of closed-source LLMs with EEG-specific adaptation without modifying the LLM's parameters, substantially reducing training costs and enhancing practical applicability.
-
 
 
 \begin{table*}[htpb] \centering
@@ -473,59 +446,63 @@ Moreover, we envision integrating LLMs with lightweight, plugin-style EEG models
   \resizebox{0.9\linewidth}{!}{
   \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
   \toprule
-  \multicolumn{11}{c}{Within-subject classfication} \\
+  \multicolumn{11}{c}{Within-subject classification} \\
   \midrule
   Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
   \midrule
-  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  BL & 74.30 & 88.30 & 70.50 & 82.10 & 65.00 & 51.30 & 76.80 & 55.00 & 58.40 & 69.08 \\
+  RD & \underline{79.60} & 89.00 & 55.90 & 77.40 & 70.40 & 54.90 & 76.50 & 58.30 & 54.30 & 68.48 \\
+  CTD & 79.00 & \textbf{89.60} & 55.50 & 78.50 & 69.30 & \underline{56.00} & 74.50 & 58.30 & 50.50 & 67.91 \\
+  SVM-far & 67.00 & 86.30 & \textbf{83.00} & \underline{82.60} & 67.70 & 52.20 & \underline{81.70} & 64.90 & 62.40 & 71.98 \\
+  SVM-near & 66.70 & 60.80 & 53.00 & 28.60 & 40.80 & 50.40 & 41.20 & 45.80 & 51.60 & 48.77 \\
+  PURE & 71.80 & \underline{88.80} & \underline{70.80} & \textbf{82.80} & \textbf{74.40} & \textbf{51.20} & \textbf{76.00} & \textbf{69.20} & \textbf{67.60} & \textbf{72.51} \\
   \midrule
-  \multicolumn{11}{c}{Cross-subject classfication} \\
+  \multicolumn{11}{c}{Cross-subject classification} \\
   \midrule
-  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  BL & 70.25 & 80.15 & 68.45 & 65.55 & 61.85 & 56.40 & 55.35 & 56.60 & 64.03 & 64.29 \\
+  RD & \underline{78.50} & \underline{83.55} & 65.85 & 55.60 & \underline{68.75} & 56.65 & \underline{62.00} & 56.63 & 63.27 & 65.64 \\
+  CTD & 71.90 & 79.35 & \underline{66.85} & 62.70 & 68.35 & 55.75 & 58.50 & \underline{57.87} & \underline{63.77} & 65.00 \\
+  SVM-far & 76.15 & 76.80 & 66.00 & 66.20 & 62.70 & 50.15 & 56.70 & 56.67 & 58.67 & 63.34 \\
+  SVM-near & 73.95 & 69.45 & 55.25 & 54.40 & 69.00 & 57.45 & 57.10 & 56.77 & 60.03 & 61.49 \\
+  PURE & 76.70 & \textbf{85.30} & \textbf{66.15} & \textbf{66.45} & \textbf{63.50} & \textbf{56.25} & \textbf{60.50} & \textbf{53.70} & \textbf{62.40} & \textbf{65.66} \\
   \bottomrule
   \end{tabular}
   }
 \end{table*}
 
-\begin{table*}[htpb] \centering
+\begin{table*}[htpb]
+  \centering
   \caption{Within-subject and cross-subject classification accuracies (\%) on Weibo2014. The best performance in each subject is marked in bold, and the second best underlined.}
   \label{tab:weibo2014-result}
-  \resizebox{0.9\linewidth}{!}{
-  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+  \resizebox{0.95\linewidth}{!}{
+  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c}
   \toprule
-  \multicolumn{11}{c}{Within-subject classfication} \\
+  \multicolumn{12}{c}{Within-subject classification} \\
   \midrule
-  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & S10 & Average \\
   \midrule
-  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  BL & 67.50 & 47.50 & 70.25 & 53.00 & 66.50 & 68.29 & 56.25 & 88.50 & 84.50 & 64.50 & 66.68 \\
+  RD & 67.75 & 46.50 & \underline{73.00} & 59.25 & \textbf{76.50} & 68.57 & 63.75 & 84.00 & 84.75 & \underline{71.75} & 69.58 \\
+  CTD & \underline{74.75} & 49.50 & 71.50 & 54.00 & 69.75 & 69.71 & 55.75 & 84.00 & 83.50 & 67.25 & 67.97 \\
+  SVM-far & \textbf{76.25} & \underline{59.00} & 73.50 & 48.50 & 67.50 & \textbf{75.43} & \underline{61.50} & 77.75 & \textbf{90.00} & 69.25 & 69.87 \\
+  SVM-near & 37.75 & 45.75 & 60.25 & 46.25 & 44.25 & 49.14 & 43.50 & 43.75 & \underline{88.75} & 63.00 & 52.24 \\
+  PURE & 69.50 & \textbf{61.75} & \textbf{76.00} & \textbf{67.50} & \underline{69.25} & \underline{71.71} & \textbf{57.25} & \textbf{80.00} & 87.50 & \textbf{67.25} & \textbf{70.77} \\
   \midrule
-  \multicolumn{11}{c}{Cross-subject classfication} \\
+  \multicolumn{12}{c}{Cross-subject classification} \\
   \midrule
-  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & S10 & Average \\
+  \midrule
+  BL & 63.69 & 54.06 & 62.32 & 52.19 & 62.94 & 63.07 & 73.07 & 78.25 & 78.25 & 61.50 & 64.93 \\
+  RD & 71.13 & 52.37 & \textbf{66.87} & 51.38 & \textbf{64.50} & \textbf{64.14} & \textbf{75.75} & 80.37 & 87.75 & \underline{64.87} & \textbf{67.91} \\
+  CTD & \textbf{72.94} & 48.75 & 66.75 & \underline{51.88} & 62.25 & 55.86 & 77.62 & 63.75 & 85.75 & \textbf{66.25} & 65.18 \\
+  SVM-far & 68.37 & \underline{54.13} & 72.12 & 57.87 & 64.12 & 63.29 & 71.12 & \textbf{80.50} & 83.37 & 60.38 & 67.53 \\
+  SVM-near & 63.00 & 53.75 & 35.88 & 46.88 & 54.87 & 68.71 & 58.25 & 43.00 & 26.37 & 60.38 & 51.11 \\
+  PURE & \underline{69.75} & \textbf{55.13} & \underline{71.37} & \textbf{55.13} & \underline{60.50} & \underline{60.00} & \underline{73.50} & \underline{74.25} & \textbf{89.38} & 59.50 & \underline{66.86} \\
   \bottomrule
   \end{tabular}
   }
 \end{table*}
+  
 
 % 睡眠
 \begin{table*}[htpb] \centering
@@ -558,210 +535,263 @@ Moreover, we envision integrating LLMs with lightweight, plugin-style EEG models
   }
 \end{table*}
 
-% within-subject cross-model MI
-\begin{figure*}[htbp]         \centering
-  \includegraphics[width=1.0\linewidth,clip]{Fig5}
-  \caption{Performance of different methods with various LLMs on five MI datasets.} \label{fig:cross-model}
-\end{figure*}
+\subsection{Impact of the Number of Demonstration Samples}
+In the preceding experiments, we selected two samples per category as demonstrations. In this subsection, we investigate the impact of varying the number of demonstration samples on performance. The experiments are conducted on the BNCI2014001 dataset. Figure~\ref{fig:diff-demo-num} presents the performance trends as the number of demonstration samples increases, from which we observe the following:
+\begin{enumerate}
+  \item The performance of the LLM improves as the number of demonstration samples increases.
+  \item As the number of demonstration samples increases, the marginal performance gains progressively decrease, and the results across different selection methods tend to converge.
+  \item The results of random selection exhibit large fluctuations across repeated trials, indicating significant instability. This further reflects the sensitivity of LLMs to the choice of demonstrations.
+  \item PURE consistently outperforms random and other selection methods across different numbers of demonstrations, and exhibits the smallest variance across repeated experiments, indicating the highest stability.
+\end{enumerate}
 
 % 不同demo数量
 \begin{figure*}[htbp]         \centering
   \includegraphics[width=1.0\linewidth,clip]{Fig6}
-  \caption{Performance under different numbers of in-context demonstrations on five MI datasets using BL, RD, and PURE methods. The LLM used here is our base model: Qwen-2.5-14b-instruct-1m} \label{fig:diff-demo-num}
+  \caption{Performance under different numbers of in-context demonstrations on five MI datasets using BL, RD, and PURE methods. The LLM used here is our base model: Qwen-2.5-14b-instruct-1m.} \label{fig:diff-demo-num}
 \end{figure*}
 
+\subsection{Impact of Different Models}
+To further assess the generalizability of the proposed method, we evaluated its performance on alternative LLMs. Specifically, DeepSeek-V3 was selected for comparative analysis. Experiments were conducted on the BNCI2015-002 dataset, and the corresponding results are presented in Table~\ref{tab:deepseek-result}. The following observations can be made:
 
-
-
-
-
-
-
-
-\section{PL: The General Idea} \label{sect:PL}
-
-This section introduces the general idea of PL, and illustrates it by a simple example.
-
-Formally, we define a \emph{patch} as a connected polyhedron in the input domain. For example, a patch in a 1D input domain is an interval, as shown in Fig.~\ref{fig:1Dpatch}, and a patch in a 2D input domain can be a rectangle, an ellipse, etc., as shown in Fig.~\ref{fig:2Dpatch}. For ease of implementation, in this paper we only consider polyhedra whose number of surfaces (sides) equals the dimensionality of the input domain, and each surface (side) is perpendicular to an axis of the input domain, e.g., an interval in the 1D input domain [Patches~1-3 in Fig.~\ref{fig:1Dpatch}], and a rectangle in the 2D input domain [each side is perpendicular to an axis, such as Patch~1 in Fig.~\ref{fig:2Dpatch}].
-
-\begin{figure}[htbp]\centering
-\subfigure[]{\label{fig:1Dpatch}   \includegraphics[width=.47\linewidth,clip]{Fig2a}}
-\subfigure[]{\label{fig:2Dpatch}    \includegraphics[width=.47\linewidth,clip]{Fig2b}}
-\caption{Patches in 1D and 2D input domains.} \label{fig:patchs}
-\end{figure}
-
-
-\subsection{Steps of PL}
-
-Given $L$, the number of patch models to be trained, PL consists of the following three steps:
 \begin{enumerate}
-\item Train an initial global model using all training data.
-\item Identify $L$ patches from the initial global model, which contribute the most to the learning error, and train a (local) patch model for each such patch.
-\item Update the global model using training data that do not fall into any patch.
-\end{enumerate}
-The rationale for the last step is that, when the default global model is first trained, it is forced to fit all training examples, some of which, e.g., those within the $L$ patches identified in Step (2), may be really difficult to fit. Since these difficult training examples have been handled by the patch models in Step (2), we can update the default global model to fit only the examples outside of the $L$ patches. This should be much easier than fitting all examples together, and hence the root mean squared error (RMSE) of the default global model may be reduced. Since in Step (3) the training examples for the updated global model are all outside of the patches, the updated global model is not suitable for inputs within any of the $L$ patches: although it can output an arbitrary value for such an input, this does not matter, since the patch models are used to handle such cases.
-
-The idea of PL may be intuitively understood by making the following analogy. Consider a sculptor who is sculpting a human figure. After his first pass at this, the sculptor examines the entire figure and notices that improvements need to be made to certain parts of the figure. The sculptor does not throw out the entire figure and begin a new. Instead, he zooms into those parts that need more work, after which he blends in the refined portions of the figure with the rest of the figure. He continues such iterative refinements until he is satisfied with the entire figure. Each patch in PL is analogous to a part in the figure that needs more work. In traditional ensemble learning approaches, usually each base/weak learner also focuses on the entire figure, instead of a part of it.
-
-\subsection{Determine the Optimal Number of Patch Models}
-
-An important question in PL is how to determine $L$, the optimal number of patch models. Increasing $L$ is equivalent to increasing the model complexity in traditional machine learning. So, some analogy also applies here: generally, the training performance increases with $L$, but the test (generalization) performance may first increase and then decrease (indicating overfitting). Inspired from some common practices in traditional machine learning for reducing overfitting \cite{Duda2000,Hastie2009}, there are at least two approaches to determine $L$ in PL:
-\begin{enumerate}
-\item \emph{Early stopping}. We first partition all available labeled data into a training set and a validation set (these two sets should not overlap). Then, we train different PL models with different $L$ on the training set, and monitor their performances on the validation set. The one with the best validation performance is chosen as the final PL model.
-\item \emph{Regularization}. We view $L$ as an indicator of model complexity, and regularize it in the loss function so that $L$ cannot be too large. We then pick the PL model that results in the smallest loss. There could be different choices and implementations of the regularization, similar to the case in traditional machine learning.
+\item Active selection methods consistently outperform random selection across different LLMs.
+\item The relative performance hierarchy among all methods remains consistent with previous experiments, confirming the robustness of active selection strategies across different model architectures.
+\item Employing larger and more powerful models leads to a consistent improvement in accuracy for all methods.Remarkably, on certain datasets, the results surpass the state-of-the-art performance achieved by conventional deep neural networks, highlighting the considerable potential of LLM-based ICL few-shot learning approaches in non-text domains such as EEG signal analysis.
 \end{enumerate}
 
-The second idea is used in this paper. We mainly consider regression problems, and use the following loss function, which showed satisfactory performance in our experiments:
-\begin{align}
-\ell= rmse(\mathbb{D})\times (L+1)^\alpha, \label{eq:loss}
-\end{align}
-where $rmse(\mathbb{D})$ is the training RMSE on the training set $\mathbb{D}$, and $\alpha>0$ is a trade-off parameter between the RMSE and the model complexity. A smaller $\alpha$ prefers a more accurate but maybe more complex model, and a larger $\alpha$ prefers a simpler model with a smaller number of patches, but the RMSE maybe large. Our experiments showed that $\alpha=1/4$ gave satisfactory performance, so $\alpha=1/4$ was used in this paper.
+% % within-subject cross-model MI 此图用于deepseek在多个数据集上对比，目前应该只在一个dataset上用ds，因此暂时无用
+% \begin{figure*}[htbp]         \centering
+%   \includegraphics[width=1.0\linewidth,clip]{Fig5}
+%   \caption{Performance of different methods with various LLMs on five MI datasets.} \label{fig:cross-model}
+% \end{figure*}
 
-\subsection{PL Illustrated by a Simple Example}
+\begin{table*}[htpb] \centering
+  \caption{Within-subject classification accuracies (\%) on BNCI2015001 using the DeepSeek-V3 model. The best performance in each subject is marked in bold, and the second best underlined.}
+  \label{tab:deepseek-result}
+  \resizebox{0.9\linewidth}{!}{
+  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+  \toprule
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+  \midrule
+  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  \bottomrule
+  \end{tabular}
+  }
+\end{table*}
 
-Next, we use a simple regression problem with only one input to illustrate the above procedure.
+\section{Conclusions and Future Research}
+In this work, we explored the feasibility of leveraging large language models (LLMs) for EEG signal classification through in-context few-shot prompting. The motivation for this study arises from the following key considerations. Although LLMs have demonstrated remarkable in-context learning (ICL) capabilities in NLP and CV tasks, their application to EEG classification remains largely unexplored. Moreover, as many state-of-the-art LLMs are accessible only through Model-as-a-Service (MaaS) platforms without fine-tuning access, few-shot prompting emerges as a more practical and generalizable approach for leveraging these models. In addition, the scarcity of EEG data compared to text and images severely limits the feasibility of training large domain-specific models, highlighting the importance of bridging this gap by adapting powerful pre-trained LLMs to EEG signal analysis.
 
-\begin{align}
-\theta_s=\arg\min_{\theta_s}\left[\sum_{i=1}^{n_s}(y_{s,i}-x_{s,i})^2+\lambda_1\|\theta_s\|^2\right]
-\end{align}
+To address the unique challenges posed by EEG signals, we incorporated domain-specific feature extraction to obtain compact and discriminative representations, substantially reducing token overhead and enhancing classification performance. Furthermore, we introduced a purity-guided active selection strategy that identifies a small set of high-confidence examples with strong intra-class consistency based on local same-label purity. Finally, unlike conventional NLP prompting strategies that select examples for each test instance individually, our method selects a fixed example set once from the training pool, significantly reducing computational cost and inference latency.
 
-Assume we have $N=601$ training examples $(x_n,y_n)$, $n=1,...,N$, generated from the unknown function
-\begin{align}
-y=\left\{\begin{array}{ll}
-           x+x^2+8\sin(x), & x\in[1.5,3] \\
-           x+x^2+2\sin(x), & x\in[4,5] \\
-           x+x^2, & \mbox{otherwise}
-         \end{array}\right. \label{eq:g}
-\end{align}
-where $x\in[0,6]$ and 601 uniform samples are used. The true relationship between $y$ and $x$ is plotted as the dotted black curve in Fig.~\ref{fig:gPL0}. We would like to build a PL model to fit it. The basic nonlinear regression model used is $y=f(x)=\beta_0+\beta_1x+\beta_2x^2$.
+Extensive experiments across multiple EEG datasets, BCI paradigms, and LLM architectures demonstrated the effectiveness and robustness of the proposed method. The active selection strategy consistently outperformed random selection, delivering superior accuracy and stability. Moreover, performance improved with the use of more powerful LLMs, and in some cases, surpassed the results of traditional deep neural networks, highlighting the considerable potential of LLM-based in-context learning approaches for EEG signal analysis and other non-text domains.
 
-\begin{figure}[htbp]\centering
-\subfigure[]{\label{fig:gPL0}   \includegraphics[width=.47\linewidth,clip]{Fig3a}}
-\subfigure[]{\label{fig:gRMSE0}    \includegraphics[width=.47\linewidth,clip]{Fig3b}}
-\caption{The general idea of PL, illustrated by a simple 1D curve fitting problem. (a) fitting by one global model $f_g(x)$; (b) the fitting error of $f_g(x)$.} \label{fig:gPL}
-\end{figure}
+Our future research will extend the proposed method to a broader range of EEG paradigms and classification tasks. We plan to further optimize the prompt structure and incorporate curriculum learning concepts by using demonstrations of varying difficulty levels to explore the impact of example ordering on model performance. These efforts aim to enhance the few-shot prompting capability of LLMs for EEG classification tasks.
 
-The first step is to build a global model $f_g(x)$ using all $N$ training examples. The fitted model is $f_g(x)=0.68+2.63x+0.63x^2$, plotted as the solid blue curve in Fig.~\ref{fig:gPL0}. The fitting errors are shown in Fig.~\ref{fig:gRMSE0}. Clearly, the RMSE is large, i.e., a single global model cannot fit the data well.
-
-By visual examination of Fig.~\ref{fig:gRMSE0}, we can see that the fitting errors are large when $x\in[1.5,3]$. So, the next step is to build a patch model for $x\in[1.5,3]$. Using only the training examples within this patch, we obtain the first patch model $f_1(x)=1.65+9.81x-2.01x^2$. $f_g(x)$ and $f_1(x)$ together reduce the training RMSE from $2.560$ to $1.654$, and the loss $\ell$ from $2.560$ to $1.967$, as shown in Fig.~\ref{fig:gRMSE1}. The fitting accuracy is improved, but the RMSE may still be too large. So, a second patch model may be needed.
-
-By visual examination of Fig.~\ref{fig:gRMSE1}, we can see that the fitting errors are large when $x\in[4,5]$. So, the next step is to build a patch model for $x\in[4,5]$. Using only the training examples within this patch, we obtain the second patch model $f_2(x)=19.29-8.03x+1.96x^2$. $f_g(x)$, $f_1(x)$ and $f_2(x)$ together further reduce the training RMSE to $1.332$, and the loss to $1.753$, as shown in Fig.~\ref{fig:gRMSE2}.
-
-Assume at this point we do not want to add more patches. The final step is then to update the default global model, using all training examples outside of the two patches.  The updated global model is $f'_g(x)=x+x^2$, identical to the last case in (\ref{eq:g}). This step reduces the RMSE to $0.026$, and the loss to $0.035$, as shown in Fig.~\ref{fig:gRMSE3}.
-
-For the above simple 1D curve fitting example, the final PL model can be easily represented as:
-\begin{align}
-y=\left\{\begin{array}{ll}
-           f_1(x)=1.65+9.81x-2.01x^2, & x\in[1.5,3] \\
-           f_2(x)=19.29-8.03x+1.96x^2, & x\in[4,5] \\
-           f'_g(x)=x+x^2, & \mbox{otherwise}
-         \end{array}\right. \label{eq:g2}
-\end{align}
-
-Generally, once the PL models are trained, the logic for determining which model to use for a new input is shown in Fig.~\ref{fig:PLmodel}. We first determine if the input falls into any patch. If yes, then the corresponding patch model is used to compute the output. Otherwise, the global model is used.
-
-\begin{figure}[htbp]         \centering
-\includegraphics[width=.6\linewidth,clip]{Fig4}
-\caption{The logic for determining which model to use in PL.} \label{fig:PLmodel}
-\end{figure}
-
-
-For a well-optimized fuzzy system, transition from one rule partition to another changes the functional form of the input-output mapping. For example,  assume $x_m$ is the only input of the TSK fuzzy system, which has the following three rules:
-\begin{align*}
-R_1: &\mbox{ IF } x_m \mbox{ is } A_1, \mbox{ THEN } y=y_1(x_m)\\
-R_2: &\mbox{ IF } x_m \mbox{ is } A_2, \mbox{ THEN } y=y_2(x_m)\\
-R_3: &\mbox{ IF } x_m \mbox{ is } A_3, \mbox{ THEN } y=y_3(x_m)
-\end{align*}
-where $y_1(x_m)$, $y_2(x_m)$ and $y_3(x_m)$ are different functions of $x_m$. In Partition $P(1|x_m)$, only Rule $R_1$ is fired, and hence the fuzzy system output is $y=f_1(x_m)$; in Partition $P(2|x_m)$, both Rules $R_1$ and $R_2$ are fired, and hence the fuzzy system output is:
-\begin{align}
-y=\frac{\mu_{A_1}(x_m)y_1(x_m)+\mu_{A_2}(x_m)y_2(x_m)}{\mu_{A_1}(x_m)+\mu_{A_2}(x_m)};
-\end{align}
-in Partition $P(3|x_m)$, only Rule $R_2$ is fired, and hence the fuzzy system output is $y=f_2(x_m)$. Clearly, the functional forms of $y$ in the different rule partitions are different. It is reasonable to believe this is because the (unknown) groundtruth functional form changes significantly from one rule partition to another, and hence the fuzzy system uses different functional forms in different rule partitions to accommodate it. Thus, we can consider each such partition as a patch candidate\footnote{This is just one simple way to initialize the patch candidates. There may be better ways to do this.}.
-
-According to Pedrycz \cite{Pedrycz2018}, \emph{``by information granules one regards a collection of elements drawn together by their closeness (resemblance, proximity, functionality, etc.) articulated in terms of some useful spatial, temporal, or functional relationships. Subsequently, Granular Computing is about representing, constructing, processing, and communicating information granules."} All points within a first-order rule partition fire the same number of same rules, and hence they resemble each other. So, each first-order rule partition can be viewed as an information granule, and PL can be viewed as a form of granular computing.
-
-\subsection{Implementation Details}
-
-For the ease of programming implementation, we can use a single index $k\in[1,K]$ to denote a patch candidate (first-order rule partition) $(P(k_1|x_1),P(k_2|x_2),...,P(k_M|x_M))$, where
-\begin{align}
-k&=(k_1-1)\cdot \prod_{m=2}^M K_m+(k_2-1)\cdot \prod_{m=3}^M K_m \nonumber \\
- &\quad +\cdots+(k_{M-1}-1)\cdot K_M+k_M\nonumber \\
-&=k_M+\sum_{m=1}^{M-1}\left[ (k_m-1)\cdot \prod_{p=m+1}^M K_p\right] \label{eq:k}
-\end{align}
-For example, assume the fuzzy system has two inputs ($M=2$), $x_1$ and $x_2$, each with five first-order rule partitions ($K_1=K_2=5$) shown in Fig.~\ref{fig:Partition}. Then, (\ref{eq:k}) becomes $k=(k_1-1)\times K_2+k_2$. The partition $(P(1|x_1),P(1|x_2))$ is mapped to $k=(1-1)\times 5+1=1$, $(P(1|x_1),P(2|x_2))$ to $k=(1-1)\times 5+2=2$, $\cdots$, $(P(2|x_1),P(1|x_2))$ to $k=(2-1)\times5+1=6$, $\cdots$, and $(P(5|x_1),P(5|x_2))$ to $k=(5-1)\times 5+5=25$.
-
-
-For a given $k\in[1,K]$, we can also map it back to a first-order rule partition $(P(k_1|x_1),P(k_2|x_2),...,P(k_M|x_M))$:
-\begin{align}
-k_1&=int\left(\frac{k-1}{\prod_{m=2}^M K_m}\right)+1 \label{eq:k1}\\
-k_2&=int\left(\frac{k-1-(k_1-1)\cdot \prod_{m=2}^M K_m}{\prod_{m=3}^M K_m}\right)+1\\
-k_m&=int\left(\frac{k-1-\sum_{i=1}^{m-1}\left[(k_i-1)\cdot \prod_{p=i+1}^M K_p\right]}{\prod_{p=m+1}^M K_p}\right)+1\\
-k_M&=k-\sum_{m=1}^{M-1}\left[ (k_m-1)\cdot \prod_{p=m+1}^M K_p\right] \label{eq:kM}
-\end{align}
-where $int(x)$ means the integer part of $x$, e.g., $int(2.0)=2$ and $int(2.9)=2$. Using again the above example, when $k=6$, we have $k_1=int(\frac{k-1}{K_2})+1=int(\frac{6-1}{5})+1=2$ and $k_2=k-(k_1-1)\times K_2=6-(2-1)\times 5=1$, and hence the mapped first-order rule partition for $k=6$ is $(P(2|x_1),P(1|x_2))$.
-
-In summary, the pseudo-code\footnote{A sample Matlab implementation is available at https://github.com/drwuHUST/Patch-Learning.} in Algorithm~\ref{alg:PLFS} implements the three generic PL steps described at the beginning of Section~\ref{sect:PL} using fuzzy systems. Its limitations and potential improvements are discussed in Section~\ref{sect:limitations}, after some experiments to demonstrate its capability are described in the next section.
-
-\begin{algorithm}[htbp]
-\KwIn{$N$ labeled training examples, $\{(\mathbf{x}_n,y_n)\}^N_{n=1}$, where $\mathbf{x}_n\in\mathbb{R}^{M\times 1}$\;
-\hspace*{9mm} $T$ unlabeled examples, $\{\mathbf{x}_t\}_{t=1}^T$\;}
-\KwOut{The PL model predictions for $\{\mathbf{x}_t\}_{t=1}^T$.}
-\tcp{Train the PL model}
-Train a global fuzzy model using all $N$ training examples\;
-\For{$m=1,...,M$}
-{Identify the first-order rule partitions for the $m$th input domain of the global fuzzy model\;}
-Index the partitions using $k$ in (\ref{eq:k})\;
-Include all partitions in the candidate pool\;
-$l=1$\;
-    \While{$l\le L$}{
-    Identify from the candidate pool the partition giving the maximum SSE\;
-    Record the location of the partition as the $l$th patch\;
-    Train a patch fuzzy model using only the training examples within the $l$th patch\;
-    \If{the $l$th model is successfully trained\footnotemark{}}
-    {$l=l+1$\;}
-    Remove the above patch from the candidate pool\;}
-\caption{PL using fuzzy systems.} \label{alg:PLFS}
-\end{algorithm}
+Moreover, we envision integrating LLMs with lightweight, plugin-style EEG models. This hybrid architecture would leverage the powerful reasoning and generalization abilities of LLMs while utilizing the precise, parameter-tunable nature of small models trained on high-informativeness samples. Unlike conventional fine-tuning approaches, this design allows for the combination of closed-source LLMs with EEG-specific adaptation without modifying the LLM's parameters, substantially reducing training costs and enhancing practical applicability.
 
 
 
-\begin{table}[h] \centering \setlength{\tabcolsep}{1.5mm}
-\caption{RMSEs, APEs and losses of Bagging and LSBoost in 3D manifold fitting.}   \label{tab:E3}
-\begin{tabular}{c|c|cccccc}   \hline
- & & \multicolumn{6}{c}{Number of weak learners}\\ \cline{3-8}
-&  & 1 & 2 & 3 &4 &5 & 6\\ \hline
-\multirow{2}{*}{Bagging}&RMSE & 0.2192 &   0.2291 &   0.1546  &  0.1924 & 0.1863 & 0.2337\\
-&APE & 0.0157 &   0.0163 &   0.0111 &   0.0138 & 0.0134 & 0.0168\\ \hline
-\multirow{2}{*}{LSBoost}&RMSE & 1.6534 &   1.2820 &   0.9823  &  0.8261 & 0.7361 & 0.6797\\
-&APE & 0.0157 &    0.0822 &   0.0633 & 0.0562 & 0.0496 & 0.0459\\ \hline
-\end{tabular}
-\end{table}
 
 
 
-\section{Conclusions} \label{sect:conclusion}
-
-When the performance of a machine learning model is not satisfactory, there are different strategies to improve it, including designing a deeper, wider, and/or more nonlinear model, and ensemble learning (aggregate multiple base/weak learners in parallel or in series). This paper has proposed a novel strategy, \emph{patch learning}, to improve the performance of a machine learning model. It first identifies a few patches from the initial model, which contribute the most to the learning error. Then, a (local) patch model is trained for each such patch, using only training examples falling into the patch. Finally, a global model is trained using training data that do not fall into any patch. To use the PL model, we first determine if the input falls into any patch. If yes, then the corresponding patch model is used to compute its output. Otherwise, the global model is used. Five experiments on different regression problems verified the effectiveness of the proposed PL approach: as more patch models are added, the overall RMSE decreases. We also defined a loss function for determining the optimal number of patches, considering the trade-off between RMSE and model complexity.
-
-It should be emphasized that although this paper focuses on PL using fuzzy systems, the idea is generic: any machine learning algorithm can be used as the patch model, and the patch models can also be trained using different machine learning algorithms.
 
 
-\section*{Acknowledgement}
-This research was supported by the National Natural Science Foundation of China Grant 61873321.
+
+
+
+
+
+
+% \section{PL: The General Idea} \label{sect:PL}
+
+% This section introduces the general idea of PL, and illustrates it by a simple example.
+
+% Formally, we define a \emph{patch} as a connected polyhedron in the input domain. For example, a patch in a 1D input domain is an interval, as shown in Fig.~\ref{fig:1Dpatch}, and a patch in a 2D input domain can be a rectangle, an ellipse, etc., as shown in Fig.~\ref{fig:2Dpatch}. For ease of implementation, in this paper we only consider polyhedra whose number of surfaces (sides) equals the dimensionality of the input domain, and each surface (side) is perpendicular to an axis of the input domain, e.g., an interval in the 1D input domain [Patches~1-3 in Fig.~\ref{fig:1Dpatch}], and a rectangle in the 2D input domain [each side is perpendicular to an axis, such as Patch~1 in Fig.~\ref{fig:2Dpatch}].
+
+% \begin{figure}[htbp]\centering
+% \subfigure[]{\label{fig:1Dpatch}   \includegraphics[width=.47\linewidth,clip]{Fig2a}}
+% \subfigure[]{\label{fig:2Dpatch}    \includegraphics[width=.47\linewidth,clip]{Fig2b}}
+% \caption{Patches in 1D and 2D input domains.} \label{fig:patchs}
+% \end{figure}
+
+
+% \subsection{Steps of PL}
+
+% Given $L$, the number of patch models to be trained, PL consists of the following three steps:
+% \begin{enumerate}
+% \item Train an initial global model using all training data.
+% \item Identify $L$ patches from the initial global model, which contribute the most to the learning error, and train a (local) patch model for each such patch.
+% \item Update the global model using training data that do not fall into any patch.
+% \end{enumerate}
+% The rationale for the last step is that, when the default global model is first trained, it is forced to fit all training examples, some of which, e.g., those within the $L$ patches identified in Step (2), may be really difficult to fit. Since these difficult training examples have been handled by the patch models in Step (2), we can update the default global model to fit only the examples outside of the $L$ patches. This should be much easier than fitting all examples together, and hence the root mean squared error (RMSE) of the default global model may be reduced. Since in Step (3) the training examples for the updated global model are all outside of the patches, the updated global model is not suitable for inputs within any of the $L$ patches: although it can output an arbitrary value for such an input, this does not matter, since the patch models are used to handle such cases.
+
+% The idea of PL may be intuitively understood by making the following analogy. Consider a sculptor who is sculpting a human figure. After his first pass at this, the sculptor examines the entire figure and notices that improvements need to be made to certain parts of the figure. The sculptor does not throw out the entire figure and begin a new. Instead, he zooms into those parts that need more work, after which he blends in the refined portions of the figure with the rest of the figure. He continues such iterative refinements until he is satisfied with the entire figure. Each patch in PL is analogous to a part in the figure that needs more work. In traditional ensemble learning approaches, usually each base/weak learner also focuses on the entire figure, instead of a part of it.
+
+% \subsection{Determine the Optimal Number of Patch Models}
+
+% An important question in PL is how to determine $L$, the optimal number of patch models. Increasing $L$ is equivalent to increasing the model complexity in traditional machine learning. So, some analogy also applies here: generally, the training performance increases with $L$, but the test (generalization) performance may first increase and then decrease (indicating overfitting). Inspired from some common practices in traditional machine learning for reducing overfitting \cite{Duda2000,Hastie2009}, there are at least two approaches to determine $L$ in PL:
+% \begin{enumerate}
+% \item \emph{Early stopping}. We first partition all available labeled data into a training set and a validation set (these two sets should not overlap). Then, we train different PL models with different $L$ on the training set, and monitor their performances on the validation set. The one with the best validation performance is chosen as the final PL model.
+% \item \emph{Regularization}. We view $L$ as an indicator of model complexity, and regularize it in the loss function so that $L$ cannot be too large. We then pick the PL model that results in the smallest loss. There could be different choices and implementations of the regularization, similar to the case in traditional machine learning.
+% \end{enumerate}
+
+% The second idea is used in this paper. We mainly consider regression problems, and use the following loss function, which showed satisfactory performance in our experiments:
+% \begin{align}
+% \ell= rmse(\mathbb{D})\times (L+1)^\alpha, \label{eq:loss}
+% \end{align}
+% where $rmse(\mathbb{D})$ is the training RMSE on the training set $\mathbb{D}$, and $\alpha>0$ is a trade-off parameter between the RMSE and the model complexity. A smaller $\alpha$ prefers a more accurate but maybe more complex model, and a larger $\alpha$ prefers a simpler model with a smaller number of patches, but the RMSE maybe large. Our experiments showed that $\alpha=1/4$ gave satisfactory performance, so $\alpha=1/4$ was used in this paper.
+
+% \subsection{PL Illustrated by a Simple Example}
+
+% Next, we use a simple regression problem with only one input to illustrate the above procedure.
+
+% \begin{align}
+% \theta_s=\arg\min_{\theta_s}\left[\sum_{i=1}^{n_s}(y_{s,i}-x_{s,i})^2+\lambda_1\|\theta_s\|^2\right]
+% \end{align}
+
+% Assume we have $N=601$ training examples $(x_n,y_n)$, $n=1,...,N$, generated from the unknown function
+% \begin{align}
+% y=\left\{\begin{array}{ll}
+%            x+x^2+8\sin(x), & x\in[1.5,3] \\
+%            x+x^2+2\sin(x), & x\in[4,5] \\
+%            x+x^2, & \mbox{otherwise}
+%          \end{array}\right. \label{eq:g}
+% \end{align}
+% where $x\in[0,6]$ and 601 uniform samples are used. The true relationship between $y$ and $x$ is plotted as the dotted black curve in Fig.~\ref{fig:gPL0}. We would like to build a PL model to fit it. The basic nonlinear regression model used is $y=f(x)=\beta_0+\beta_1x+\beta_2x^2$.
+
+% \begin{figure}[htbp]\centering
+% \subfigure[]{\label{fig:gPL0}   \includegraphics[width=.47\linewidth,clip]{Fig3a}}
+% \subfigure[]{\label{fig:gRMSE0}    \includegraphics[width=.47\linewidth,clip]{Fig3b}}
+% \caption{The general idea of PL, illustrated by a simple 1D curve fitting problem. (a) fitting by one global model $f_g(x)$; (b) the fitting error of $f_g(x)$.} \label{fig:gPL}
+% \end{figure}
+
+% The first step is to build a global model $f_g(x)$ using all $N$ training examples. The fitted model is $f_g(x)=0.68+2.63x+0.63x^2$, plotted as the solid blue curve in Fig.~\ref{fig:gPL0}. The fitting errors are shown in Fig.~\ref{fig:gRMSE0}. Clearly, the RMSE is large, i.e., a single global model cannot fit the data well.
+
+% By visual examination of Fig.~\ref{fig:gRMSE0}, we can see that the fitting errors are large when $x\in[1.5,3]$. So, the next step is to build a patch model for $x\in[1.5,3]$. Using only the training examples within this patch, we obtain the first patch model $f_1(x)=1.65+9.81x-2.01x^2$. $f_g(x)$ and $f_1(x)$ together reduce the training RMSE from $2.560$ to $1.654$, and the loss $\ell$ from $2.560$ to $1.967$, as shown in Fig.~\ref{fig:gRMSE1}. The fitting accuracy is improved, but the RMSE may still be too large. So, a second patch model may be needed.
+
+% By visual examination of Fig.~\ref{fig:gRMSE1}, we can see that the fitting errors are large when $x\in[4,5]$. So, the next step is to build a patch model for $x\in[4,5]$. Using only the training examples within this patch, we obtain the second patch model $f_2(x)=19.29-8.03x+1.96x^2$. $f_g(x)$, $f_1(x)$ and $f_2(x)$ together further reduce the training RMSE to $1.332$, and the loss to $1.753$, as shown in Fig.~\ref{fig:gRMSE2}.
+
+% Assume at this point we do not want to add more patches. The final step is then to update the default global model, using all training examples outside of the two patches.  The updated global model is $f'_g(x)=x+x^2$, identical to the last case in (\ref{eq:g}). This step reduces the RMSE to $0.026$, and the loss to $0.035$, as shown in Fig.~\ref{fig:gRMSE3}.
+
+% For the above simple 1D curve fitting example, the final PL model can be easily represented as:
+% \begin{align}
+% y=\left\{\begin{array}{ll}
+%            f_1(x)=1.65+9.81x-2.01x^2, & x\in[1.5,3] \\
+%            f_2(x)=19.29-8.03x+1.96x^2, & x\in[4,5] \\
+%            f'_g(x)=x+x^2, & \mbox{otherwise}
+%          \end{array}\right. \label{eq:g2}
+% \end{align}
+
+% Generally, once the PL models are trained, the logic for determining which model to use for a new input is shown in Fig.~\ref{fig:PLmodel}. We first determine if the input falls into any patch. If yes, then the corresponding patch model is used to compute the output. Otherwise, the global model is used.
+
+% \begin{figure}[htbp]         \centering
+% \includegraphics[width=.6\linewidth,clip]{Fig4}
+% \caption{The logic for determining which model to use in PL.} \label{fig:PLmodel}
+% \end{figure}
+
+
+% For a well-optimized fuzzy system, transition from one rule partition to another changes the functional form of the input-output mapping. For example,  assume $x_m$ is the only input of the TSK fuzzy system, which has the following three rules:
+% \begin{align*}
+% R_1: &\mbox{ IF } x_m \mbox{ is } A_1, \mbox{ THEN } y=y_1(x_m)\\
+% R_2: &\mbox{ IF } x_m \mbox{ is } A_2, \mbox{ THEN } y=y_2(x_m)\\
+% R_3: &\mbox{ IF } x_m \mbox{ is } A_3, \mbox{ THEN } y=y_3(x_m)
+% \end{align*}
+% where $y_1(x_m)$, $y_2(x_m)$ and $y_3(x_m)$ are different functions of $x_m$. In Partition $P(1|x_m)$, only Rule $R_1$ is fired, and hence the fuzzy system output is $y=f_1(x_m)$; in Partition $P(2|x_m)$, both Rules $R_1$ and $R_2$ are fired, and hence the fuzzy system output is:
+% \begin{align}
+% y=\frac{\mu_{A_1}(x_m)y_1(x_m)+\mu_{A_2}(x_m)y_2(x_m)}{\mu_{A_1}(x_m)+\mu_{A_2}(x_m)};
+% \end{align}
+% in Partition $P(3|x_m)$, only Rule $R_2$ is fired, and hence the fuzzy system output is $y=f_2(x_m)$. Clearly, the functional forms of $y$ in the different rule partitions are different. It is reasonable to believe this is because the (unknown) groundtruth functional form changes significantly from one rule partition to another, and hence the fuzzy system uses different functional forms in different rule partitions to accommodate it. Thus, we can consider each such partition as a patch candidate\footnote{This is just one simple way to initialize the patch candidates. There may be better ways to do this.}.
+
+% According to Pedrycz \cite{Pedrycz2018}, \emph{``by information granules one regards a collection of elements drawn together by their closeness (resemblance, proximity, functionality, etc.) articulated in terms of some useful spatial, temporal, or functional relationships. Subsequently, Granular Computing is about representing, constructing, processing, and communicating information granules."} All points within a first-order rule partition fire the same number of same rules, and hence they resemble each other. So, each first-order rule partition can be viewed as an information granule, and PL can be viewed as a form of granular computing.
+
+% \subsection{Implementation Details}
+
+% For the ease of programming implementation, we can use a single index $k\in[1,K]$ to denote a patch candidate (first-order rule partition) $(P(k_1|x_1),P(k_2|x_2),...,P(k_M|x_M))$, where
+% \begin{align}
+% k&=(k_1-1)\cdot \prod_{m=2}^M K_m+(k_2-1)\cdot \prod_{m=3}^M K_m \nonumber \\
+%  &\quad +\cdots+(k_{M-1}-1)\cdot K_M+k_M\nonumber \\
+% &=k_M+\sum_{m=1}^{M-1}\left[ (k_m-1)\cdot \prod_{p=m+1}^M K_p\right] \label{eq:k}
+% \end{align}
+% For example, assume the fuzzy system has two inputs ($M=2$), $x_1$ and $x_2$, each with five first-order rule partitions ($K_1=K_2=5$) shown in Fig.~\ref{fig:Partition}. Then, (\ref{eq:k}) becomes $k=(k_1-1)\times K_2+k_2$. The partition $(P(1|x_1),P(1|x_2))$ is mapped to $k=(1-1)\times 5+1=1$, $(P(1|x_1),P(2|x_2))$ to $k=(1-1)\times 5+2=2$, $\cdots$, $(P(2|x_1),P(1|x_2))$ to $k=(2-1)\times5+1=6$, $\cdots$, and $(P(5|x_1),P(5|x_2))$ to $k=(5-1)\times 5+5=25$.
+
+
+% For a given $k\in[1,K]$, we can also map it back to a first-order rule partition $(P(k_1|x_1),P(k_2|x_2),...,P(k_M|x_M))$:
+% \begin{align}
+% k_1&=int\left(\frac{k-1}{\prod_{m=2}^M K_m}\right)+1 \label{eq:k1}\\
+% k_2&=int\left(\frac{k-1-(k_1-1)\cdot \prod_{m=2}^M K_m}{\prod_{m=3}^M K_m}\right)+1\\
+% k_m&=int\left(\frac{k-1-\sum_{i=1}^{m-1}\left[(k_i-1)\cdot \prod_{p=i+1}^M K_p\right]}{\prod_{p=m+1}^M K_p}\right)+1\\
+% k_M&=k-\sum_{m=1}^{M-1}\left[ (k_m-1)\cdot \prod_{p=m+1}^M K_p\right] \label{eq:kM}
+% \end{align}
+% where $int(x)$ means the integer part of $x$, e.g., $int(2.0)=2$ and $int(2.9)=2$. Using again the above example, when $k=6$, we have $k_1=int(\frac{k-1}{K_2})+1=int(\frac{6-1}{5})+1=2$ and $k_2=k-(k_1-1)\times K_2=6-(2-1)\times 5=1$, and hence the mapped first-order rule partition for $k=6$ is $(P(2|x_1),P(1|x_2))$.
+
+% In summary, the pseudo-code\footnote{A sample Matlab implementation is available at https://github.com/drwuHUST/Patch-Learning.} in Algorithm~\ref{alg:PLFS} implements the three generic PL steps described at the beginning of Section~\ref{sect:PL} using fuzzy systems. Its limitations and potential improvements are discussed in Section~\ref{sect:limitations}, after some experiments to demonstrate its capability are described in the next section.
+
+% \begin{algorithm}[htbp]
+% \KwIn{$N$ labeled training examples, $\{(\mathbf{x}_n,y_n)\}^N_{n=1}$, where $\mathbf{x}_n\in\mathbb{R}^{M\times 1}$\;
+% \hspace*{9mm} $T$ unlabeled examples, $\{\mathbf{x}_t\}_{t=1}^T$\;}
+% \KwOut{The PL model predictions for $\{\mathbf{x}_t\}_{t=1}^T$.}
+% \tcp{Train the PL model}
+% Train a global fuzzy model using all $N$ training examples\;
+% \For{$m=1,...,M$}
+% {Identify the first-order rule partitions for the $m$th input domain of the global fuzzy model\;}
+% Index the partitions using $k$ in (\ref{eq:k})\;
+% Include all partitions in the candidate pool\;
+% $l=1$\;
+%     \While{$l\le L$}{
+%     Identify from the candidate pool the partition giving the maximum SSE\;
+%     Record the location of the partition as the $l$th patch\;
+%     Train a patch fuzzy model using only the training examples within the $l$th patch\;
+%     \If{the $l$th model is successfully trained\footnotemark{}}
+%     {$l=l+1$\;}
+%     Remove the above patch from the candidate pool\;}
+% \caption{PL using fuzzy systems.} \label{alg:PLFS}
+% \end{algorithm}
+
+
+
+% \begin{table}[h] \centering \setlength{\tabcolsep}{1.5mm}
+% \caption{RMSEs, APEs and losses of Bagging and LSBoost in 3D manifold fitting.}   \label{tab:E3}
+% \begin{tabular}{c|c|cccccc}   \hline
+%  & & \multicolumn{6}{c}{Number of weak learners}\\ \cline{3-8}
+% &  & 1 & 2 & 3 &4 &5 & 6\\ \hline
+% \multirow{2}{*}{Bagging}&RMSE & 0.2192 &   0.2291 &   0.1546  &  0.1924 & 0.1863 & 0.2337\\
+% &APE & 0.0157 &   0.0163 &   0.0111 &   0.0138 & 0.0134 & 0.0168\\ \hline
+% \multirow{2}{*}{LSBoost}&RMSE & 1.6534 &   1.2820 &   0.9823  &  0.8261 & 0.7361 & 0.6797\\
+% &APE & 0.0157 &    0.0822 &   0.0633 & 0.0562 & 0.0496 & 0.0459\\ \hline
+% \end{tabular}
+% \end{table}
+
+
+
+% \section{Conclusions} \label{sect:conclusion}
+
+% When the performance of a machine learning model is not satisfactory, there are different strategies to improve it, including designing a deeper, wider, and/or more nonlinear model, and ensemble learning (aggregate multiple base/weak learners in parallel or in series). This paper has proposed a novel strategy, \emph{patch learning}, to improve the performance of a machine learning model. It first identifies a few patches from the initial model, which contribute the most to the learning error. Then, a (local) patch model is trained for each such patch, using only training examples falling into the patch. Finally, a global model is trained using training data that do not fall into any patch. To use the PL model, we first determine if the input falls into any patch. If yes, then the corresponding patch model is used to compute its output. Otherwise, the global model is used. Five experiments on different regression problems verified the effectiveness of the proposed PL approach: as more patch models are added, the overall RMSE decreases. We also defined a loss function for determining the optimal number of patches, considering the trade-off between RMSE and model complexity.
+
+% It should be emphasized that although this paper focuses on PL using fuzzy systems, the idea is generic: any machine learning algorithm can be used as the patch model, and the patch models can also be trained using different machine learning algorithms.
+
+
+% \section*{Acknowledgement}
+% This research was supported by the National Natural Science Foundation of China Grant 61873321.
 
 
 
 \bibliographystyle{IEEEtran}\bibliography{drwubib}
 
 
-\begin{IEEEbiography}[{\includegraphics[height=1in,clip,keepaspectratio]{Wu}}]{Dongrui~Wu} (S'05-M'09-SM'14) received the BE degree in automatic control from the University of Science and Technology of China in 2003, the ME degree in electrical engineering from the National University of Singapore in 2005, and the PhD degree in electrical engineering from the University of Southern California in 2009. He is now Professor in the School of Artificial Intelligence and Automation, Huazhong University of Science and Technology, Wuhan, China, and Deputy Director of the Key Laboratory of Image Processing and Intelligent Control, Ministry of Education. His research interests include affective computing, brain-computer interface, computational intelligence, and machine learning. He has more than 110 publications, including a book entitled \emph{Perceptual Computing} (Wiley-IEEE Press, 2010).
+% \begin{IEEEbiography}[{\includegraphics[height=1in,clip,keepaspectratio]{Wu}}]{Dongrui~Wu} (S'05-M'09-SM'14) received the BE degree in automatic control from the University of Science and Technology of China in 2003, the ME degree in electrical engineering from the National University of Singapore in 2005, and the PhD degree in electrical engineering from the University of Southern California in 2009. He is now Professor in the School of Artificial Intelligence and Automation, Huazhong University of Science and Technology, Wuhan, China, and Deputy Director of the Key Laboratory of Image Processing and Intelligent Control, Ministry of Education. His research interests include affective computing, brain-computer interface, computational intelligence, and machine learning. He has more than 110 publications, including a book entitled \emph{Perceptual Computing} (Wiley-IEEE Press, 2010).
 
-Prof. Wu received the IEEE Computational Intelligence Society Outstanding PhD Dissertation Award in 2012, the IEEE TRANSACTIONS ON FUZZY SYSTEMS Outstanding Paper Award in 2014, the NAFIPS Early Career Award in 2014, the IEEE Systems, Man and Cybernetics (SMC) Society Early Career Award in 2017, and the IEEE SMC Society Best Associate Editor Award in 2018. He was also a finalist of another three Best Paper Awards. He was/is an Associate Editor of the IEEE TRANSACTIONS ON FUZZY SYSTEMS (2011-2018), the IEEE TRANSACTIONS ON HUMAN-MACHINE SYSTEMS (2014-), the IEEE COMPUTATIONAL INTELLIGENCE MAGAZINE (2017-), and the IEEE TRANSACTIONS ON NEURAL SYSTEMS AND REHABILITATION ENGINEERING (2019-).
-\end{IEEEbiography}
+% Prof. Wu received the IEEE Computational Intelligence Society Outstanding PhD Dissertation Award in 2012, the IEEE TRANSACTIONS ON FUZZY SYSTEMS Outstanding Paper Award in 2014, the NAFIPS Early Career Award in 2014, the IEEE Systems, Man and Cybernetics (SMC) Society Early Career Award in 2017, and the IEEE SMC Society Best Associate Editor Award in 2018. He was also a finalist of another three Best Paper Awards. He was/is an Associate Editor of the IEEE TRANSACTIONS ON FUZZY SYSTEMS (2011-2018), the IEEE TRANSACTIONS ON HUMAN-MACHINE SYSTEMS (2014-), the IEEE COMPUTATIONAL INTELLIGENCE MAGAZINE (2017-), and the IEEE TRANSACTIONS ON NEURAL SYSTEMS AND REHABILITATION ENGINEERING (2019-).
+% \end{IEEEbiography}
 
-\begin{IEEEbiography}[{\includegraphics[width=1in,clip,keepaspectratio]{Mendel}}]{Jerry M. Mendel} (LF'04) received the Ph.D. degree in electrical engineering from the Polytechnic Institute of Brooklyn, Brooklyn, NY, in 1963. Currently, he is Emeritus Professor of Electrical Engineering at the University of Southern California in Los Angeles,  where he has been since 1974. He is also Tianjin 1000-Talents Foreign Experts Plan Endowment Professor and Honorary Dean of the College of Artificial Intelligence, Tianjin Normal University, Tianjin, China.
+% \begin{IEEEbiography}[{\includegraphics[width=1in,clip,keepaspectratio]{Mendel}}]{Jerry M. Mendel} (LF'04) received the Ph.D. degree in electrical engineering from the Polytechnic Institute of Brooklyn, Brooklyn, NY, in 1963. Currently, he is Emeritus Professor of Electrical Engineering at the University of Southern California in Los Angeles,  where he has been since 1974. He is also Tianjin 1000-Talents Foreign Experts Plan Endowment Professor and Honorary Dean of the College of Artificial Intelligence, Tianjin Normal University, Tianjin, China.
 
-He has published over 570 technical papers and is author and/or co-author of 13 books, including Uncertain Rule-based Fuzzy Systems: Introduction and New Directions, 2nd ed. (Springer 2017), Perceptual Computing: Aiding People in Making Subjective Judgments (Wiley \& IEEE Press, 2010), and Introduction to Type-2 Fuzzy Logic Control: Theory and Application (Wiley \& IEEE Press, 2014). He is a Life Fellow of the IEEE, a Distinguished Member of the IEEE Control Systems Society, and a Fellow of the International Fuzzy Systems Association. He was President of the IEEE Control Systems Society in 1986, a member of the Administrative Committee of the IEEE Computational Intelligence Society for nine years, and Chairman of its Fuzzy Systems Technical Committee and the Computing With Words Task Force of that TC. Among his awards are the 1983 Best Transactions Paper Award of the IEEE Geoscience and Remote Sensing Society, the 1992 Signal Processing Society Paper Award, the 2002 and 2014 Transactions on Fuzzy Systems Outstanding Paper Awards, a 1984 IEEE Centennial Medal, an IEEE Third Millenium Medal, a Fuzzy Systems Pioneer Award (2008) from the IEEE Computational Intelligence Society for ``fundamental theoretical contributions and seminal results in fuzzy systems"; and, 2015 USC Viterbi School of Engineering Senior Research Award. His present research interests include: type-2 fuzzy logic systems and computing with words.
-\end{IEEEbiography}
+% He has published over 570 technical papers and is author and/or co-author of 13 books, including Uncertain Rule-based Fuzzy Systems: Introduction and New Directions, 2nd ed. (Springer 2017), Perceptual Computing: Aiding People in Making Subjective Judgments (Wiley \& IEEE Press, 2010), and Introduction to Type-2 Fuzzy Logic Control: Theory and Application (Wiley \& IEEE Press, 2014). He is a Life Fellow of the IEEE, a Distinguished Member of the IEEE Control Systems Society, and a Fellow of the International Fuzzy Systems Association. He was President of the IEEE Control Systems Society in 1986, a member of the Administrative Committee of the IEEE Computational Intelligence Society for nine years, and Chairman of its Fuzzy Systems Technical Committee and the Computing With Words Task Force of that TC. Among his awards are the 1983 Best Transactions Paper Award of the IEEE Geoscience and Remote Sensing Society, the 1992 Signal Processing Society Paper Award, the 2002 and 2014 Transactions on Fuzzy Systems Outstanding Paper Awards, a 1984 IEEE Centennial Medal, an IEEE Third Millenium Medal, a Fuzzy Systems Pioneer Award (2008) from the IEEE Computational Intelligence Society for ``fundamental theoretical contributions and seminal results in fuzzy systems"; and, 2015 USC Viterbi School of Engineering Senior Research Award. His present research interests include: type-2 fuzzy logic systems and computing with words.
+% \end{IEEEbiography}
 
 \end{document}
