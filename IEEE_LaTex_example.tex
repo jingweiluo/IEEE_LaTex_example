@@ -26,15 +26,14 @@
 \maketitle
 
 \begin{abstract}
-With the rapid scaling of large language models (LLMs), their emergent abilities have exhibited an impressive spectrum of capabilities. Among these, in-context few-shot learning—where models effectively generalize from only a handful of examples—has elicited notable interest, inspiring a surge of research into it. However, these efforts have primarily focused on textual and visual modalities, with limited exploration of complex numerical data such as Electroencephalography (EEG) signal.
-While a few recent works have explored fine-tuning LLMs for brain-computer interface (BCI) tasks, to the best of our knowledge, none have directly leveraged prompt engineering—a simple yet powerful approach—to unlock LLMs’ in-context learning ability for EEG-based classification. Notably, as many large-scale models are only available through Model-as-a-Service (MaaS) APIs, which prohibit user-side fine-tuning, prompt engineering becomes the only viable means to exploit the capabilities of these powerful but closed-source models.
-In this paper, we propose a novel method that integrates domain-specific feature extraction with a purity-guided active selection strategy to identify a small set of informative examples from a large sample pool. For example, in Motor Imagery (MI) tasks, we apply common spatial pattern (CSP) filtering to extract discriminative EEG features. We then compute the proportion of each sample’s $k$-nearest neighbors that share the same label, rank all samples by this ratio in descending order, and select the top-ranked ones with the highest local same-label purity.
-These high-purity examples are then embedded in prompts as demonstrations, enabling LLMs to perform EEG classification in a few-shot setting—without any gradient-based parameter updates. Notably, our example selection is performed only once, unlike conventional Natural Language Processing (NLP) tasks where examples must be re-selected for each test instance. This significantly reduces computational cost and inference latency.
-Extensive experiments across multiple EEG datasets, BCI paradigms, and LLM models demonstrate that our method consistently outperforms random selection baselines, delivering superior accuracy and stability. Furthermore, performance improves with more powerful LLM (e.g., DeepSeek-V3), and in some cases, our approach even surpasses state-of-the-art supervised models.
+  With the rapid scaling of large language models (LLMs), their in-context learning (ICL) capabilities, particularly in few-shot prompting, have attracted considerable attention. However, existing studies have predominantly focused on natural language processing (NLP) and computer vision (CV), with limited exploration into complex numerical domains such as Electroencephalography (EEG) signals.
+  In this paper, we propose a novel method that integrates domain-specific feature extraction with a purity-guided active selection strategy to identify a small set of prototypical examples from a large sample pool. These examples are embedded into prompts as demonstrations, enabling LLMs to perform EEG classification in a few-shot setting without any gradient-based parameter updates.
+  Our approach exhibits three desirable properties. First, to the best of our knowledge, this is the first work to leverage prompt engineering—a simple yet powerful technique—to bridge the gap between LLMs and EEG-based classification, demonstrating its feasibility. Moreover, unlike fine-tuning, prompt engineering remains applicable to both open-source and closed-source LLMs, thereby broadening its practical applicability. Second, while random example selection remains the common practice in most existing studies, we propose an active selection strategy that identifies the most valuable samples for LLMs, achieving significantly better performance and higher stability. Third, unlike conventional NLP tasks where examples must be re-selected for each test instance, our example selection is performed only once at the beginning, substantially reducing computational cost and inference latency.
+  Extensive experiments across multiple EEG datasets, BCI paradigms, and LLMs demonstrate that our method consistently outperforms random selection baselines, achieving superior accuracy and stability. Furthermore, performance improves with more powerful LLMs (e.g., DeepSeek-V3), and in some cases, our method even surpasses state-of-the-art supervised models.
 \end{abstract}
 
 \begin{IEEEkeywords}
-EEG classification,active learning,prompt engineering,in-context learning,motor imagery,few-shot prompting
+EEG, LLMs, active learning, prompt engineering, in-context learning, motor imagery, few-shot prompting, domain knowledge fusion
 \end{IEEEkeywords}
 
 \IEEEpeerreviewmaketitle
@@ -43,7 +42,7 @@ EEG classification,active learning,prompt engineering,in-context learning,motor 
 
 Transformer-based \cite{vaswani2017attention} pre-trained large language models (LLMs) have achieved remarkable progress across a wide range of natural language processing (NLP) tasks. As their size increases, these models gain the ability to perform in-context learning (ICL), where a small number of demonstration examples provided at inference time enable the model to achieve state-of-the-art (SOTA) or near-SOTA performance—without any parameter updates \cite{brown2020language}.
 
-However, in many real-world applications, language alone is insufficient. Different tasks often rely on non-linguistic modalities to convey information, and textual inputs may not fully capture the necessary signals. To bridge this gap, various efforts have been made to integrate LLMs with other modalities such as images \cite{radford2021learning, alayrac2022flamingo}, audio \cite{borsos2023audiolm}, video \cite{Zhang2023VideoLLaMAAI}, and physical actions \cite{Brohan2023RT2VM}. Nevertheless, applying LLMs to EEG signals presents a distinct set of challenges. EEG data suffers from limited high-quality annotations, especially aligned EEG-text pairs. Furthermore, EEG signals are inherently non-stationary, exhibit high inter-subject variability, and possess a low signal-to-noise ratio—making few-shot learning with raw EEG data particularly difficult.
+However, in many real-world applications, language alone is insufficient. Different tasks often rely on non-linguistic modalities to convey information, and textual inputs may not fully capture the necessary information. To bridge this gap, various efforts have been made to integrate LLMs with other modalities such as images \cite{radford2021learning, alayrac2022flamingo}, audio \cite{borsos2023audiolm}, video \cite{Zhang2023VideoLLaMAAI}, and physical actions \cite{Brohan2023RT2VM}. Nevertheless, applying LLMs to EEG signals presents a distinct set of challenges. Firstly, EEG data suffers from limited high-quality annotations, especially aligned EEG-text pairs, which are essential for effective model supervision or alignment. Secondly, EEG signals are inherently non-stationary—their statistical properties vary over time and across sessions—posing difficulties for consistent feature extraction and model generalization. Thirdly, there exists significant inter-subject variability, meaning models trained on one group of subjects often perform poorly when transferred to another. Finally, EEG recordings are characterized by a low signal-to-noise ratio due to contamination from muscle activity, eye movements, and environmental artifacts. As a result, these challenges make it particularly difficult to integrate LLMs with EEG-based tasks.
 
 An alternative strategy is to embed numerical signals into textual templates, allowing LLMs to process them as prompts. Prior studies have explored such methods for structured data like tables \cite{hegselmann2023tabllm} or medical records \cite{liu2023large}, where values typically carry semantic meaning and can be easily verbalized. In contrast, EEG signals lack inherent semantic interpretability. For instance, the number “16” in a clinical record may indicate a meaningful age, whereas the same value in EEG data might simply represent an arbitrary signal amplitude at a specific time point, devoid of symbolic meaning.
 
@@ -51,11 +50,10 @@ In addition, EEG data is high-dimensional and temporally dense. A 2-second EEG t
 
 To address these challenges, incorporating domain knowledge to extract discriminative and compact features from raw EEG signals is both essential and effective. In our experiments on MI tasks—which primarily elicit event-related desynchronization (ERD) and synchronization (ERS) patterns in the $\mu$ (8–13 Hz) and $\beta$ (13–30 Hz) frequency bands over the sensorimotor cortex, particularly around electrodes C3 and C4—we drew inspiration from the Filter Bank Common Spatial Pattern (FBCSP) framework \cite{4634130}. Specifically, we found that applying bandpass filtering in the 8–24 Hz range, dividing the spectrum into four 4-Hz sub-bands, and extracting two CSP features from each sub-band significantly enhanced classification performance.
 
-Just as in NLP tasks, selecting appropriate in-context examples is crucial for model performance \cite{dong-etal-2024-survey}. Prior work has proposed selecting examples based on semantic similarity \cite{liu-etal-2022-makes} or using clustering to balance similarity and diversity \cite{li-etal-2024-self-prompting}. These methods aim to identify examples that are both informative and representative, maximizing the full potential of large language models.
+Just as in NLP tasks, selecting appropriate in-context examples is crucial for model performance \cite{dong-etal-2024-survey}. Prior work has proposed selecting examples based on semantic similarity \cite{liu-etal-2022-makes} or using clustering to balance similarity and diversity \cite{li-etal-2024-self-prompting}. These methods aim to identify examples that are both informative and representative, maximizing the full potential of LLMs.
 However, we find that such strategies are not directly effective for EEG signal classification. Based on extensive experimentation and analysis, we propose a new example selection method tailored for EEG features and other types of complex numerical data. Our method differs from standard NLP in-context selection approaches in two key ways.
 
-First, instead of selecting examples for each test instance individually as commonly done in NLP, we select a fixed set of examples from the training pool once at first, and reuse them for all test samples. This significantly reduces computational overhead.
-Second, in the context of EEG signal classification, we find that prompting the LLM with class-consistent, low-entropy examples from each category consistently improves accuracy. In contrast, using high-entropy, hard-to-predict samples results in poor performance, while mid-level examples—such as those near the cluster center—fall somewhere in between.
+First, instead of selecting examples for each test instance individually as commonly done in NLP, we select a fixed set of examples from the training pool once at first, and reuse them for all test samples. This significantly reduces computational overhead. Second, in the context of EEG signal classification, we find that prompting the LLM with class-consistent, low-entropy examples from each category consistently improves accuracy. In contrast, using high-entropy, hard-to-predict samples results in poor performance, while mid-level examples—such as those near the cluster center—fall somewhere in between.
 
 Based on these observations, we propose a simple yet effective algorithm that selects high-confidence examples by estimating local same-label purity—defined as the proportion of same-label neighbors within a $k$-nearest neighborhood. This selection strategy identifies examples with the highest intra-class consistency for prompting, and achieves significantly better and more stable performance than random selection across multiple BCI paradigms and EEG datasets.
 
@@ -64,7 +62,7 @@ In summary, our contributions in this paper are:
 \item To the best of our knowledge, this work is the first to directly explore the feasibility of using LLMs for classifying EEG signals via in-context few-shot prompting, thereby extending the application of LLMs to complex, low-semantic numerical domains beyond natural language.
 \item We incorporate domain knowledge to extract compact and task-relevant features from raw EEG signals. This not only reduces the number of input tokens substantially but also improves classification performance, making the LLM-based prompting pipeline more effective and computationally feasible.
 \item Unlike prior work in NLP that performs example selection per test instance, we introduce a fixed example set that is selected once from the training pool and reused across all test samples. This strategy significantly reduces computational cost and inference latency.
-\item We propose a novel example selection strategy based on local same-label purity, which identifies low-entropy, class-consistent samples as prompts. Our findings challenge common assumptions in prompt construction and demonstrate that such examples consistently lead to superior and more stable performance across multiple BCI paradigms and EEG datasets.
+\item We propose a novel example selection method named PURE, which identifies low-entropy, class-consistent samples based on local same-label purity. Our findings challenge common assumptions regarding criteria used for demonstration selection, and demonstrate that such examples consistently lead to superior and more stable performance across multiple BCI paradigms and EEG datasets.
 \end{enumerate}
 
 % Machine learning has been widely used in our everyday life, e.g., face recognition \cite{Zhao2003}, natural language processing \cite{Collobert2011}, recommender systems \cite{Wang2015b}, affective computing \cite{drwuVRST2010,drwuMTALR2021}, brain-computer interfaces \cite{drwuiGS2019,drwuEA2020}, etc. However, training a high-performance machine learning model is usually a challenging and iterative process, relying on experience and trial-and-error: a simple model is first designed; if its performance is not satisfactory, then some remedies are taken to enhance it.
@@ -96,19 +94,19 @@ In summary, our contributions in this paper are:
 \section{Related Works}
 
 \subsection{Few-shot Prompting}
-With the rapid advancement of LLMs, ICL has emerged as a powerful paradigm that enables models to perform downstream tasks by conditioning on a small set of input–output examples without updating model parameters. A particularly effective and widely adopted form of ICL is few-shot prompting, wherein a handful of labeled demonstrations are provided in the prompt during inference. This approach has achieved competitive, and sometimes even state-of-the-art results across diverse tasks.
+With the rapid advancement of LLMs, ICL has emerged as a powerful paradigm that enables models to perform downstream tasks by conditioning on a small set of input–output examples without updating model parameters. A particularly effective and widely adopted form of ICL is few-shot prompting, wherein a handful of labeled demonstrations are provided in the prompt during inference. This approach has achieved competitive, and sometimes even SOAT results across diverse tasks.
 
 \subsection{Demonstration Selection for Few-shot Prompting}
 Despite its simplicity, the success of few-shot prompting depends heavily on the selection and arrangement of demonstration examples. Poor example quality or ordering can lead to degraded performance or unintended biases.
 
-In existing studies on demonstration selection for ICL, several strategies have been proposed. \cite{liu-etal-2022-makes} proposed to select demonstrations based on similarity, retrieving the k nearest neighbors of a test instance using sentence encoders to compute distances in the embedding space. \cite{li-etal-2024-self-prompting} incorporate diversity by clustering the sample pool and then selecting the nearest sample to the test instance from each cluster. In the field of computer vision, recent work has extended this idea by assigning a similarity-based score (e.g., cosine distance) to each candidate, reflecting its suitability for inclusion in the prompt \cite{zhang2023makes}.
+In existing studies on demonstration selection for ICL, several strategies have been proposed. Liu \textit{et al.}~\cite{liu-etal-2022-makes} proposed to select demonstrations based on similarity, retrieving the $k$ nearest neighbors of a test instance using sentence encoders to compute distances in the embedding space. Li \textit{et al.}~\cite{li-etal-2024-self-prompting} incorporate diversity by clustering the sample pool and then selecting the nearest sample to the test instance from each cluster. In the field of CV, recent work has extended this idea by assigning a similarity-based score (e.g., cosine distance) to each candidate, reflecting its suitability for inclusion in the prompt \cite{zhang2023makes}.
 
 Overall, current research on ICL demonstration selection is primarily focused on NLP and CV tasks, with selection criteria centered around similarity to the query, representativeness, diversity, and uncertainty.
 
 \subsection{EEG-based Classification}
-EEG-based classification tasks cover a wide range of scenarios, such as motor imagery, sleep stage classification, and epilepsy detection. Traditional approaches typically rely on feature extraction methods like CSP, followed by classifiers such as logistic regression (LR) or support vector machines (SVM). In recent years, deep learning models—particularly those based on convolutional neural networks (CNNs)—have been proposed and have achieved state-of-the-art performance across various tasks. However, due to the limited size of available EEG datasets, the scale of these models remains constrained, making it infeasible to train models comparable in size to LLMs or large vision models (LVMs).
+EEG-based classification tasks cover a wide range of scenarios, such as motor imagery, sleep stage classification, and epilepsy detection. Traditional approaches typically rely on feature extraction methods like CSP, followed by classifiers such as logistic regression (LR) or support vector machines (SVM). In recent years, deep learning models—particularly those based on convolutional neural networks (CNNs)—have been proposed and have achieved SOAT performance across various tasks. However, due to the limited size of available EEG datasets, the scale of these models remains constrained, making it infeasible to train models comparable in size to LLMs or large vision models (LVMs).
 
-\cite{jiang2024large} introduced a 0.369B-parameter model trained on a large collection of EEG data spanning multiple paradigms and tasks, which represents one of the largest models in the EEG domain to date. Nonetheless, its performance and ease of use in downstream tasks still lag far behind that of LLMs. Due to the modality gap, LLMs cannot be directly applied to EEG-based tasks. To the best of our knowledge, no prior work has directly applied prompt engineering to EEG classification tasks.
+Jiang \textit{et al.}~\cite{jiang2024large} introduced a 0.369B-parameter model trained on a large collection of EEG data spanning multiple paradigms and tasks, which represents one of the largest models in the EEG domain to date. Nonetheless, its performance and ease of use in downstream tasks still lag far behind that of LLMs. Due to the modality gap, LLMs cannot be directly applied to EEG-based tasks. To the best of our knowledge, no prior work has directly applied prompt engineering to EEG classification tasks.
 
 
 
@@ -131,7 +129,7 @@ To address these issues, we propose a one-time selection approach. Instead of se
 \item \emph{Reduced computational overhead}. It eliminates the need for repeated per-instance selection, avoiding the iterative process for each test sample.
 \item \emph{Improved batch efficiency}. Since all test samples share the same in-context examples, we can batch multiple test inputs into a single prompt and obtain multiple predictions with one API call. In contrast, per-instance selection requires constructing one prompt per test instance, yielding only a single prediction at a time.
 \end{enumerate}
-Furthermore, in terms of prediction accuracy, our experiments show that performance improves as the size and capability of the LLM increase. On some datasets, the one-time selection strategy even outperforms state-of-the-art methods.
+Furthermore, in terms of prediction accuracy, our experiments show that performance improves as the size and capability of the LLM increase. On some datasets, the one-time selection strategy even outperforms SOAT methods.
 
 \subsection{Gold Criteria for Demonstrations}
 Once the one-time selection strategy is adopted, the notion of similarity—which has served as a primary criterion in most prior few-shot demonstration selection methods—no longer applies, as there is no specific test instance to serve as a reference for measuring similarity. This calls for a major shift: we must focus on samples that best represent the entire input space rather than resemble an individual instance.
@@ -163,9 +161,9 @@ However, when applying LLMs to EEG-based classification tasks, it remains unclea
 
 Concretely, we evaluate three selection methods: (1) random selection as a baseline, (2) entropy-based selection, which identifies the most informative examples based on prediction uncertainty, and (3) k-means clustering, which selects examples that are both representative and diverse. For all methods involving distance computations, the Euclidean distance is used. Experiments are conducted on the well-established BCI Competition IV 2a dataset, focusing on a binary-class motor imagery task. The training and test sets each contain 144 trials, drawn from two separate sessions, with balanced class distributions.
 
-Additionally, since only a small number of examples are used in few-shot prompting, we adopt a class-balanced selection strategy in all experiments to prevent the selected examples from being dominated by a single class, which could bias the LLM’s predictions. All methods are repeated 25 times, and the results are reported in Table~ref{tab:pre-exp}.
+Additionally, since only a small number of examples are used in few-shot prompting, we adopt a class-balanced selection strategy in all experiments to prevent the selected examples from being dominated by a single class, which could bias the LLM’s predictions. All methods are repeated 25 times, and the results are reported in Table~\ref{tab:pre-exp}.
 
-As shown in Table~ref{tab:pre-exp}, using k-means-selected samples as in-context examples leads to overall better prediction performance than random selection. This indicates that strategies based on representativeness and diversity are also effective for in-context example selection in LLMs. However, contrary to our expectations, using the most informative samples—those with the highest entropy—as in-context examples yields surprisingly poor results, with an 51.00 \\ accuracy of only XX\%, significantly lower than that of random selection. This suggests that information-based selection strategies, which are among the most effective in traditional classification models, may completely fail in the context of in-context learning with large language models.
+As shown in Table~\ref{tab:pre-exp}, using $k$-means-selected samples as in-context examples leads to overall better prediction performance than random selection. This indicates that strategies based on representativeness and diversity are also effective for in-context example selection in LLMs. However, contrary to our expectations, using the most informative samples—those with the highest entropy—as in-context examples yields surprisingly poor results, with an average accuracy of only 38.89\%, significantly lower than that of random selection. This suggests that information-based selection strategies, which are among the most effective in traditional classification models, may completely fail in the context of in-context learning with LLMs.
 
 \begin{figure}[htbp]
   \centering
@@ -174,9 +172,9 @@ As shown in Table~ref{tab:pre-exp}, using k-means-selected samples as in-context
   \label{fig:tsne} % 引用用的标签
 \end{figure}
 
-To better understand which types of samples contribute most to model performance, an additional set of experiments was conducted. Each sample in the training set was individually used as the sole in-context example, and the corresponding prediction accuracy was recorded. Based on these results, all samples were ranked by performance, and the top 10 most effective ones were selected. Their distribution was then analyzed using t-SNE, as shown in Figure~ref{fig:tsne} (Subject 8). Interestingly, these high-performing samples are not located near the decision boundary; on the contrary, most lie far from it. This pattern was consistently observed across multiple subjects.
+To better understand which types of samples contribute most to model performance, an additional set of experiments was conducted. Each sample in the training set was individually used as the sole in-context example, and the corresponding prediction accuracy was recorded. Based on these results, all samples were ranked by performance, and the best-performing ones were selected. Their distribution was then analyzed using t-SNE, as shown in Figure~\ref{fig:tsne} (Subject 8). Interestingly, these high-performing samples are not located near the decision boundary; on the contrary, most lie far from it. This pattern was consistently observed across multiple subjects.
 
-Motivated by this observation, we took the opposite approach by selecting the least informative samples—those predicted by the model with the highest confidence. Using the same evaluation procedure, the results are reported in Table~ref{tab:pre-exp}. Remarkably, these low-entropy samples not only outperform random selection but also achieve better performance than the k-means-based selection strategy. Furthermore, to mitigate the risk of selecting outlier samples, we leveraged the known label information and proposed a local same-label purity method. This strategy further enhances the performance of the LLM, as demonstrated in subsequent experiments.
+Motivated by this observation, we took the opposite approach by selecting the least informative samples—those predicted by the model with the highest confidence. Using the same evaluation procedure, the results are reported in Table~ref{tab:pre-exp}. Remarkably, these low-entropy samples not only outperform random selection but also achieve better performance than the $k$-means-based selection strategy. Furthermore, to mitigate the risk of selecting outlier samples, we leveraged the known label information and proposed a local same-label purity method. This strategy further enhances the performance of the LLM, as demonstrated in subsequent experiments.
 
 We hypothesize that, for classification tasks involving numerical data, few-shot prompting in LLMs relies more on analyzing the intrinsic characteristics of the data itself, rather than constructing a deep neural network as in fine-tuning. Consequently, more prototypical and easily classifiable examples may better represent the underlying characteristics of each class, thereby enabling more accurate predictions. In contrast, highly informative examples—those near the decision boundary and more difficult to classify—may introduce ambiguity and offer less effective guidance during inference.
 
@@ -255,18 +253,18 @@ Finally, the selected examples, along with their corresponding labels, are combi
 \section{Datasets}
 This section introduces five MI datasets, one sleep dataset, and one epilepsy dataset used in our experiments.
 \subsection{MI Datasets}
-All MI datasets used in our experiments are binary classification tasks and were obtained using the MOABB framework \cite{jayaram2018moabb}. Specifically, two datasets from BCI Competition IV (2a and 2b) \cite{tangermann2012review} contain left-vs-right hand imagery, while the other three—BNCI2014002, BNCI2015001, and Weibo2014—contain right-hand vs. feet imagery.
+All MI datasets used in our experiments are binary classification tasks and were obtained using the MOABB framework \cite{jayaram2018moabb}. Specifically, two datasets from BCI Competition IV (BNCI2014001 and BNCI2014004) \cite{tangermann2012review} contain left-vs-right hand imagery, while the other three—BNCI2014002, BNCI2015001, and Weibo2014—contain right-hand vs. feet imagery.
 
-Their experimental paradigms were similar: In each session, a subject sat comfortably in an armchair positioned in front of a computer screen. At the beginning of each trial, a fixation cross appeared on a black background, accompanied by a short auditory warning tone. After a brief delay, a directional cue in the form of an arrow pointing left, right, down, or up appeared on the screen, corresponding to one of the four MI classes: left hand, right hand, foot, or tongue. This cue remained visible throughout the task period and served as a prompt for the subject to begin the corresponding MI task. Subject performed the imagery task until the fixation cross disappeared. Each trial ended with a brief black screen before the next trial began \cite{tangermann2012review}.
+Their experimental paradigms were similar: In each session, a subject sat comfortably in an armchair positioned in front of a computer screen. At the beginning of each trial, a fixation cross appeared on a black background, accompanied by a short auditory warning tone. After a brief delay, a directional cue in the form of an arrow pointing left, right, down, or up appeared on the screen, corresponding to one of the four MI classes: left hand, right hand, feet, or tongue. This cue remained visible throughout the task period and served as a prompt for the subject to begin the corresponding MI task. Subject performed the imagery task until the fixation cross disappeared. Each trial ended with a brief black screen before the next trial began \cite{tangermann2012review}.
 
 \begin{enumerate}
   \item \emph{Left Hand vs. Right Hand Datasets}. 
-  Dataset 2a comprises recordings from 9 subjects, with EEG signals collected from 22 channels at a sampling rate of 250 Hz. Although the original paradigm involves four MI tasks (left hand, right hand, feet, and tongue), only the left- and right-hand trials are used in our experiments. Each subject completed two sessions on different days, with 72 trials per class per session, totaling 144 trials per session.
+  Dataset BNCI2014001 comprises recordings from 9 subjects, with EEG signals collected from 22 channels at a sampling rate of 250 Hz. Although the original paradigm involves four MI tasks (left hand, right hand, feet, and tongue), only the left- and right-hand trials are used in our experiments. Each subject completed two sessions on different days, with 72 trials per class per session, totaling 144 trials per session.
 
-  Dataset 2b also includes 9 subjects but uses only 3 bipolar EEG channels (C3, Cz, and C4), sampled at 250 Hz. Each subject participated in 5 sessions: the first 2 (screening) without feedback, and the last 3 with real-time feedback. During the feedback sessions, a smiley face was displayed and changed color based on the accuracy of the subject’s imagined movement.
+  Dataset BNCI2014004 also includes 9 subjects but uses only 3 bipolar EEG channels (C3, Cz, and C4), sampled at 250 Hz. Each subject participated in 5 sessions: the first 2 (screening) without feedback, and the last 3 with real-time feedback. During the feedback sessions, a smiley face was displayed and changed color based on the accuracy of the subject’s imagined movement.
 
   \item \emph{Right Hand vs. Feet Datasets}.
-  BNCI2014002 includes 14 participants and follows a similar paradigm to 2a. Each subject completed 1 session with 8 runs (5 for training and 3 for evaluation), totaling 160 trials.
+  BNCI2014002 includes 14 participants and follows a similar paradigm to BNCI2014001. Each subject completed 1 session with 8 runs (5 for training and 3 for evaluation), totaling 160 trials.
 
   BNCI2015001 adopts the Graz two-class synchronous MI paradigm, using EEG recorded from 3 Laplacian derivations. Data were sampled at 512 Hz and filtered using a 0.5–100 Hz bandpass filter with a 50 Hz notch filter. The last 3 subjects were excluded due to poor performance.
 
@@ -313,7 +311,8 @@ Extensive experiments are conducted in this section to validate the effectivenes
 \subsection{Experimental Setup}
 To comprehensively evaluate our method, we conducted experiments under three different settings. For the MI datasets, we adopted (i) within-subject, cross-session evaluation and (ii) cross-subject evaluation. For the sleep dataset, as only one session per subject is available, we employed (iii) within-subject five-fold cross-validation instead of (i). For the epilepsy dataset, only the cross-subject evaluation was performed, as each subject contains either epilepsy or non-epilepsy EEG signals.
 
-In all three settings, each method was repeated five times to ensure stability. Due to the high variability introduced by random selection, experiments involving random baselines were repeated twenty times, and the average classification accuracy was used as the performance metric.
+In the first two settings, each method was repeated five times to ensure stability. Due to the high variability introduced by random selection, experiments involving random baselines were repeated twenty times. For five-fold cross-validation experiments, the entire five-fold process was repeated five times, resulting in a total of 25 runs per method. The average classification accuracy was used as the performance metric.
+
 \begin{enumerate}
   \item \emph{Within-Subject Cross-Session:}
   In this setting, we used the training and testing splits predefined by each dataset. This approach avoids session leakage while ensuring realistic session-wise generalization. However, the ratio between training and testing samples varies across datasets. Specifically:
@@ -344,7 +343,7 @@ Tables~\ref{tab:2014001-result}, ~\ref{tab:2014002-result}, ~\ref{tab:2014004-re
   
   \item {PURE consistently outperforms SVM-far.} Although SVM-far has been optimized to avoid outlier selection and shows competitive performance, PURE still achieves better overall prompting effects across datasets and experimental conditions.
   
-  \item {PURE achieves consistent superiority across multiple datasets and paradigms.} Our proposed method PURE consistently outperforms random selection across all experiments and achieves optimal results in the majority of cases. Specifically, in the within-subject setting, PURE improves over random selection by 8.04\%, 8.19\%, 6.03\%, 0\%, and 0\% across the five MI datasets, by 0\% on the sleep dataset, and by 0\% on the epilepsy dataset. In the cross-subject setting, PURE achieves similar improvements: 10.17\%, 6.32\%, 5.35\%, 0\%, and 0\% across the five MI datasets, 0\% on the sleep dataset, and 0\% on the epilepsy dataset.  
+  \item {PURE achieves consistent superiority across multiple datasets and paradigms.} Our proposed method PURE consistently outperforms random selection across all experiments and achieves optimal results in the majority of cases. Specifically, in the within-subject setting, PURE improves over random selection by 8.04\%, 8.19\%, 6.03\%, 3.43\%, and 4.09\% across the five MI datasets, by 5.44\% on the sleep dataset, and by 0\% on the epilepsy dataset. In the cross-subject setting, PURE achieves similar improvements: 10.17\%, 6.32\%, 5.35\%, 1.37\%, and 1.93\% across the five MI datasets, 5.67\% on the sleep dataset, and 0\% on the epilepsy dataset.  
   
   \item {Representativeness- and diversity-based methods (RD and CTD) also outperform random selection} Although RD and CTD perform slightly worse than PURE overall, they consistently outperform random selection across all experiments. Notably, in cross-subject settings, their performance significantly improves, achieving results comparable to or even exceeding PURE on several MI datasets. Moreover, since these methods do not strictly rely on label information (labels are only used to maintain class balance), they exhibit broader applicability to scenarios where label information is limited or unavailable.
 \end{enumerate}
@@ -451,20 +450,22 @@ Tables~\ref{tab:2014001-result}, ~\ref{tab:2014002-result}, ~\ref{tab:2014004-re
   Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
   \midrule
   BL & 74.30 & 88.30 & 70.50 & 82.10 & 65.00 & 51.30 & 76.80 & 55.00 & 58.40 & 69.08 \\
-  RD & \underline{79.60} & 89.00 & 55.90 & 77.40 & 70.40 & 54.90 & 76.50 & 58.30 & 54.30 & 68.48 \\
-  CTD & 79.00 & \textbf{89.60} & 55.50 & 78.50 & 69.30 & \underline{56.00} & 74.50 & 58.30 & 50.50 & 67.91 \\
-  SVM-far & 67.00 & 86.30 & \textbf{83.00} & \underline{82.60} & 67.70 & 52.20 & \underline{81.70} & 64.90 & 62.40 & 71.98 \\
+  RD & 79.60 & 89.00 & 55.90 & 77.40 & 70.40 & 54.90 & 76.50 & 58.30 & 54.30 & 68.48 \\
+  CTD & 79.00 & 89.60 & 55.50 & 78.50 & 69.30 & 56.00 & 74.50 & 58.30 & 50.50 & 67.91 \\
+  SVM-far & 67.00 & 86.30 & 83.00 & 82.60 & 67.70 & 52.20 & 81.70 & 64.90 & 62.40 & \underline{71.98} \\
   SVM-near & 66.70 & 60.80 & 53.00 & 28.60 & 40.80 & 50.40 & 41.20 & 45.80 & 51.60 & 48.77 \\
-  PURE & 71.80 & \underline{88.80} & \underline{70.80} & \textbf{82.80} & \textbf{74.40} & \textbf{51.20} & \textbf{76.00} & \textbf{69.20} & \textbf{67.60} & \textbf{72.51} \\
+  PURE & 71.80 & 88.80 & 70.80 & 82.80 & 74.40 & 51.20 & 76.00 & 69.20 & 67.60 & \textbf{72.51 (↑3.43)} \\
   \midrule
   \multicolumn{11}{c}{Cross-subject classification} \\
   \midrule
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+  \midrule
   BL & 70.25 & 80.15 & 68.45 & 65.55 & 61.85 & 56.40 & 55.35 & 56.60 & 64.03 & 64.29 \\
-  RD & \underline{78.50} & \underline{83.55} & 65.85 & 55.60 & \underline{68.75} & 56.65 & \underline{62.00} & 56.63 & 63.27 & 65.64 \\
-  CTD & 71.90 & 79.35 & \underline{66.85} & 62.70 & 68.35 & 55.75 & 58.50 & \underline{57.87} & \underline{63.77} & 65.00 \\
+  RD & 78.50 & 83.55 & 65.85 & 55.60 & 68.75 & 56.65 & 62.00 & 56.63 & 63.27 & \underline{65.64} \\
+  CTD & 71.90 & 79.35 & 66.85 & 62.70 & 68.35 & 55.75 & 58.50 & 57.87 & 63.77 & 65.00 \\
   SVM-far & 76.15 & 76.80 & 66.00 & 66.20 & 62.70 & 50.15 & 56.70 & 56.67 & 58.67 & 63.34 \\
   SVM-near & 73.95 & 69.45 & 55.25 & 54.40 & 69.00 & 57.45 & 57.10 & 56.77 & 60.03 & 61.49 \\
-  PURE & 76.70 & \textbf{85.30} & \textbf{66.15} & \textbf{66.45} & \textbf{63.50} & \textbf{56.25} & \textbf{60.50} & \textbf{53.70} & \textbf{62.40} & \textbf{65.66} \\
+  PURE & 76.70 & 85.30 & 66.15 & 66.45 & 63.50 & 56.25 & 60.50 & 53.70 & 62.40 & \textbf{65.66 (↑1.37)} \\
   \bottomrule
   \end{tabular}
   }
@@ -474,7 +475,7 @@ Tables~\ref{tab:2014001-result}, ~\ref{tab:2014002-result}, ~\ref{tab:2014004-re
   \centering
   \caption{Within-subject and cross-subject classification accuracies (\%) on Weibo2014. The best performance in each subject is marked in bold, and the second best underlined.}
   \label{tab:weibo2014-result}
-  \resizebox{0.95\linewidth}{!}{
+  \resizebox{0.9\linewidth}{!}{
   \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c}
   \toprule
   \multicolumn{12}{c}{Within-subject classification} \\
@@ -482,22 +483,22 @@ Tables~\ref{tab:2014001-result}, ~\ref{tab:2014002-result}, ~\ref{tab:2014004-re
   Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & S10 & Average \\
   \midrule
   BL & 67.50 & 47.50 & 70.25 & 53.00 & 66.50 & 68.29 & 56.25 & 88.50 & 84.50 & 64.50 & 66.68 \\
-  RD & 67.75 & 46.50 & \underline{73.00} & 59.25 & \textbf{76.50} & 68.57 & 63.75 & 84.00 & 84.75 & \underline{71.75} & 69.58 \\
-  CTD & \underline{74.75} & 49.50 & 71.50 & 54.00 & 69.75 & 69.71 & 55.75 & 84.00 & 83.50 & 67.25 & 67.97 \\
-  SVM-far & \textbf{76.25} & \underline{59.00} & 73.50 & 48.50 & 67.50 & \textbf{75.43} & \underline{61.50} & 77.75 & \textbf{90.00} & 69.25 & 69.87 \\
-  SVM-near & 37.75 & 45.75 & 60.25 & 46.25 & 44.25 & 49.14 & 43.50 & 43.75 & \underline{88.75} & 63.00 & 52.24 \\
-  PURE & 69.50 & \textbf{61.75} & \textbf{76.00} & \textbf{67.50} & \underline{69.25} & \underline{71.71} & \textbf{57.25} & \textbf{80.00} & 87.50 & \textbf{67.25} & \textbf{70.77} \\
+  RD & 67.75 & 46.50 & 73.00 & 59.25 & 76.50 & 68.57 & 63.75 & 84.00 & 84.75 & 71.75 & 69.58 \\
+  CTD & 74.75 & 49.50 & 71.50 & 54.00 & 69.75 & 69.71 & 55.75 & 84.00 & 83.50 & 67.25 & 67.97 \\
+  SVM-far & 76.25 & 59.00 & 73.50 & 48.50 & 67.50 & 75.43 & 61.50 & 77.75 & 90.00 & 69.25 & \underline{69.87} \\
+  SVM-near & 37.75 & 45.75 & 60.25 & 46.25 & 44.25 & 49.14 & 43.50 & 43.75 & 88.75 & 63.00 & 52.24 \\
+  PURE & 69.50 & 61.75 & 76.00 & 67.50 & 69.25 & 71.71 & 57.25 & 80.00 & 87.50 & 67.25 & \textbf{70.77 (↑4.09)} \\
   \midrule
   \multicolumn{12}{c}{Cross-subject classification} \\
   \midrule
   Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & S10 & Average \\
   \midrule
   BL & 63.69 & 54.06 & 62.32 & 52.19 & 62.94 & 63.07 & 73.07 & 78.25 & 78.25 & 61.50 & 64.93 \\
-  RD & 71.13 & 52.37 & \textbf{66.87} & 51.38 & \textbf{64.50} & \textbf{64.14} & \textbf{75.75} & 80.37 & 87.75 & \underline{64.87} & \textbf{67.91} \\
-  CTD & \textbf{72.94} & 48.75 & 66.75 & \underline{51.88} & 62.25 & 55.86 & 77.62 & 63.75 & 85.75 & \textbf{66.25} & 65.18 \\
-  SVM-far & 68.37 & \underline{54.13} & 72.12 & 57.87 & 64.12 & 63.29 & 71.12 & \textbf{80.50} & 83.37 & 60.38 & 67.53 \\
+  RD & 71.13 & 52.37 & 66.87 & 51.38 & 64.50 & 64.14 & 75.75 & 80.37 & 87.75 & 64.87 & \textbf{67.91 (↑2.98)} \\
+  CTD & 72.94 & 48.75 & 66.75 & 51.88 & 62.25 & 55.86 & 77.62 & 63.75 & 85.75 & 66.25 & 65.18 \\
+  SVM-far & 68.37 & 54.13 & 72.12 & 57.87 & 64.12 & 63.29 & 71.12 & 80.50 & 83.37 & 60.38 & \underline{67.53} \\
   SVM-near & 63.00 & 53.75 & 35.88 & 46.88 & 54.87 & 68.71 & 58.25 & 43.00 & 26.37 & 60.38 & 51.11 \\
-  PURE & \underline{69.75} & \textbf{55.13} & \underline{71.37} & \textbf{55.13} & \underline{60.50} & \underline{60.00} & \underline{73.50} & \underline{74.25} & \textbf{89.38} & 59.50 & \underline{66.86} \\
+  PURE & 69.75 & 55.13 & 71.37 & 55.13 & 60.50 & 60.00 & 73.50 & 74.25 & 89.38 & 59.50 & 66.86 \\
   \bottomrule
   \end{tabular}
   }
@@ -506,30 +507,30 @@ Tables~\ref{tab:2014001-result}, ~\ref{tab:2014002-result}, ~\ref{tab:2014004-re
 
 % 睡眠
 \begin{table*}[htpb] \centering
-  \caption{Within-subject and cross-subject classification accuracies (\%) on Sleep-edfx. The best performance in each subject is marked in bold, and the second best underlined.}
+  \caption{Within-subject and cross-subject classification accuracies (\%) on Sleep-EDF. The best performance in each subject is marked in bold, and the second best underlined.}
   \label{tab:sleep-edfx-result}
   \resizebox{0.9\linewidth}{!}{
-  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+  \begin{tabular}{c|c|c|c|c|c|c|c|c}
   \toprule
-  \multicolumn{11}{c}{Within-subject classfication} \\
+  \multicolumn{9}{c}{Within-subject classification} \\
   \midrule
-  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & Average \\
   \midrule
-  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  BL & 29.81 & 30.93 & 31.93 & 28.26 & 35.18 & 30.18 & 31.87 & 31.17 \\
+  RD & 26.31 & 28.76 & 36.58 & 29.13 & 34.81 & 32.76 & 35.06 & 31.92 \\
+  CTD & 23.92 & 27.08 & 34.76 & 26.28 & 35.66 & 29.38 & 28.30 & 29.34 \\
+  SVM-far & 37.83 & 28.43 & 36.49 & 31.51 & 39.63 & 39.25 & 37.95 & \underline{35.87} \\
+  SVM-near & 28.65 & 25.85 & 27.47 & 26.07 & 31.34 & 31.32 & 26.40 & 28.16 \\
+  PURE & 35.57 & 33.93 & 35.71 & 35.97 & 50.78 & 31.48 & 32.80 & \textbf{36.61 (↑5.44)} \\
   \midrule
-  \multicolumn{11}{c}{Cross-subject classfication} \\
+  \multicolumn{9}{c}{Cross-subject classification} \\
   \midrule
-  BL & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  CTD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  RD & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-near & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  SVM-far & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
-  PURE & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 50.00 & 51.00 \\
+  BL & 23.59 & 21.81 & 19.52 & 24.87 & 27.20 & 20.36 & 23.18 & 22.93 \\
+  RD & 22.67 & 24.41 & 17.25 & 18.27 & 22.47 & 18.01 & 22.15 & 20.89 \\
+  CTD & 21.49 & 20.47 & 19.62 & 18.79 & 19.52 & 18.10 & 25.96 & 20.85 \\
+  SVM-far & 24.81 & 23.24 & 17.98 & 19.89 & 22.68 & 16.16 & 32.36 & 22.73 \\
+  SVM-near & 20.44 & 21.56 & 16.13 & 27.30 & 22.83 & 30.13 & 23.01 & \underline{23.06} \\
+  PURE & 29.79 & 25.81 & 26.28 & 20.37 & 34.64 & 34.66 & 24.63 & \textbf{28.60 (↑5.67)} \\
   \bottomrule
   \end{tabular}
   }
@@ -556,7 +557,7 @@ To further assess the generalizability of the proposed method, we evaluated its 
 \begin{enumerate}
 \item Active selection methods consistently outperform random selection across different LLMs.
 \item The relative performance hierarchy among all methods remains consistent with previous experiments, confirming the robustness of active selection strategies across different model architectures.
-\item Employing larger and more powerful models leads to a consistent improvement in accuracy for all methods.Remarkably, on certain datasets, the results surpass the state-of-the-art performance achieved by conventional deep neural networks, highlighting the considerable potential of LLM-based ICL few-shot learning approaches in non-text domains such as EEG signal analysis.
+\item Employing larger and more powerful models leads to a consistent improvement in accuracy for all methods.Remarkably, on certain datasets, the results surpass the SOAT performance achieved by conventional deep neural networks, highlighting the considerable potential of LLM-based ICL few-shot learning approaches in non-text domains such as EEG signal analysis.
 \end{enumerate}
 
 % % within-subject cross-model MI 此图用于deepseek在多个数据集上对比，目前应该只在一个dataset上用ds，因此暂时无用
@@ -585,7 +586,7 @@ To further assess the generalizability of the proposed method, we evaluated its 
 \end{table*}
 
 \section{Conclusions and Future Research}
-In this work, we explored the feasibility of leveraging large language models (LLMs) for EEG signal classification through in-context few-shot prompting. The motivation for this study arises from the following key considerations. Although LLMs have demonstrated remarkable in-context learning (ICL) capabilities in NLP and CV tasks, their application to EEG classification remains largely unexplored. Moreover, as many state-of-the-art LLMs are accessible only through Model-as-a-Service (MaaS) platforms without fine-tuning access, few-shot prompting emerges as a more practical and generalizable approach for leveraging these models. In addition, the scarcity of EEG data compared to text and images severely limits the feasibility of training large domain-specific models, highlighting the importance of bridging this gap by adapting powerful pre-trained LLMs to EEG signal analysis.
+In this work, we explored the feasibility of leveraging large language models (LLMs) for EEG signal classification through in-context few-shot prompting. The motivation for this study arises from the following key considerations. Although LLMs have demonstrated remarkable in-context learning (ICL) capabilities in NLP and CV tasks, their application to EEG classification remains largely unexplored. Moreover, as many SOAT LLMs are accessible only through Model-as-a-Service (MaaS) platforms without fine-tuning access, few-shot prompting emerges as a more practical and generalizable approach for leveraging these models. In addition, the scarcity of EEG data compared to text and images severely limits the feasibility of training large domain-specific models, highlighting the importance of bridging this gap by adapting powerful pre-trained LLMs to EEG signal analysis.
 
 To address the unique challenges posed by EEG signals, we incorporated domain-specific feature extraction to obtain compact and discriminative representations, substantially reducing token overhead and enhancing classification performance. Furthermore, we introduced a purity-guided active selection strategy that identifies a small set of high-confidence examples with strong intra-class consistency based on local same-label purity. Finally, unlike conventional NLP prompting strategies that select examples for each test instance individually, our method selects a fixed example set once from the training pool, significantly reducing computational cost and inference latency.
 
