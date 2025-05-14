@@ -648,10 +648,10 @@ In the preceding experiments, we selected two samples per category as demonstrat
 \end{enumerate}
 
 % 不同demo数量
-\begin{figure*}[htbp]         \centering
-  \includegraphics[width=1.0\linewidth,clip]{Fig6}
-  \caption{Performance under different numbers of in-context demonstrations on five MI datasets using BL, RD, and PURE methods. The LLM used here is our base model: Qwen-2.5-14b-instruct-1m.} \label{fig:diff-demo-num}
-\end{figure*}
+\begin{figure}[htbp]         \centering
+  \includegraphics[width=1.0\linewidth,clip]{Fig3}
+  \caption{Performance under different numbers of in-context demonstrations on BNCI2014001 datasets using BL, RD, CTD, SVM-near, SVM-far and PURE methods. The LLM used here is our base model: Qwen-2.5-14b-instruct-1m.} \label{fig:diff-demo-num}
+\end{figure}
 
 \subsection{Impact of Different Models}
 To further assess the generalizability of the proposed method, we evaluated its performance on alternative LLMs. Specifically, DeepSeek-V3 was selected for comparative analysis. Experiments were conducted on the BNCI2015-002 dataset, and the corresponding results are presented in Table~\ref{tab:deepseek-result}. The following observations can be made:

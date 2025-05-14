@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.2.18)  14 MAY 2025 14:49
+This is pdfTeX, Version 3.141592653-2.6-1.40.26 (TeX Live 2024) (preloaded format=pdflatex 2025.2.18)  14 MAY 2025 15:29
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -482,16 +482,25 @@ LaTeX Info: Symbol \textuparrow not provided by
 
 
 [7] [8{c:/texlive/2024/texmf-dist/fonts/enc/dvips/cm-super/cm-super-ts1.enc}] [9]
-<Fig6.png, id=77, 1438.173pt x 280.8894pt>
-File: Fig6.png Graphic file (type png)
-<use Fig6.png>
-Package pdftex.def Info: Fig6.png  used on input line 652.
-(pdftex.def)             Requested size: 516.0pt x 100.78151pt.
+Package epstopdf Info: Source file: <Fig3.eps>
+(epstopdf)                    date: 2025-05-14 15:28:33
+(epstopdf)                    size: 1231253 bytes
+(epstopdf)             Output file: <Fig3-eps-converted-to.pdf>
+(epstopdf)                    date: 2025-05-14 15:29:24
+(epstopdf)                    size: 309193 bytes
+(epstopdf)             Command: <repstopdf --outfile=Fig3-eps-converted-to.pdf Fig3.eps>
+(epstopdf)             \includegraphics on input line 652.
+Package epstopdf Info: Output file is already uptodate.
+<Fig3-eps-converted-to.pdf, id=77, 483.8075pt x 376.40625pt>
+File: Fig3-eps-converted-to.pdf Graphic file (type pdf)
+<use Fig3-eps-converted-to.pdf>
+Package pdftex.def Info: Fig3-eps-converted-to.pdf  used on input line 652.
+(pdftex.def)             Requested size: 252.0pt x 196.05974pt.
 
 
 (./IEEE_LaTex_example.bbl
 
-[10 <./Fig6.png>]
+[10 <./Fig3-eps-converted-to.pdf>]
 
 
 
@@ -508,15 +517,15 @@ L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 5243 strings out of 473201
- 84581 string characters out of 5720299
+ 5267 strings out of 473201
+ 85021 string characters out of 5720299
  589475 words of memory out of 5000000
- 28404 multiletter control sequences out of 15000+600000
+ 28428 multiletter control sequences out of 15000+600000
  603695 words of font info for 122 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  57i,13n,65p,1458b,422s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb><c:/texlive/2024/texmf-dist/fonts/type1/public/cm-super/sfrb0800.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/courier/ucrr8a.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmb8a.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmbi8a.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmr8a.pfb><c:/texlive/2024/texmf-dist/fonts/type1/urw/times/utmri8a.pfb>
-Output written on IEEE_LaTex_example.pdf (12 pages, 990836 bytes).
+Output written on IEEE_LaTex_example.pdf (12 pages, 825700 bytes).
 PDF statistics:
  148 PDF objects out of 1000 (max. 8388607)
  85 compressed objects within 1 object stream
