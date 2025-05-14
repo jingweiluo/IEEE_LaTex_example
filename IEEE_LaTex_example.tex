@@ -233,7 +233,7 @@ This section introduces our proposed method, PURE. Specifically, we start with a
 
 \begin{figure*}[htbp]
   \centering
-  \includegraphics[width=1.0\linewidth, clip]{Fig7.eps}
+  \includegraphics[width=1.0\linewidth, clip]{Fig1.eps}
   \caption{Flowchart of EEG-based classification using LLM few-shot prompting.}
   \label{fig:flowchart} % 引用用的标签
 \end{figure*}
@@ -244,7 +244,9 @@ Given the complexity of raw EEG signals, it remains necessary to extract compact
 
 To this end, domain knowledge is incorporated, and feature extraction methods are selected based on the specific EEG paradigm. For MI classification, which primarily elicits event-related desynchronization (ERD) and synchronization (ERS) patterns in the $\mu$ (8–13 Hz) and $\beta$ (13–30 Hz) frequency bands over the sensorimotor cortex, which particularly around electrodes C3 and C4, we adopt a feature extraction pipeline inspired by the FBCSP framework \cite{4634130}. Specifically, we apply a band-pass filter over the 8–24 Hz range, divide the spectrum into four 4-Hz sub-bands, and extract two CSP features from each sub-band. This approach significantly improves classification performance.
 
-For sleep stage classification, a wide range of EEG feature extraction techniques are available, spanning the time, frequency, and time-frequency domains. In the time domain, standard statistical features such as amplitude measures and zero-crossing rates are employed. In the frequency domain, power spectral density and band power features are commonly used. Time-frequency domain approaches include wavelet transform, short-time Fourier transform, empirical mode decomposition, and Wigner–Ville distribution. Since our primary goal is to evaluate the impact of demonstration selection strategies (random vs. active), we focus on delta (0.5–4 Hz), theta (4–8 Hz), alpha (8–13 Hz), and sigma (12–16 Hz) bands, which have been shown to correspond to sleep stages W, N1–N3, and REM in prior EEG literature, and adopt a simple yet effective feature representation using multi-band power spectral density features.
+For sleep stage classification, a wide range of EEG feature extraction techniques are available, spanning the time, frequency, and time-frequency domains. In the time domain, standard statistical features such as amplitude measures and zero-crossing rates are employed. In the frequency domain, power spectral density and band power features are commonly used. Time-frequency domain approaches include wavelet transform, short-time Fourier transform, empirical mode decomposition, and Wigner–Ville distribution. Since our primary goal is to evaluate the impact of demonstration selection strategies (random vs. active), we focus on delta (0.5–4 Hz), theta (4–8 Hz), alpha (8–13 Hz), spindle (12 - 14 Hz) and beta (14–30 Hz) bands, which have been shown to correspond to sleep stages W, N1–N3, and REM in prior EEG literature, and adopt a simple yet effective feature representation using multi-band power spectral density features.
+
+For epileptic seizure detection, a wide variety of EEG feature extraction techniques have been investigated across the time, frequency, and time-frequency domains. Through extensive experimentation, Boonyakitanont \textit{et al.}~\cite{boonyakitanont2020review} demonstrated that features such as variance, energy, nonlinear energy, and Shannon entropy computed directly from raw EEG signals, as well as variance, energy, kurtosis, and line length derived from wavelet coefficients, are effective in capturing seizure-related patterns. Among these, amplitude-based features were found to be particularly discriminative. Motivated by these findings, we adopt a simple yet effective representation by extracting multi-band signal power features directly from the raw EEG signals across standard frequency bands.
 
 \subsection{Purity-Based Unique-Round Example Selection (PURE)}
 \label{subsec:PURE}
@@ -305,6 +307,13 @@ To prevent prompt overload or truncation, all components are optimized for brevi
   \Return{Selected sample indices list $L$.}
 \end{algorithm}
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=1.0\linewidth, clip]{Fig2.eps}
+  \caption{A typical prompt structure used in our experiments.}
+  \label{fig:template} % 引用用的标签
+\end{figure}
+
 
 \begin{table*}[htpb] \centering
   \caption{Summary of the seven EEG datasets.}
@@ -322,7 +331,7 @@ To prevent prompt overload or truncation, all components are optimized for brevi
   \midrule
   Sleep&Sleep-EdfX& 9 & 2 & 100 & 30 & 1025 &  W, N1, N2, N3, REM \\
   \midrule
-  Epilepsy&TUEP&10&23&250&30&390&epilepsy, non-epilepsy \\
+  Epilepsy&CHB-MIT&10&23&256&3&76-618&seizures, non-seizures \\
   \bottomrule
   \end{tabular}
 \end{table*}
@@ -345,7 +354,7 @@ In our experiments, we use only EEG channels for a five-stage sleep classificati
 
 During the signal processing and feature extraction stages, EEG data from the Sleep-EDFx dataset were first bandpass filtered between 0.5 Hz and 35 Hz. Since the recordings span an entire night and include prolonged wake periods at the beginning and end, only the first and last 30 minutes of wakefulness were retained to reduce redundancy. Sleep stages were labeled according to the AASM standard and grouped into five classes: Wake (W), N1, N2, N3, and REM. Each trial was segmented into non-overlapping 30-second epochs.
 
-To extract frequency-domain features, four bandpass filters were applied to isolate the following frequency bands: 0.5–4 Hz, 4–8 Hz, 8–12 Hz, and 12–16 Hz. For each band, the root mean square (RMS) power was computed on a per-channel basis, defined as the mean of the squared signal amplitude across all samples within the trial. This process yielded a feature representation with shape (N,C×B), where N is the number of trials, C is the number of EEG channels, and B=4 is the number of frequency bands.
+To characterize the spectral properties of the EEG signals, we extracted frequency-domain features using Welch’s method for power spectral density (PSD) estimation. For each epoch, the signal from every channel was processed individually. The PSD was computed using the Welch algorithm. We then defined five canonical frequency bands—delta (0.5–4 Hz), theta (4–8 Hz), alpha (8–13 Hz), spindle (12 - 14 Hz) and beta (14–30 Hz). For each band, the mean PSD within the corresponding frequency range was calculated by averaging the PSD values across that band. This process was repeated across all channels and frequency bands, resulting in a feature vector of size C $\times$ B per epoch, where C is the number of EEG channels and B is the number of frequency bands.
 
 \subsection{Epilepsy Datasets}
 % \begin{enumerate}
@@ -358,6 +367,12 @@ To extract frequency-domain features, four bandpass filters were applied to isol
 The CHB-MIT Scalp EEG Database comprises EEG recordings from 22 pediatric subjects (5 males, aged 3–22 years, and 17 females, aged 1.5–19 years) with intractable seizures. Subjects were monitored over multiple days following the withdrawal of anti-seizure medication to capture seizure activity and evaluate their suitability for surgical intervention. In total, 182 seizures were annotated with precise onset and offset timings.
 
 All signals were sampled at 256 Hz with 16-bit resolution. Most recordings contain 23 EEG channels, though a few have 24 or 26. Electrode placement follows the International 10–20 system for EEG acquisition.
+
+We selected the first ten subjects for our experiments. The raw EEG signals were segmented using non-overlapping sliding windows of 3 seconds. We extracted all seizure segments and randomly selected an equal number of non-seizure segments from the remaining data to ensure class balance.
+
+For feature extraction, we employed a commonly used and effective time-domain features for seizure detection: band power. Specifically, the raw EEG signals were filtered into five standard frequency bands: $\delta$ (0.5–4 Hz), $\theta$ (4–8 Hz), $\alpha$ (8–13 Hz), $\beta$ (13–30 Hz), and $\gamma$ (30–50 Hz). 
+
+For each frequency band, the signal from every channel was individually filtered and the power was calculated as the mean squared amplitude over time. The power values from all channels were then averaged to obtain a single scalar representing the overall energy in that frequency band. This process was repeated for all five bands, resulting in a five-dimensional feature vector per EEG epoch. These band power features provide a compact summary of the frequency-specific signal energy across the scalp.
 
 % 实验部分
 \section{Experiments}
@@ -410,7 +425,7 @@ Tables~\ref{tab:2014001-result}, ~\ref{tab:2014002-result}, ~\ref{tab:2014004-re
   
   \item {PURE consistently outperforms SVM-far.} Although SVM-far has been optimized to avoid outlier selection and shows competitive performance, PURE still achieves better overall prompting effects across datasets and experimental conditions.
   
-  \item {PURE achieves consistent superiority across multiple datasets and paradigms.} Our proposed method PURE consistently outperforms random selection across all experiments and achieves optimal results in the majority of cases. Specifically, in the within-subject setting, PURE improves over random selection by 8.04\%, 8.19\%, 6.03\%, 3.43\%, and 4.09\% across the five MI datasets, by 5.44\% on the sleep dataset, and by 0\% on the epilepsy dataset. In the cross-subject setting, PURE achieves similar improvements: 10.17\%, 6.32\%, 5.35\%, 1.37\%, and 1.93\% across the five MI datasets, 5.67\% on the sleep dataset, and 0\% on the epilepsy dataset.  
+  \item {PURE achieves consistent superiority across multiple datasets and paradigms.} Our proposed method PURE consistently outperforms random selection across all experiments and achieves optimal results in the majority of cases. Specifically, in the within-subject setting, PURE improves over random selection by 8.04\%, 8.19\%, 6.03\%, 3.43\%, and 4.09\% across the five MI datasets, by 5.44\% on the sleep dataset, and by 3.68\% on the epilepsy dataset. In the cross-subject setting, PURE achieves similar improvements: 10.17\%, 6.32\%, 5.35\%, 1.37\%, and 1.93\% across the five MI datasets, 5.67\% on the sleep dataset.
   
   \item {Representativeness- and diversity-based methods (RD and CTD) also outperform random selection} Although RD and CTD perform slightly worse than PURE overall, they consistently outperform random selection across all experiments. Notably, in cross-subject settings, their performance significantly improves, achieving results comparable to or even exceeding PURE on several MI datasets. Moreover, since these methods do not strictly rely on label information (labels are only used to maintain class balance), they exhibit broader applicability to scenarios where label information is limited or unavailable.
 \end{enumerate}
@@ -603,6 +618,25 @@ Tables~\ref{tab:2014001-result}, ~\ref{tab:2014002-result}, ~\ref{tab:2014004-re
   % }
 \end{table*}
 
+\begin{table*}[htpb] \centering
+  \caption{Within-subject classification accuracies (\%) on CHB-MIT. The best performance in each subject is marked in bold, and the second best underlined.}
+  \label{tab:chb-mit-result}
+  % \resizebox{0.9\linewidth}{!}{
+  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+  \toprule
+  Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+  \midrule
+  BL & 84.93 & 84.35 & 81.25 & 59.68 & 84.52 & 51.85 & 82.82 & 74.88 & 90.43 & 77.12 \\
+  CTD & 71.00 & 73.22 & 79.27 & 41.59 & 87.44 & 48.67 & 85.18 & 79.29 & 90.71 & 71.45 \\
+  RD & 55.40 & 70.44 & 78.41 & 44.27 & 87.02 & 51.07 & 83.64 & 74.27 & 88.71 & 70.43 \\
+  SVM-near & 39.87 & 68.53 & 73.33 & 59.88 & 79.08 & 42.17 & 79.91 & 67.99 & 89.57 & 66.87 \\
+  SVM-far & 81.33 & 83.70 & 79.15 & 74.16 & 81.10 & 58.37 & 80.00 & 74.39 & 89.57 & \underline{77.35} \\
+  PURE & 85.40 & 86.03 & 82.98 & 72.64 & 86.17 & 64.20 & 83.55 & 76.27 & 89.43 & \textbf{80.80 (↑3.68)} \\
+  \bottomrule
+  \end{tabular}
+  % }
+\end{table*}
+
 \subsection{Impact of the Number of Demonstration Samples}
 In the preceding experiments, we selected two samples per category as demonstrations. In this subsection, we investigate the impact of varying the number of demonstration samples on performance. The experiments are conducted on the BNCI2014001 dataset. Figure~\ref{fig:diff-demo-num} presents the performance trends as the number of demonstration samples increases, from which we observe the following:
 \begin{enumerate}
@@ -624,7 +658,7 @@ To further assess the generalizability of the proposed method, we evaluated its 
 \begin{enumerate}
 \item Active selection methods consistently outperform random selection across different LLMs.
 \item The relative performance hierarchy among all methods remains consistent with previous experiments, confirming the robustness of active selection strategies across different model architectures.
-\item Employing larger and more powerful models leads to a consistent improvement in accuracy for all methods.Remarkably, on certain datasets, the results surpass the SOAT performance achieved by conventional deep neural networks, highlighting the considerable potential of LLM-based ICL few-shot learning approaches in non-text domains such as EEG signal analysis.
+\item Employing larger and more powerful models leads to a consistent improvement in accuracy for all methods.Remarkably, on certain datasets, the results surpass the SOTA performance achieved by conventional deep neural networks, highlighting the considerable potential of LLM-based ICL few-shot learning approaches in non-text domains such as EEG signal analysis.
 \end{enumerate}
 
 % % within-subject cross-model MI 此图用于deepseek在多个数据集上对比，目前应该只在一个dataset上用ds，因此暂时无用
