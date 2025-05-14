@@ -14,26 +14,27 @@
 \title{Exploring LLMs for EEG Classification through Active Prompting with Purity-Guided Unique-Round Example Selection (PURE)}
 
 % \author{Dongrui~Wu,~\IEEEmembership{Fellow,~IEEE} and Jerry M. Mendel,~\IEEEmembership{Life Fellow, IEEE}
-\author{Jingwei~Luo
+\author{Jingwei~Luo, Dingkun~Liu, Ziwei~Wang and Dongrui~Wu,~\IEEEmembership{Fellow,~IEEE}
 
 % \thanks{D.~Wu is with the Key Laboratory of Image Processing and Intelligent Control (Huazhong University of Science and Technology), Ministry of Education, China. He is also with the School of Artificial Intelligence and Automation, Huazhong University of Science and Technology, Wuhan, China. Email: drwu@hust.edu.cn.}
 % \thanks{J.M. Mendel is with the Ming Hsieh Department of Electrical Engineering, University of Southern California, Los Angeles, CA, USA. He is also with the College of Artificial Intelligence, Tianjin Normal University, Tianjin, China. Email: mendel@sipi.usc.edu.}}
-\thanks{J.~Luo is with the Key Laboratory of Image Processing and Intelligent Control (Huazhong University of Science and Technology), Ministry of Education, China. He is also with the School of Artificial Intelligence and Automation, Huazhong University of Science and Technology, Wuhan, China. Email: d202481524@hust.edu.cn.}}
-
+\thanks{J.~Luo, D.~Liu, Z.~Wang and D.~Wu, are with the Ministry of Education Key Laboratory of Image Processing and Intelligent Control, School of Artificial Intelligence and Automation, Huazhong University of Science and Technology, Wuhan 430074, China. They are also with the Shenzhen Huazhong University of Science and Technology Research Institute, Shenzhen, 518000 China.}
+\thanks{Corresponding Authors: Dongrui Wu (drwu09@gmail.com).}
+}
 % \markboth{IEEE Transactions on Fuzzy Systems, 2023}%
 \markboth{}%
 {Shell \MakeLowercase{\textit{et al.}}: Bare Demo of IEEEtran.cls for IEEE Journals}
 \maketitle
 
 \begin{abstract}
-  Large language models (LLMs) have demonstrated impressive in-context learning (ICL) capabilities, particularly in few-shot prompting scenarios. However, most studies have focused on natural language processing (NLP) and computer vision (CV), with limited exploration of complex physiologic signals such as electroencephalogram (EEG) signal classification.
+  Large language models (LLMs) have demonstrated impressive in-context learning (ICL) capabilities, particularly in few-shot prompting scenarios. However, most studies have focused on natural language processing (NLP) and computer vision (CV), with limited exploration of tasks based on complex physiologic signals such as electroencephalogram (EEG) signal classification.
   To bridge this gap, we propose a purity-guided active prompting approach, which integrates domain-specific EEG feature extraction with an active learning-based demonstration selection strategy. PURE identifies a compact set of prototypical examples that effectively activate the few-shot capabilities of LLMs without requiring gradient-based parameter updates, and is compatible with both open-source and closed-source models.
-  Unlike conventional random selection and per-instance demonstration selection approaches, PURE actively identifies a small set of highly representative EEG samples just once from the training data, achieving better performance and stability while significantly reducing computational overhead.
-  Extensive experiments on seven EEG datasets and three brain-computer interface (BCI) paradigms demonstrate that PURE consistently outperforms random selection baseline, achieving superior accuracy and robustness. Furthermore, performance improves with more powerful LLMs (e.g., DeepSeek-V3), and in some cases, our method even surpasses state-of-the-art supervised models.
+  Unlike the conventional framework that involves random selection of demonstration examples on a per-instance basis for each test sample, PURE actively identifies a small set of highly representative EEG samples just once from the training data, significantly reducing computational overhead.
+  Extensive experiments on seven EEG datasets and three paradigms demonstrate that PURE consistently outperforms random selection baseline, achieving superior accuracy and robustness. Furthermore, performance improves with more powerful LLMs (e.g., DeepSeek-V3), and in some cases, even surpasses state-of-the-art supervised models.
 \end{abstract}
 
 \begin{IEEEkeywords}
-EEG, LLMs, active learning, prompt engineering, in-context learning, motor imagery, few-shot prompting, domain knowledge fusion
+EEG, BCI, LLMs, active learning, prompt engineering, in-context learning, few-shot prompting, knowledge fusion, motor imagery, sleep-stage classification, seizure detection
 \end{IEEEkeywords}
 
 \IEEEpeerreviewmaketitle
@@ -44,23 +45,23 @@ Transformer-based large language models (LLMs) \cite{vaswani2017attention} have 
 
 A brain-computer interface (BCI) \cite{Lance2012, Wolpaw2002} establish a direct communication pathway between the human brain and external devices, allowing users to interact with their surroundings using brain signals that reflect cognitive states or intentions \cite{he2019transfer}. Among various BCI modalities, electroencephalography (EEG), which records electrical activity from the scalp, is the most widely used input signal due to its low cost, non-invasiveness, and convenience.
 
-Although ICL has been extensively studied in NLP and computer vision (CV), its application in BCI tasks, especially those based on EEG signals, remains largely unexplored. To bridge this gap, it is essential to develop effective strategies for embedding complex numerical data into textual prompts for use with LLMs.
+Although ICL has been extensively studied in NLP and computer vision (CV), its application in BCI tasks, especially those based on EEG signals, remains largely unexplored. To bridge this gap, it is essential to develop effective strategies for embedding complex numerical data into textual prompts that can be processed by LLMs.
 
-Prior efforts have addressed such integration in domains such as tabular data \cite{hegselmann2023tabllm} and medical records \cite{liu2023large}, where numerical values often possess clear semantic meaning and can be easily verbalized. In contrast, EEG signals lack inherent semantic interpretability. For example, the value “16” in a clinical record may represent a patient’s age, while in EEG data it may simply denote a signal amplitude at a specific time point, devoid of symbolic meaning.
+Prior efforts have investigated such integration in domains such as tabular data \cite{hegselmann2023tabllm} and medical records \cite{liu2023large}, where numerical values often possess clear semantic meaning and can be easily verbalized. In contrast, EEG signals lack inherent semantic interpretability. For example, the value “16” in a clinical record may represent a patient’s age, while in EEG data it may simply denote a signal amplitude at a specific time point, devoid of symbolic meaning.
 
-Moreover, EEG signals are high-dimensional and temporally dense. A two-second EEG trial sampled at 256 Hz across 8 channels yields 4,096 raw values. Directly inputting such dense and unstructured data into an LLM results in excessive token consumption and limits the model’s capacity to extract meaningful patterns. Additionally, EEG signals are non-stationary, exhibit substantial inter-subject variability, and suffer from low signal-to-noise ratios. These challenges render the direct application of LLMs to physiologic time series such as EEG largely unexplored.
+Moreover, EEG signals are high-dimensional and temporally dense. A two-second EEG trial sampled at 256 Hz across 8 channels yields 4,096 raw values. Directly inputting such dense and unstructured data into an LLM results in excessive token consumption and limits the model’s capacity to extract meaningful patterns. Additionally, EEG signals are non-stationary, exhibit substantial inter-subject variability, and suffer from low signal-to-noise ratios. These challenges have left the direct application of LLMs to EEG largely unexplored.
 
-To address these challenges, we propose a simple yet effective framework that incorporating domain knowledge to extract discriminative and compact features, and selects highest intra-class consistent examples by the proportion of same-label neighbors within a $k$-nearest neighborhood. Experimental results on seven EEG datasets across three BCI paradigms demonstrate that our method consistently achieves better and more stable performance than random selection.
+To address these challenges, we propose a simple yet effective framework that incorporating domain knowledge to extract discriminative and compact features, so that they can be effectively processed by LLMs, and selects highest intra-class consistent examples by the proportion of same-label neighbors within a $k$-nearest neighborhood. Experimental results on seven EEG datasets across three paradigms demonstrate that our method consistently achieves better and more stable performance than random selection.
 
 In summary, our contributions in this paper are:
 \begin{enumerate}
 \item To the best of our knowledge, this work is the first to directly explore the feasibility of using LLMs for classifying EEG signals via in-context few-shot prompting, thereby extending the application of LLMs to complex, low-semantic numerical domains beyond natural language.
 \item We incorporate domain-specific knowledge to extract features from EEG signals. This not only reduces the number of input tokens substantially but also improves classification performance, making the LLM-based prompting pipeline more effective and computationally feasible.
 \item Unlike prior work in NLP that performs example selection per test instance, we introduce a fixed example set that is selected once from the training pool and reused across all test samples. This strategy significantly reduces computational cost and inference latency.
-\item Extensive experiments on seven EEG datasets and three brain-computer interface (BCI) paradigms demonstrated that PURE achieved superior performance.
+\item We propose a purity-guided active prompting method named PURE, which is validated on seven EEG datasets spanning three paradigms. Experimental results demonstrate that PURE consistently outperforms random selection in terms of performance and stability.
 \end{enumerate}
 
-The remainder of this paper is organized as follows: Section~\ref{sec:related} introduces related work. Section~\ref{sec:method} proposes PURE. Section~\ref{sec:exp} presents the experiment results. Finally, Section~\ref{sec:conclusion} draws conclusions.
+The remainder of this paper is organized as follows: Section~\ref{sec:related} introduces related work. Section~\ref{sec:method} proposes PURE. Section~\ref{sec:exp} presents the experimental results. Finally, Section~\ref{sec:conclusion} draws conclusions.
 
 % Machine learning has been widely used in our everyday life, e.g., face recognition \cite{Zhao2003}, natural language processing \cite{Collobert2011}, recommender systems \cite{Wang2015b}, affective computing \cite{drwuVRST2010,drwuMTALR2021}, brain-computer interfaces \cite{drwuiGS2019,drwuEA2020}, etc. However, training a high-performance machine learning model is usually a challenging and iterative process, relying on experience and trial-and-error: a simple model is first designed; if its performance is not satisfactory, then some remedies are taken to enhance it.
 
@@ -102,7 +103,7 @@ For example, Schirrmeister \textit{et al.}~\cite{schirrmeister2017deep} proposed
 
 For sleep stage classification, Supratak \textit{et al.}~\cite{supratak2017deepsleepnet} proposed DeepSleepNet, which combines CNN and bidirectional LSTM architectures and achieved state-of-the-art (SOTA) performance on the Sleep-EDF dataset. For seizure prediction, Golmohammadi \textit{et al.}~\cite{golmohammadi2017gated} utilized LSTM to effectively capture the temporal dynamics of EEG signals, thereby improving prediction accuracy.
 
-A few recent studies have also explored the use of large-scale models for EEG-based classification. Jiang \textit{et al.}~\cite{jiang2024large} introduced a 0.369B-parameter model trained on a large-scale EEG corpus spanning multiple paradigms and tasks, representing one of the most extensive models in the EEG domain. However, due to the limited size of publicly available EEG datasets, model scalability remains constrained, and its performance and usability in downstream applications still fall short compared to LLMs. Due to the modality gap, and to the best of our knowledge, no existing study has directly applied LLMs to EEG classification tasks via prompt engineering.
+A few recent studies have also explored the use of large-scale models for EEG-based classification. Jiang \textit{et al.}~\cite{jiang2024large} introduced a 0.369B-parameter model trained on a large-scale EEG corpus spanning multiple paradigms and tasks, representing one of the most extensive models in the EEG domain. However, due to the limited size of publicly available EEG datasets, model scalability remains constrained, and its performance and usability in downstream applications still fall short compared to LLMs. Due to the modality gap, no existing study has directly applied LLMs to EEG classification tasks via prompt engineering.
 
 \subsection{Active Learning}
 Active learning (AL), a subfield of machine learning, aims to reduce annotation costs by enabling models to proactively select the most informative unlabeled instances for labeling. This strategy enhances model performance while minimizing labeling effort.
@@ -242,11 +243,11 @@ This section introduces our proposed method, PURE. Specifically, we start with a
 
 Given the complexity of raw EEG signals, it remains necessary to extract compact and discriminative handcrafted features after standard preprocessing. This step is crucial not only for enhancing task-relevant signal characteristics but also for reducing the input dimensionality to meet the token-length constraints of LLMs. The resulting feature vectors are then used as in-context demonstrations in the LLM prompt.
 
-To this end, domain knowledge is incorporated, and feature extraction methods are selected based on the specific EEG paradigm. For MI classification, which primarily elicits event-related desynchronization (ERD) and synchronization (ERS) patterns in the $\mu$ (8–13 Hz) and $\beta$ (13–30 Hz) frequency bands over the sensorimotor cortex, which particularly around electrodes C3 and C4, we adopt a feature extraction pipeline inspired by the FBCSP framework \cite{4634130}. Specifically, we apply a band-pass filter over the 8–24 Hz range, divide the spectrum into four 4-Hz sub-bands, and extract two CSP features from each sub-band. This approach significantly improves classification performance.
+To this end, domain knowledge is incorporated, and feature extraction methods are selected based on the specific paradigm. For MI classification, which primarily elicits event-related desynchronization (ERD) and synchronization (ERS) patterns in the $\mu$ (8–13 Hz) and $\beta$ (13–30 Hz) frequency bands over the sensorimotor cortex, which particularly around electrodes C3 and C4, we adopt a feature extraction pipeline inspired by the FBCSP framework \cite{4634130}. Specifically, we apply a band-pass filter over the 8–24 Hz range, divide the spectrum into four 4-Hz sub-bands, and extract two CSP features from each sub-band. This approach significantly improves classification performance.
 
 For sleep stage classification, a wide range of EEG feature extraction techniques are available, spanning the time, frequency, and time-frequency domains. In the time domain, standard statistical features such as amplitude measures and zero-crossing rates are employed. In the frequency domain, power spectral density and band power features are commonly used. Time-frequency domain approaches include wavelet transform, short-time Fourier transform, empirical mode decomposition, and Wigner–Ville distribution. Since our primary goal is to evaluate the impact of demonstration selection strategies (random vs. active), we focus on delta (0.5–4 Hz), theta (4–8 Hz), alpha (8–13 Hz), spindle (12 - 14 Hz) and beta (14–30 Hz) bands, which have been shown to correspond to sleep stages W, N1–N3, and REM in prior EEG literature, and adopt a simple yet effective feature representation using multi-band power spectral density features.
 
-For epileptic seizure detection, a wide variety of EEG feature extraction techniques have been investigated across the time, frequency, and time-frequency domains. Through extensive experimentation, Boonyakitanont \textit{et al.}~\cite{boonyakitanont2020review} demonstrated that features such as variance, energy, nonlinear energy, and Shannon entropy computed directly from raw EEG signals, as well as variance, energy, kurtosis, and line length derived from wavelet coefficients, are effective in capturing seizure-related patterns. Among these, amplitude-based features were found to be particularly discriminative. Motivated by these findings, we adopt a simple yet effective representation by extracting multi-band signal power features directly from the raw EEG signals across standard frequency bands.
+For epileptic seizure detection, a wide variety of EEG feature extraction techniques have been investigated across the time, frequency, and time-frequency domains. Through extensive experimentation, Boonyakitanont \textit{et al.}~\cite{boonyakitanont2020review} demonstrated that features such as variance, energy, nonlinear energy, and Shannon entropy computed directly from raw EEG signals, as well as variance, energy, kurtosis, and line length derived from wavelet coefficients, are effective in capturing seizure-related patterns. Among these, amplitude-based features were found to be particularly discriminative. Motivated by these findings, we adopt a practical representation by extracting multi-band signal power features directly from the raw EEG signals across standard frequency bands.
 
 \subsection{Purity-Based Unique-Round Example Selection (PURE)}
 \label{subsec:PURE}
@@ -391,7 +392,7 @@ Extensive experiments are conducted in this section to validate the effectivenes
 \end{enumerate}
 
 \subsection{Experimental Setup}
-To comprehensively evaluate our method, we conducted experiments under three different settings. For the MI datasets, we adopted (i) within-subject, cross-session evaluation and (ii) cross-subject evaluation. For the sleep dataset, as only one session per subject is available, we employed (iii) within-subject five-fold cross-validation instead of (i). For the epilepsy dataset, only the cross-subject evaluation was performed, as each subject contains either epilepsy or non-epilepsy EEG signals.
+To comprehensively evaluate our method, we conducted experiments under three different settings. For the MI datasets, we adopted (i) within-subject, cross-session evaluation and (ii) cross-subject evaluation. For the sleep and epilepsy dataset, as only one session per subject is available, we employed (iii) within-subject five-fold cross-validation instead of (i). For the epilepsy dataset, due to the large variation in the number of seizure segments across subjects, cross-subject experimental results may be affected. Therefore, we only conduct within-subject experiments.
 
 In the first two settings, each method was repeated five times to ensure stability. Due to the high variability introduced by random selection, experiments involving random baselines were repeated twenty times. For five-fold cross-validation experiments, the entire five-fold process was repeated five times, resulting in a total of 25 runs per method. The average classification accuracy was used as the performance metric.
 
@@ -414,7 +415,7 @@ In the first two settings, each method was repeated five times to ensure stabili
 \end{enumerate}
 
 \subsection{Results Analysis}
-Tables~\ref{tab:2014001-result}, ~\ref{tab:2014002-result}, ~\ref{tab:2014004-result}, ~\ref{tab:2015001-result}, and~\ref{tab:weibo2014-result} presents the within-subject and cross-subject classification accuracies on the five MI datasets, respectively.We can observe that:
+Tables~\ref{tab:2014001-result}, ~\ref{tab:2014002-result}, ~\ref{tab:2014004-result}, ~\ref{tab:2015001-result}, ~\ref{tab:weibo2014-result}, ~\ref{tab:sleep-edfx-result} and~\ref{tab:chb-mit-result} presents the classification accuracies on the seven EEG datasets, respectively. We can observe that:
 
 \begin{enumerate}
   \item {Active selection of ICL demonstrations significantly outperforms random selection.} In both within-subject and cross-subject settings, actively selected demonstrations consistently lead to a better prompting effect on the LLM, resulting in higher prediction accuracy and more stable outputs compared to random selection.
