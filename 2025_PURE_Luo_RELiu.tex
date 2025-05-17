@@ -211,7 +211,7 @@ To avoid prompt truncation or exceeding token limits, all components are optimiz
   &BNCI2015001 & 12(9) & 13 & 512 & 5 & 400/600 &  right hand, both feet \\
   &Weibo2014 & 10 & 60(22) & 200 & 4 & 140, 160 &  right hand, both feet \\
   \midrule
-  Sleep&Sleep-EdfX& 9 & 2 & 100 & 30 & 1025 &  W, N1, N2, N3, REM \\
+  Sleep&Sleep-EdfX& 7 & 2 & 100 & 30 & 1025 &  W, N1, N2, N3, REM \\
   \midrule
   Epilepsy&CHB-MIT&10&23&256&3&76-618&seizures, non-seizures \\
   \bottomrule
@@ -543,12 +543,12 @@ To further assess the generalizability of the proposed method, we evaluated its 
   \toprule
   Methods & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
   \midrule
-  BL & 87.40 & 92.90 & 95.30 & 84.10 & 79.90 & 63.30 & 76.30 & 59.20 & 71.30 & 78.86 \\
+  BL & 87.40 & 92.90 & 95.30 & 84.10 & 79.90 & 63.30 & 76.30 & 59.20 & 71.30 & \underline{78.86} \\
   RD & 93.80 & 91.20 & 79.50 & 79.10 & 80.40 & 59.80 & 73.20 & 56.40 & 76.10 & 76.61 \\
   CTD & 93.10 & 93.20 & 80.00 & 76.90 & 80.10 & 62.70 & 71.80 & 57.30 & 87.50 & 78.10 \\
   SVM-near & 34.30 & 39.60 & 33.90 & 11.10 & 33.50 & 62.10 & 38.50 & 23.90 & 38.50 & 35.04 \\
   SVM-far & 75.30 & 88.20 & 85.00 & 71.00 & 76.50 & 60.70 & 61.10 & 58.10 & 84.60 & 73.40 \\
-  PURE & 75.40 & 93.00 & 91.20 & 81.50 & 86.40 & 61.10 & 80.30 & 64.10 & 86.40 & 79.93 \\
+  PURE & 75.40 & 93.00 & 91.20 & 81.50 & 86.40 & 61.10 & 80.30 & 64.10 & 86.40 & \textbf{79.93 (↑1.07)} \\
   \bottomrule
   \end{tabular}
 \end{table*}
