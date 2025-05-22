@@ -49,7 +49,7 @@ Despite ICL has been extensively studied in NLP and computer vision (CV), its ap
 
 Prior efforts have investigated such integration in domains such as tabular data \cite{hegselmann2023tabllm, liu2025umman} and medical records \cite{liu2023large}, where numerical values often possess clear semantic meaning and can be easily verbalized. However, EEG signals lack such intrinsic semantic context. For instance, the value “16” in a clinical record may represent a patient’s age, while in EEG data it may simply denote a voltage amplitude at a specific time point, devoid of symbolic meaning.
 
-The high temporal density and dimensionality of EEG signals further complicate the usage of LLMs. Directly feeding such dense and unstructured data into an LLM may lead to excessive token consumption, thereby limiting the model’s capacity to extract meaningful patterns. Moreover, EEG signals are inherently non-stationary, exhibit substantial cross-subject variability, and suffer from low signal-to-noise ratios, posing significant challenges for direct LLM-based analysis. An overview of LLM applications across various domains, with a particular emphasis on the challenges of EEG decoding, is shown in Fig.~\ref{fig_intro}.
+The high temporal density and dimensionality of EEG signals further complicate the usage of LLMs. Directly feeding such dense and unstructured data into an LLM may lead to excessive token consumption, thereby limiting the model’s capacity to extract meaningful patterns. Moreover, EEG signals are inherently non-stationary, exhibit substantial cross-subject variability, and suffer from low signal-to-noise ratios, posing significant challenges for direct LLM-based analysis. An overview of LLM applications across various domains, with a particular emphasis on the challenges of EEG decoding, is shown in Fig.~\ref{fig:fig_intro}.
 
 \begin{figure}[htbp]\centering
 \subfigure[]{\label{fig:intro_cv} \includegraphics[width=\linewidth,clip]{intro_pic_nlp}}\\
@@ -311,12 +311,12 @@ Tables~\ref{tab:2014001-result}-~\ref{tab:chb-mit-result} presents the classific
   \midrule
   Approaches & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
   \midrule
-  BL & 49.31 & 49.03 & 67.64 & 56.11 & 48.19 & 55.28 & 52.22 & 56.81 & 83.47 & 57.56 \\
+  BL & 50.94 & 49.34 & 66.35 & 55.70 & 49.38 & 53.26 & 52.78 & 59.65 & 77.85 & 57.25 \\
   RD & 55.42 & 48.89 & 77.92 & 64.44 & 48.06 & 53.19 & 54.31 & 71.11 & 80.14 & 61.50 \\
   CTD & 56.81 & 44.17 & 71.53 & 62.92 & 50.28 & 51.81 & 54.58 & 76.25 & 86.11 & 61.61 \\
   SVM-near & 38.89 & 50.00 & 45.00 & 53.06 & 50.56 & 47.36 & 48.19 & 46.11 & 71.53 & 50.08 \\
   SVM-far & 58.89 & 47.64 & 75.00 & 61.11 & 52.78 & 55.69 & 57.22 & 73.06 & 85.00 & \underline{62.93} \\
-  PGAP & 67.08 & 51.94 & 68.61 & 68.75 & 52.50 & 59.44 & 58.19 & 77.22 & 86.67 & \textbf{65.60 (↑8.04)} \\
+  PGAP & 67.08 & 51.94 & 68.61 & 68.75 & 52.50 & 59.44 & 58.19 & 77.22 & 86.67 & \textbf{65.60 (↑8.35)} \\
   \midrule
   \multicolumn{11}{c}{Cross-subject classification} \\
   \midrule
@@ -341,12 +341,12 @@ Tables~\ref{tab:2014001-result}-~\ref{tab:chb-mit-result} presents the classific
   \midrule
   Approaches & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & S10 & S11 & S12 & S13 & S14 & Avg. \\
   \midrule
-  BL & 61.33 & 75.00 & 72.67 & 60.67 & 59.33 & 68.33 & 84.00 & 64.00 & 88.00 & 54.67 & 47.67 & 57.00 & 47.33 & 52.67 & 63.76 \\
+  BL & 63.25 & 62.33 & 77.83 & 58.42 & 57.83 & 68.08 & 82.00 & 64.67 & 81.08 & 53.92 & 55.42 & 59.19 & 45.17 & 53.75 & 63.07 \\
   RD & 65.00 & 74.67 & 76.67 & 68.00 & 60.67 & 84.00 & 89.67 & 71.67 & 88.67 & 56.33 & 73.67 & 47.33 & 49.00 & 57.67 & 68.79 \\
   CTD & 66.67 & 78.67 & 80.33 & 61.33 & 66.00 & 83.00 & 90.00 & 51.67 & 94.33 & 56.00 & 67.00 & 54.33 & 45.33 & 54.00 & 67.76 \\
   SVM-near & 37.33 & 47.67 & 20.67 & 47.67 & 41.00 & 89.00 & 59.67 & 60.00 & 72.33 & 53.33 & 81.33 & 61.67 & 44.33 & 56.67 & 55.19 \\
   SVM-far & 71.00 & 69.33 & 77.33 & 75.33 & 64.67 & 82.33 & 86.67 & 70.00 & 92.33 & 54.00 & 81.00 & 61.33 & 50.33 & 52.33 & \underline{70.57} \\
-  PGAP & 63.33 & 74.67 & 88.33 & 77.67 & 61.67 & 83.00 & 88.67 & 71.67 & 90.00 & 55.00 & 79.00 & 70.00 & 46.33 & 58.00 & \textbf{71.95 (↑8.19)} \\
+  PGAP & 63.33 & 74.67 & 88.33 & 77.67 & 61.67 & 83.00 & 88.67 & 71.67 & 90.00 & 55.00 & 79.00 & 70.00 & 46.33 & 58.00 & \textbf{71.95 (↑8.88)} \\
   \midrule
   \multicolumn{16}{c}{Cross-subject classification} \\
   \midrule
@@ -371,12 +371,12 @@ Tables~\ref{tab:2014001-result}-~\ref{tab:chb-mit-result} presents the classific
   \midrule
   Approaches & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
   \midrule
-  BL & 51.44 & 55.00 & 51.00 & 65.31 & 54.94 & 47.62 & 50.44 & 58.94 & 51.31 & 54.00 \\
+  BL & 50.31 & 52.34 & 52.25 & 65.20 & 52.94 & 53.59 & 50.45 & 58.58 & 51.02 & 54.08 \\
   RD & 55.44 & 49.57 & 55.40 & 75.25 & 54.00 & 62.62 & 52.81 & 71.50 & 52.81 & 58.82 \\
   CTD & 49.19 & 56.93 & 52.87 & 65.81 & 50.00 & 52.19 & 54.88 & 56.94 & 54.31 & 54.79 \\
   SVM-near & 49.31 & 56.93 & 51.40 & 47.25 & 51.25 & 45.94 & 42.87 & 52.75 & 42.81 & 48.95 \\
   SVM-far & 53.25 & 56.29 & 54.00 & 77.25 & 55.50 & 54.69 & 49.75 & 75.94 & 57.06 & \underline{59.30} \\
-  PGAP & 51.67 & 50.14 & 53.67 & 76.88 & 61.44 & 57.25 & 52.87 & 78.25 & 58.13 & \textbf{60.03 (↑6.03)} \\
+  PGAP & 51.67 & 50.14 & 53.67 & 76.88 & 61.44 & 57.25 & 52.87 & 78.25 & 58.13 & \textbf{60.03 (↑5.95)} \\
   \midrule
   \multicolumn{11}{c}{Cross-subject classification} \\
   \midrule
@@ -401,12 +401,12 @@ Tables~\ref{tab:2014001-result}-~\ref{tab:chb-mit-result} presents the classific
   \midrule
   Approaches & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
   \midrule
-  BL & 74.30 & 88.30 & 70.50 & 82.10 & 65.00 & 51.30 & 76.80 & 55.00 & 58.40 & 69.08 \\
+  BL & 75.60 & 88.69 & 72.64 & 82.21 & 68.83 & 50.54 & 77.06 & 57.61 & 56.81 & 70.00 \\
   RD & 79.60 & 89.00 & 55.90 & 77.40 & 70.40 & 54.90 & 76.50 & 58.30 & 54.30 & 68.48 \\
   CTD & 79.00 & 89.60 & 55.50 & 78.50 & 69.30 & 56.00 & 74.50 & 58.30 & 50.50 & 67.91 \\
   SVM-far & 67.00 & 86.30 & 83.00 & 82.60 & 67.70 & 52.20 & 81.70 & 64.90 & 62.40 & \underline{71.98} \\
   SVM-near & 66.70 & 60.80 & 53.00 & 28.60 & 40.80 & 50.40 & 41.20 & 45.80 & 51.60 & 48.77 \\
-  PGAP & 71.80 & 88.80 & 70.80 & 82.80 & 74.40 & 51.20 & 76.00 & 69.20 & 67.60 & \textbf{72.51 (↑3.43)} \\
+  PGAP & 71.80 & 88.80 & 70.80 & 82.80 & 74.40 & 51.20 & 76.00 & 69.20 & 67.60 & \textbf{72.51 (↑2.51)} \\
   \midrule
   \multicolumn{11}{c}{Cross-subject classification} \\
   \midrule
@@ -434,12 +434,12 @@ Tables~\ref{tab:2014001-result}-~\ref{tab:chb-mit-result} presents the classific
   \midrule
   Approaches & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & S10 & Average \\
   \midrule
-  BL & 67.50 & 47.50 & 70.25 & 53.00 & 66.50 & 68.29 & 56.25 & 88.50 & 84.50 & 64.50 & 66.68 \\
+  BL & 69.25 & 50.62 & 65.19 & 52.56 & 68.69 & 66.21 & 59.06 & 84.63 & 86.56 & 65.31 & 66.81 \\
   RD & 67.75 & 46.50 & 73.00 & 59.25 & 76.50 & 68.57 & 63.75 & 84.00 & 84.75 & 71.75 & 69.58 \\
   CTD & 74.75 & 49.50 & 71.50 & 54.00 & 69.75 & 69.71 & 55.75 & 84.00 & 83.50 & 67.25 & 67.97 \\
   SVM-far & 76.25 & 59.00 & 73.50 & 48.50 & 67.50 & 75.43 & 61.50 & 77.75 & 90.00 & 69.25 & \underline{69.87} \\
   SVM-near & 37.75 & 45.75 & 60.25 & 46.25 & 44.25 & 49.14 & 43.50 & 43.75 & 88.75 & 63.00 & 52.24 \\
-  PGAP & 69.50 & 61.75 & 76.00 & 67.50 & 69.25 & 71.71 & 57.25 & 80.00 & 87.50 & 67.25 & \textbf{70.77 (↑4.09)} \\
+  PGAP & 69.50 & 61.75 & 76.00 & 67.50 & 69.25 & 71.71 & 57.25 & 80.00 & 87.50 & 67.25 & \textbf{70.77 (↑3.96)} \\
   \midrule
   \multicolumn{12}{c}{Cross-subject classification} \\
   \midrule
