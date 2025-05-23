@@ -123,11 +123,108 @@ This section introduces the proposed PGAP. Specifically, we start with a large p
 
 Due to the inherent complexity of raw EEG signals, it is essential to extract compact and discriminative handcrafted features following standard preprocessing. This step is crucial not only for enhancing task-relevant signal characteristics but also for reducing input dimensionality to meet the token-length constraints of LLMs. The resulting embeddings are subsequently utilized as demonstrations within the in-context prompt.
 
-Domain-specific knowledge needs to be leveraged to design feature extraction pipelines tailored to different EEG paradigms. MI paradigm primarily elicits event-related desynchronization and synchronization patterns in the $\mu$ (8-13 Hz) and $\beta$ (13-30 Hz) frequency bands over the sensorimotor cortex, particularly around electrodes C3 and C4. We adopt a feature extraction pipeline inspired by the FBCSP framework \cite{4634130} for MI EEG decoding. Specifically, signals are bandpass-filtered in the 8-24 Hz range and divided into four 4-Hz sub-bands. Two CSP features are extracted from each band, yielding an 8-dimensional feature vector per trial. 
+% Domain-specific knowledge needs to be leveraged to design feature extraction pipelines tailored to different EEG paradigms. MI paradigm primarily elicits event-related desynchronization and synchronization patterns in the $\mu$ (8-13 Hz) and $\beta$ (13-30 Hz) frequency bands over the sensorimotor cortex, particularly around electrodes C3 and C4. We adopt a feature extraction pipeline inspired by the FBCSP framework \cite{4634130} for MI EEG decoding. Specifically, signals are bandpass-filtered in the 8-24 Hz range and divided into four 4-Hz sub-bands. Two CSP features are extracted from each band, yielding an 8-dimensional feature vector per trial. 
 
-For sleep stage classification, EEG features are extracted from time, frequency, and time-frequency domains. In the time domain, standard statistical features such as amplitude measures and zero-crossing rates are employed. In the frequency domain, power spectral density and band power features are commonly used. Time-frequency features are obtained using approaches such as wavelet transform, short-time Fourier transform, empirical mode decomposition, and Wigner–Ville distribution. Given that our primary goal is to evaluate the impact of demonstration selection strategies (random vs. active), we focus on delta (0.5-4 Hz), theta (4–8 Hz), alpha (8-13 Hz), spindle (12-14 Hz) and beta (14-30 Hz) bands, which have been shown to correspond to sleep stages W, N1-N3, and REM in the literature. We adopt a simple yet effective feature representation based on multi-band power spectral density features.
+Domain-specific knowledge needs to be leveraged to design feature extraction pipelines tailored to different EEG paradigms. The motor imagery (MI) paradigm primarily elicits event-related desynchronization and synchronization patterns in the $\mu$ (8--13~Hz) and $\beta$ (13--30~Hz) frequency bands over the sensorimotor cortex, particularly around electrodes C3 and C4. We adopt a feature extraction pipeline inspired by the FBCSP framework~\cite{4634130} for MI EEG decoding. Specifically, signals are bandpass-filtered in the 8--24~Hz range and divided into four 4-Hz sub-bands:
+\begin{align}
+    \mathcal{B}_1 &= [8, 12]\,\text{Hz}, \notag \\
+    \mathcal{B}_2 &= [12, 16]\,\text{Hz}, \notag \\
+    \mathcal{B}_3 &= [16, 20]\,\text{Hz}, \notag \\
+    \mathcal{B}_4 &= [20, 24]\,\text{Hz}. \notag
+\end{align}
+Given a multi-channel EEG trial $\mathbf{X}_{i} \in \mathbb{R}^{C \times T}$, where $i \in \{1, 2\}$ is the class index, $C$ is the number of channels and $T$ is the number of time points, each sub-band signal $\mathbf{X}_{i}^{(k)}$ is obtained via bandpass filtering:
+\begin{equation}
+    \mathbf{X}_{i}^{(k)} = \mathrm{BandpassFilter}(\mathbf{X}_{i}, \mathcal{B}_k), \quad k=1,2,3,4.
+    \label{eq:bandpass}
+\end{equation}
 
-For epileptic seizure detection, previous studies have explored various domain features~\cite{wang2023tasa,boonyakitanont2020review}, highlighting the effectiveness of amplitude-based representations such as variance, energy, and entropy. Motivated by these insights, we adopt a practical and compact feature representation by computing band-specific signal power directly from raw EEG signals. Specifically, we apply bandpass filters to decompose the signals into canonical frequency bands: $\delta$ (0.5–4Hz), $\theta$ (4–8Hz), $\alpha$ (8–13Hz), $\beta$ (13–30Hz), and $\gamma$ (30–45Hz). Then, the average power is extracted from each band. This approach effectively captures band-level spectral energy patterns, which are highly indicative of seizure-related dynamics, while maintaining low computational complexity.
+Fig~\ref{fig:filterband} illustrates the filtered bands from an EEG trial at channel C3.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=1.0\linewidth, clip]{Fig4.eps}
+  \caption{EEG signal from channel C3 and its band-specific components.}
+  \label{fig:filterband}
+\end{figure}
+
+The CSP algorithm computes a spatial filter matrix $W \in \mathbb{R}^{C \times C'}$ ($C' < C$) that reduces the dimensionality of EEG data and improves class separability.
+
+The mean spatial covariance matrix for class $i$ is calculated as:
+\begin{equation}
+    \Sigma_i = \frac{1}{N_i} \sum_{j=1}^{N_i} \frac{\mathbf{X}_{i,j}\mathbf{X}_{i,j}^\top}{\mathrm{tr}(\mathbf{X}_{i,j}\mathbf{X}_{i,j}^\top)}
+    \label{eq:cov}
+\end{equation}
+where $\mathbf{X}_{i,j}$ denotes the $j$-th EEG trial of class $i$ and $N_i$ is the total number of trials in class $i$.
+
+The spatial filter matrix $W$ is derived by maximizing (or minimizing) the following objective function:
+\begin{equation}
+    J(W) = \frac{W^\top \Sigma_1 W}{W^\top \Sigma_2 W}
+    \label{eq:csp_obj}
+\end{equation}
+where $\Sigma_1$ and $\Sigma_2$ are the mean spatial covariance matrices of all EEG trials in class 1 and class 2, respectively.
+
+The CSP features for a given band-filtered trial $\mathbf{X}^{(k)}$ are then computed by projecting the signal with the spatial filter $W$:
+\begin{equation}
+    \mathbf{Z}^{(k)} = W^\top \mathbf{X}^{(k)}
+    \label{eq:csp_proj}
+\end{equation}
+and extracting the log-variance of each projected component:
+\begin{equation}
+    \mathbf{f}^{(k)} = \log \left( \frac{\mathrm{var}(\mathbf{Z}^{(k)}_r)}{\sum_{l=1}^{C'} \mathrm{var}(\mathbf{Z}^{(k)}_l)} \right), \quad r=1,\ldots,C'
+    \label{eq:csp_feat}
+\end{equation}
+where $\mathrm{var}(\cdot)$ denotes the temporal variance of the $r$-th spatially filtered signal.
+
+Finally, all CSP features from the four sub-bands are concatenated to form an 8-dimensional feature vector for each trial:
+\begin{equation}
+    \mathbf{f} = [\mathbf{f}^{(1)},\ \mathbf{f}^{(2)},\ \mathbf{f}^{(3)},\ \mathbf{f}^{(4)}] \in \mathbb{R}^8.
+    \label{eq:concat_feat}
+\end{equation}
+
+% For sleep stage classification, EEG features are extracted from time, frequency, and time-frequency domains. In the time domain, standard statistical features such as amplitude measures and zero-crossing rates are employed. In the frequency domain, power spectral density and band power features are commonly used. Time-frequency features are obtained using approaches such as wavelet transform, short-time Fourier transform, empirical mode decomposition, and Wigner–Ville distribution. Given that our primary goal is to evaluate the impact of demonstration selection strategies (random vs. active), we focus on delta (0.5-4 Hz), theta (4–8 Hz), alpha (8-13 Hz), spindle (12-14 Hz) and beta (14-30 Hz) bands, which have been shown to correspond to sleep stages W, N1-N3, and REM in the literature. We adopt a simple yet effective feature representation based on multi-band power spectral density features.
+For sleep stage classification, EEG features can be extracted from the time, frequency, and time-frequency domains. In the time domain, standard statistical features such as amplitude measures and zero-crossing rates are commonly employed. In the frequency domain, power spectral density (PSD) and band power features are widely used. Time-frequency features are often obtained using approaches such as wavelet transform, short-time Fourier transform, empirical mode decomposition, and Wigner–Ville distribution. Given that our primary goal is to evaluate the impact of demonstration selection strategies (random vs. active), we focus on the delta (0.5--4~Hz), theta (4–8~Hz), alpha (8--13~Hz), spindle (12--14~Hz), and beta (14--30~Hz) bands, which have been shown in the literature to correspond to sleep stages W, N1--N3, and REM.
+
+We adopt a simple yet effective feature representation based on multi-band power spectral density (PSD) features. Specifically, given a multi-channel EEG signal $\mathbf{X} \in \mathbb{R}^{C \times T}$, the signal is first segmented into standard frequency bands $\{\mathcal{B}_k\}$, where each $\mathcal{B}_k$ denotes a band of interest. For each channel $c$ and band $k$, the PSD feature is computed by first estimating the power spectral density $S_c(f)$ (e.g., using Welch's method), and then averaging within the desired frequency range:
+\begin{equation}
+    \mathrm{PSD}_{c,k} = \frac{1}{N_k} \sum_{f_j \in \mathcal{B}_k} S_c(f_j),
+    \label{eq:psd_feature}
+\end{equation}
+where $S_c(f_j)$ is the estimated PSD value at frequency $f_j$, and $N_k$ is the number of frequency bins within band $\mathcal{B}_k$. The feature vector for each trial is then constructed by concatenating the PSD features across all channels and selected bands:
+\begin{equation}
+    \mathbf{f} = [\mathrm{PSD}_{1,1}, \ldots, \mathrm{PSD}_{1,K}, \mathrm{PSD}_{2,1}, \ldots, \mathrm{PSD}_{C,K}],
+    \label{eq:feature_vector}
+\end{equation}
+where $K$ is the number of bands and $C$ is the number of channels.
+
+% For epileptic seizure detection, previous studies have explored various domain features~\cite{wang2023tasa,boonyakitanont2020review}, highlighting the effectiveness of amplitude-based representations such as variance, energy, and entropy. Motivated by these insights, we adopt a practical and compact feature representation by computing band-specific signal power directly from raw EEG signals. Specifically, we apply bandpass filters to decompose the signals into canonical frequency bands: $\delta$ (0.5–4Hz), $\theta$ (4–8Hz), $\alpha$ (8–13Hz), $\beta$ (13–30Hz), and $\gamma$ (30–45Hz). Then, the average power is extracted from each band. This approach effectively captures band-level spectral energy patterns, which are highly indicative of seizure-related dynamics, while maintaining low computational complexity.
+For epileptic seizure detection, previous studies have explored various domain features~\cite{wang2023tasa,boonyakitanont2020review}, highlighting the effectiveness of amplitude-based representations such as variance, energy, and entropy. Motivated by these insights, we adopt a practical and compact feature representation by computing band-specific signal power directly from raw EEG signals. Specifically, we apply bandpass filters to decompose the signals into canonical frequency bands: $\delta$ (0.5--4~Hz), $\theta$ (4--8~Hz), $\alpha$ (8--13~Hz), $\beta$ (13--30~Hz), and $\gamma$ (30--45~Hz). Then, the average power is extracted from each band. This approach effectively captures band-level spectral energy patterns, which are highly indicative of seizure-related dynamics, while maintaining low computational complexity.
+
+Mathematically, given a multi-channel EEG signal $\mathbf{X} \in \mathbb{R}^{C \times T}$, for each frequency band $\mathcal{B}_k$, we obtain the band-filtered signal:
+\begin{equation}
+    \mathbf{X}^{(k)} = \mathrm{BandpassFilter}(\mathbf{X}, \mathcal{B}_k)
+    \label{eq:band_filter}
+\end{equation}
+where $\mathcal{B}_k$ denotes the $k$-th frequency band. The instantaneous power for channel $c$ in band $k$ is computed as:
+\begin{equation}
+    P_{c,k}(t) = \left[\mathbf{X}^{(k)}_{c, t}\right]^2,
+    \label{eq:inst_power}
+\end{equation}
+and the average power over time for each channel and band is:
+\begin{equation}
+    \overline{P}_{c,k} = \frac{1}{T} \sum_{t=1}^{T} P_{c,k}(t) = \frac{1}{T} \sum_{t=1}^{T} \left[\mathbf{X}^{(k)}_{c, t}\right]^2.
+    \label{eq:avg_band_power}
+\end{equation}
+To obtain a compact representation, the mean power across all channels is further computed for each band:
+\begin{equation}
+    \overline{P}_{k} = \frac{1}{C} \sum_{c=1}^{C} \overline{P}_{c,k}
+    \label{eq:pool_band_power}
+\end{equation}
+Finally, the feature vector for each trial is constructed as:
+\begin{equation}
+    \mathbf{f} = [\overline{P}_{1}, \overline{P}_{2}, \ldots, \overline{P}_{B}],
+    \label{eq:feature_vector_band_power}
+\end{equation}
+where $B$ is the number of frequency bands.
+
 
 \subsection{PGAP}
 \label{subsec:PGAP}

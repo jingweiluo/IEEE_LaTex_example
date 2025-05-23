@@ -42,3 +42,51 @@ plt.savefig("BNCI2014001_6methods.eps", format='eps', bbox_inches='tight')
 plt.savefig("BNCI2014001_6methods.png", format='png', dpi=300, bbox_inches='tight')
 
 plt.show()
+
+
+
+# ###################################
+# # 画频带分解图
+# import numpy as np
+# import matplotlib.pyplot as plt
+# from scipy.signal import butter, filtfilt
+
+# X = np.load('/home/luojingwei/data/Weibo2014/X.npy')
+# raw_signal = X[0, 25, :] # index25为C3通道
+
+# # plt.rcParams['font.family'] = 'Serif'
+# # plt.rcParams['font.serif'] = ['Times New Roman']
+
+# def bandpass_filter(sig, fs, fmin, fmax, order=4):
+#     b, a = butter(order, [fmin / (fs/2), fmax / (fs/2)], btype='band')
+#     return filtfilt(b, a, sig)
+
+# # 频带定义
+# bands = {
+#     'B1 [8-12 Hz]': (8, 12),
+#     'B2 [12-16 Hz]': (12, 16),
+#     'B3 [16-20 Hz]': (16, 20),
+#     'B4 [20-24 Hz]': (20, 24)
+# }
+
+# fs = 200
+# filtered_signals = []
+# for label, (fmin, fmax) in bands.items():
+#     filtered = bandpass_filter(raw_signal, fs, fmin, fmax)
+#     filtered_signals.append(filtered)
+
+# # 画图
+# plt.figure(figsize=(7, 5))
+# offset = 0
+# colors = ['#49006a', '#253494', '#2c7fb8', '#41b6c4', '#a1dab4']  # 可自定义
+# names = ['Raw'] + list(bands.keys())
+# signals_to_plot = [raw_signal] + filtered_signals
+
+# for i, (y, name, color) in enumerate(zip(signals_to_plot, names, colors)):
+#     plt.plot(y/2 - i*2*np.std(raw_signal), color=color, linewidth=2)
+#     plt.text(-20, -i*2*np.std(raw_signal), name, va='center', ha='right', fontsize=12)
+
+# plt.axis('off')
+# plt.tight_layout()
+# plt.savefig('band_filtered_signals.png', dpi=300, bbox_inches='tight')  # 保存图片
+# plt.show()
