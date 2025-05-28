@@ -13,9 +13,7 @@
 \begin{document}
 \title{Exploring EEG Decoding with LLMs: A Purity-Guided Active Prompting Framework}
 
-% \author{Dongrui~Wu,~\IEEEmembership{Fellow,~IEEE} and Jerry M. Mendel,~\IEEEmembership{Life Fellow, IEEE}
 \author{Jingwei~Luo, Ziwei~Wang, Dingkun~Liu and Dongrui~Wu,~\IEEEmembership{Fellow,~IEEE}
-
 \thanks{J.~Luo, Z.~Wang, D.~Liu, and D.~Wu, are with the Ministry of Education Key Laboratory of Image Processing and Intelligent Control, School of Artificial Intelligence and Automation, Huazhong University of Science and Technology, Wuhan, 430074 China.}
 \thanks{D.~Liu and D.~Wu, are also with Zhongguancun Academy, Beijing, 100080 China.}
 \thanks{J.~Luo, Z.~Wang, D.~Liu, and D.~Wu are also with the Shenzhen Huazhong University of Science and Technology Research Institute, Shenzhen, 518000 China.}
@@ -391,7 +389,6 @@ Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classifica
 \begin{table*}[htpb] \centering
   \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014001. The best performance of each subject is marked in bold, and the second best underlined.}
   \label{tab:2014001-result}
-  % \resizebox{0.9\linewidth}{!}{
   \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
   \toprule
   \multicolumn{11}{c}{Within-subject classification} \\
@@ -415,13 +412,11 @@ Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classifica
   PGAP & 60.76 & 52.15 & 70.07 & 60.76 & 54.79 & 62.92 & 62.64 & 68.89 & 70.83 & \textbf{62.65 (↑10.17)} \\
   \bottomrule
   \end{tabular}
-  % }
 \end{table*}
 
 \begin{table*}[htpb] \centering
   \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014002. The best performance of each subject is marked in bold, and the second best underlined.}
   \label{tab:2014002-result}
-  % \resizebox{0.9\linewidth}{!}{
   \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c}
   \toprule
   \multicolumn{16}{c}{Within-subject classification} \\
@@ -445,13 +440,11 @@ Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classifica
   PGAP & 57.38 & 66.25 & 86.75 & 55.13 & 62.75 & 69.12 & 85.00 & 62.38 & 85.13 & 60.75 & 65.50 & 66.25 & 51.38 & 51.88 & \underline{66.12} \\
   \bottomrule
   \end{tabular}
-  % }
 \end{table*}
 
 \begin{table*}[htpb] \centering
   \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014004. The best performance of each subject is marked in bold, and the second best underlined.}
   \label{tab:2014004-result}
-  % \resizebox{0.9\linewidth}{!}{
   \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
   \toprule
   \multicolumn{11}{c}{Within-subject classification} \\
@@ -475,7 +468,6 @@ Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classifica
   PGAP & 57.00 & 52.56 & 52.64 & 69.05 & 55.51 & 57.14 & 53.25 & 64.76 & 52.03 & \textbf{57.10 (↑5.35)} \\
   \bottomrule
   \end{tabular}
-  % }
 \end{table*}
 
 %\begin{table*}[htpb] \centering
@@ -514,7 +506,6 @@ Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classifica
   \centering
   \caption{Within-subject and cross-subject classification accuracies (\%) on Weibo2014. The best performance in each subject is marked in bold, and the second best underlined.}
   \label{tab:weibo2014-result}
-  % \resizebox{0.9\linewidth}{!}{
   \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c}
   \toprule
   \multicolumn{12}{c}{Within-subject classification} \\
@@ -540,13 +531,11 @@ Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classifica
   PGAP & 69.75 & 55.13 & 71.37 & 55.13 & 60.50 & 60.00 & 73.50 & 74.25 & 89.38 & 59.50 & 66.86 \\
   \bottomrule
   \end{tabular}
-  % }
 \end{table*}
   
 \begin{table*}[htpb] \centering
   \caption{Within-subject and cross-subject classification accuracies (\%) on Sleep-EDF. The best performance in each subject is marked in bold, and the second best underlined.}
   \label{tab:sleep-edfx-result}
-  % \resizebox{0.9\linewidth}{!}{
   \begin{tabular}{c|c|c|c|c|c|c|c|c}
   \toprule
   \multicolumn{9}{c}{Within-subject classification} \\
@@ -570,13 +559,11 @@ Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classifica
   PGAP & 29.79 & 25.81 & 26.28 & 20.37 & 34.64 & 34.66 & 24.63 & \textbf{28.60 (↑5.67)} \\
   \bottomrule
   \end{tabular}
-  % }
 \end{table*}
 
 \begin{table*}[htpb] \centering
   \caption{Within-subject classification accuracies (\%) on CHB-MIT. The best performance in each subject is marked in bold, and the second best underlined.}
   \label{tab:chb-mit-result}
-  % \resizebox{0.9\linewidth}{!}{
   \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c}
   \toprule
   Approaches & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & S10 & Average \\
@@ -589,7 +576,6 @@ Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classifica
   PGAP & 85.40 & 86.03 & 82.98 & 72.64 & 86.17 & 64.20 & 83.55 & 76.27 & 89.43 & 81.35 & \textbf{80.80 (↑3.68)} \\
   \bottomrule
   \end{tabular}
-  % }
 \end{table*}
 
 \subsection{Effect of the Number of Demonstration Samples}

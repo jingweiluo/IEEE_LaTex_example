@@ -36,11 +36,6 @@
 # plt.title('BNCI2014001', fontsize=16)
 # plt.xlabel('Number of Demonstrations', fontsize=16)
 # plt.ylabel('Accuracy (%)', fontsize=16)
-
-# # plt.title('BNCI2014001')
-# # plt.xlabel('Number of Demonstrations')
-# # plt.ylabel('Accuracy (%)')
-
 # plt.xticks(x)
 # plt.grid(True)
 # plt.legend(loc='lower right')
@@ -60,18 +55,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import butter, filtfilt
 import matplotlib as mpl
-
 mpl.rcParams['font.family'] = 'Times New Roman'
-
-# # 设置字体为 Times New Roman
-# mpl.rcParams['font.family'] = 'Serif'
-# mpl.rcParams['font.serif'] = ['Times New Roman']
 
 X = np.load('E:/data/Weibo2014/X.npy')
 raw_signal = X[0, 25, :] # index25为C3通道
-
-# plt.rcParams['font.family'] = 'Serif'
-# plt.rcParams['font.serif'] = ['Times New Roman']
 
 def bandpass_filter(sig, fs, fmin, fmax, order=4):
     b, a = butter(order, [fmin / (fs/2), fmax / (fs/2)], btype='band')
