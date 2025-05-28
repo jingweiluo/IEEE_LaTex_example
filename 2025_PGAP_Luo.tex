@@ -123,18 +123,17 @@ This section introduces the proposed PGAP. Specifically, we start with a large p
 
 Due to the inherent complexity of raw EEG signals, it is essential to extract compact and discriminative handcrafted features following standard preprocessing. This step is crucial not only for enhancing task-relevant signal characteristics but also for reducing input dimensionality to meet the token-length constraints of LLMs. The resulting embeddings are subsequently utilized as demonstrations within the in-context prompt.
 
-% Domain-specific knowledge needs to be leveraged to design feature extraction pipelines tailored to different EEG paradigms. MI paradigm primarily elicits event-related desynchronization and synchronization patterns in the $\mu$ (8-13 Hz) and $\beta$ (13-30 Hz) frequency bands over the sensorimotor cortex, particularly around electrodes C3 and C4. We adopt a feature extraction pipeline inspired by the FBCSP framework \cite{4634130} for MI EEG decoding. Specifically, signals are bandpass-filtered in the 8-24 Hz range and divided into four 4-Hz sub-bands. Two CSP features are extracted from each band, yielding an 8-dimensional feature vector per trial. 
-
-Domain-specific knowledge needs to be leveraged to design feature extraction pipelines tailored to different EEG paradigms. The motor imagery (MI) paradigm primarily elicits event-related desynchronization and synchronization patterns in the $\mu$ (8--13~Hz) and $\beta$ (13--30~Hz) frequency bands over the sensorimotor cortex, particularly around electrodes C3 and C4. We adopt a feature extraction pipeline inspired by the FBCSP framework~\cite{4634130} for MI EEG decoding. Specifically, signals are bandpass-filtered in the 8--24~Hz range and divided into four 4-Hz sub-bands:
+Domain-specific knowledge needs to be leveraged to design feature extraction pipelines tailored to different EEG paradigms. MI paradigm primarily elicits event-related desynchronization and synchronization patterns in the $\mu$ (8--13~Hz) and $\beta$ (13--30~Hz) frequency bands over the sensorimotor cortex, particularly around electrodes C3 and C4. We adopt a feature extraction pipeline inspired by the FBCSP framework~\cite{4634130} for MI EEG decoding. Specifically, signals are bandpass-filtered in the 8--24~Hz range and divided into four 4-Hz sub-bands:
 \begin{align}
     \mathcal{B}_1 &= [8, 12]\,\text{Hz}, \notag \\
     \mathcal{B}_2 &= [12, 16]\,\text{Hz}, \notag \\
     \mathcal{B}_3 &= [16, 20]\,\text{Hz}, \notag \\
     \mathcal{B}_4 &= [20, 24]\,\text{Hz}. \notag
 \end{align}
-Given a multi-channel EEG trial $\mathbf{X}_{i} \in \mathbb{R}^{C \times T}$, where $i \in \{1, 2\}$ is the class index, $C$ is the number of channels and $T$ is the number of time points, each sub-band signal $\mathbf{X}_{i}^{(k)}$ is obtained via bandpass filtering:
+
+Given a multi-channel EEG trial $\mathbf{X}_{i} \in \mathbb{R}^{C \times T}$, where $i$ is the class index, $C$ the number of channels, and $T$ the number of time points, each sub-band signal $\mathbf{X}_{i}^{k}$ is obtained via bandpass filtering:
 \begin{equation}
-    \mathbf{X}_{i}^{(k)} = \mathrm{BandpassFilter}(\mathbf{X}_{i}, \mathcal{B}_k), \quad k=1,2,3,4.
+    \mathbf{X}_{i}^{k} = \mathrm{BandpassFilter}(\mathbf{X}_{i}, \mathcal{B}_k), \quad k=1,2,3,4.
     \label{eq:bandpass}
 \end{equation}
 
@@ -146,76 +145,74 @@ Fig~\ref{fig:filterband} illustrates the filtered bands from an EEG trial at cha
   \label{fig:filterband}
 \end{figure}
 
-The CSP algorithm computes a spatial filter matrix $W \in \mathbb{R}^{C \times C'}$ ($C' < C$) that reduces the dimensionality of EEG data and improves class separability.
+The CSP algorithm computes a spatial filtering matrix $W \in \mathbb{R}^{C \times C'}$ ($C' < C$) that reduces the dimensionality of EEG trials and improves class separability.
 
 The mean spatial covariance matrix for class $i$ is calculated as:
 \begin{equation}
-    \Sigma_i = \frac{1}{N_i} \sum_{j=1}^{N_i} \frac{\mathbf{X}_{i,j}\mathbf{X}_{i,j}^\top}{\mathrm{tr}(\mathbf{X}_{i,j}\mathbf{X}_{i,j}^\top)}
+    \Sigma_i = \frac{1}{N_i} \sum_{j=1}^{N_i} \frac{\mathbf{X}_{i,j}\mathbf{X}_{i,j}^\top}{\mathrm{tr}(\mathbf{X}_{i,j}\mathbf{X}_{i,j}^\top)},
     \label{eq:cov}
 \end{equation}
 where $\mathbf{X}_{i,j}$ denotes the $j$-th EEG trial of class $i$ and $N_i$ is the total number of trials in class $i$.
 
 The spatial filter matrix $W$ is derived by maximizing (or minimizing) the following objective function:
 \begin{equation}
-    J(W) = \frac{W^\top \Sigma_1 W}{W^\top \Sigma_2 W}
+    J(W) = \frac{W^\top \Sigma_1 W}{W^\top \Sigma_2 W},
     \label{eq:csp_obj}
 \end{equation}
-where $\Sigma_1$ and $\Sigma_2$ are the mean spatial covariance matrices of all EEG trials in class 1 and class 2, respectively.
+where $\Sigma_1$ and $\Sigma_2$ are the mean spatial covariance matrices of all EEG trials from two classes in MI, respectively.
 
-The CSP features for a given band-filtered trial $\mathbf{X}^{(k)}$ are then computed by projecting the signal with the spatial filter $W$:
+The CSP features for a given band-filtered trial $\mathbf{X}^{k}$ are then computed by projecting the trial with the spatial filter $W$:
 \begin{equation}
-    \mathbf{Z}^{(k)} = W^\top \mathbf{X}^{(k)}
+    \mathbf{Z}^{k} = W^\top \mathbf{X}^{k}
     \label{eq:csp_proj}
 \end{equation}
 and extracting the log-variance of each projected component:
 \begin{equation}
-    \mathbf{f}^{(k)} = \log \left( \frac{\mathrm{var}(\mathbf{Z}^{(k)}_r)}{\sum_{l=1}^{C'} \mathrm{var}(\mathbf{Z}^{(k)}_l)} \right), \quad r=1,\ldots,C'
+    \mathbf{f}^{k} = \log \left( \frac{\mathrm{var}(\mathbf{Z}^{k}_r)}{\sum_{l=1}^{C'} \mathrm{var}(\mathbf{Z}^{k}_l)} \right), \quad r=1,\ldots,C',
     \label{eq:csp_feat}
 \end{equation}
 where $\mathrm{var}(\cdot)$ denotes the temporal variance of the $r$-th spatially filtered signal.
 
 Finally, all CSP features from the four sub-bands are concatenated to form an 8-dimensional feature vector for each trial:
 \begin{equation}
-    \mathbf{f} = [\mathbf{f}^{(1)},\ \mathbf{f}^{(2)},\ \mathbf{f}^{(3)},\ \mathbf{f}^{(4)}] \in \mathbb{R}^8.
+    \mathbf{f} = [\mathbf{f}^{1},\ \mathbf{f}^{2},\ \mathbf{f}^{3},\ \mathbf{f}^{4}].
     \label{eq:concat_feat}
 \end{equation}
 
-% For sleep stage classification, EEG features are extracted from time, frequency, and time-frequency domains. In the time domain, standard statistical features such as amplitude measures and zero-crossing rates are employed. In the frequency domain, power spectral density and band power features are commonly used. Time-frequency features are obtained using approaches such as wavelet transform, short-time Fourier transform, empirical mode decomposition, and Wigner–Ville distribution. Given that our primary goal is to evaluate the impact of demonstration selection strategies (random vs. active), we focus on delta (0.5-4 Hz), theta (4–8 Hz), alpha (8-13 Hz), spindle (12-14 Hz) and beta (14-30 Hz) bands, which have been shown to correspond to sleep stages W, N1-N3, and REM in the literature. We adopt a simple yet effective feature representation based on multi-band power spectral density features.
 For sleep stage classification, EEG features can be extracted from the time, frequency, and time-frequency domains. In the time domain, standard statistical features such as amplitude measures and zero-crossing rates are commonly employed. In the frequency domain, power spectral density (PSD) and band power features are widely used. Time-frequency features are often obtained using approaches such as wavelet transform, short-time Fourier transform, empirical mode decomposition, and Wigner–Ville distribution. Given that our primary goal is to evaluate the impact of demonstration selection strategies (random vs. active), we focus on the delta (0.5--4~Hz), theta (4–8~Hz), alpha (8--13~Hz), spindle (12--14~Hz), and beta (14--30~Hz) bands, which have been shown in the literature to correspond to sleep stages W, N1--N3, and REM.
 
-We adopt a simple yet effective feature representation based on multi-band power spectral density (PSD) features. Specifically, given a multi-channel EEG signal $\mathbf{X} \in \mathbb{R}^{C \times T}$, the signal is first segmented into standard frequency bands $\{\mathcal{B}_k\}$, where each $\mathcal{B}_k$ denotes a band of interest. For each channel $c$ and band $k$, the PSD feature is computed by first estimating the power spectral density $S_c(f)$ (e.g., using Welch's method), and then averaging within the desired frequency range:
+We adopt a simple yet effective feature representation based on multi-band PSD analysis. Given a multi-channel EEG trial $\mathbf{X} \in \mathbb{R}^{C \times T}$, the signal is first decomposed into a set of standard frequency bands $\{\mathcal{B}_k\}$, where each $\mathcal{B}_k$ corresponds to a specific frequency range of interest. For each channel $c$ and frequency band $k$, the PSD feature is obtained by estimating the spectral distribution $S_c(f)$ (e.g., via Welch's method), and subsequently averaging the spectral power within the target frequency range: 
 \begin{equation}
     \mathrm{PSD}_{c,k} = \frac{1}{N_k} \sum_{f_j \in \mathcal{B}_k} S_c(f_j),
     \label{eq:psd_feature}
 \end{equation}
-where $S_c(f_j)$ is the estimated PSD value at frequency $f_j$, and $N_k$ is the number of frequency bins within band $\mathcal{B}_k$. The feature vector for each trial is then constructed by concatenating the PSD features across all channels and selected bands:
+where $S_c(f_j)$ is the estimated PSD value at frequency $f_j$, and $N_k$ the number of frequency bins within the band $\mathcal{B}_k$. The feature vector for each trial is then formed by concatenating the PSD features across all channels and selected frequency bands:
 \begin{equation}
     \mathbf{f} = [\mathrm{PSD}_{1,1}, \ldots, \mathrm{PSD}_{1,K}, \mathrm{PSD}_{2,1}, \ldots, \mathrm{PSD}_{C,K}],
     \label{eq:feature_vector}
 \end{equation}
 where $K$ is the number of bands and $C$ is the number of channels.
 
-% For epileptic seizure detection, previous studies have explored various domain features~\cite{wang2023tasa,boonyakitanont2020review}, highlighting the effectiveness of amplitude-based representations such as variance, energy, and entropy. Motivated by these insights, we adopt a practical and compact feature representation by computing band-specific signal power directly from raw EEG signals. Specifically, we apply bandpass filters to decompose the signals into canonical frequency bands: $\delta$ (0.5–4Hz), $\theta$ (4–8Hz), $\alpha$ (8–13Hz), $\beta$ (13–30Hz), and $\gamma$ (30–45Hz). Then, the average power is extracted from each band. This approach effectively captures band-level spectral energy patterns, which are highly indicative of seizure-related dynamics, while maintaining low computational complexity.
 For epileptic seizure detection, previous studies have explored various domain features~\cite{wang2023tasa,boonyakitanont2020review}, highlighting the effectiveness of amplitude-based representations such as variance, energy, and entropy. Motivated by these insights, we adopt a practical and compact feature representation by computing band-specific signal power directly from raw EEG signals. Specifically, we apply bandpass filters to decompose the signals into canonical frequency bands: $\delta$ (0.5--4~Hz), $\theta$ (4--8~Hz), $\alpha$ (8--13~Hz), $\beta$ (13--30~Hz), and $\gamma$ (30--45~Hz). Then, the average power is extracted from each band. This approach effectively captures band-level spectral energy patterns, which are highly indicative of seizure-related dynamics, while maintaining low computational complexity.
 
-Mathematically, given a multi-channel EEG signal $\mathbf{X} \in \mathbb{R}^{C \times T}$, for each frequency band $\mathcal{B}_k$, we obtain the band-filtered signal:
+Mathematically, for each frequency band $\mathcal{B}_k$, we obtain the band-filtered signal:
 \begin{equation}
-    \mathbf{X}^{(k)} = \mathrm{BandpassFilter}(\mathbf{X}, \mathcal{B}_k)
+    \mathbf{X}^{(k)} = \mathrm{BandpassFilter}(\mathbf{X}, \mathcal{B}_k),
     \label{eq:band_filter}
 \end{equation}
 where $\mathcal{B}_k$ denotes the $k$-th frequency band. The instantaneous power for channel $c$ in band $k$ is computed as:
 \begin{equation}
-    P_{c,k}(t) = \left[\mathbf{X}^{(k)}_{c, t}\right]^2,
+    P_{c,k}(t) = \left[\mathbf{X}^{k}_{c, t}\right]^2,
     \label{eq:inst_power}
 \end{equation}
 and the average power over time for each channel and band is:
 \begin{equation}
-    \overline{P}_{c,k} = \frac{1}{T} \sum_{t=1}^{T} P_{c,k}(t) = \frac{1}{T} \sum_{t=1}^{T} \left[\mathbf{X}^{(k)}_{c, t}\right]^2.
+    \overline{P}_{c,k} = \frac{1}{T} \sum_{t=1}^{T} P_{c,k}(t) = \frac{1}{T} \sum_{t=1}^{T} \left[\mathbf{X}^{k}_{c, t}\right]^2.
     \label{eq:avg_band_power}
 \end{equation}
 To obtain a compact representation, the mean power across all channels is further computed for each band:
 \begin{equation}
-    \overline{P}_{k} = \frac{1}{C} \sum_{c=1}^{C} \overline{P}_{c,k}
+    \overline{P}_{k} = \frac{1}{C} \sum_{c=1}^{C} \overline{P}_{c,k}.
     \label{eq:pool_band_power}
 \end{equation}
 Finally, the feature vector for each trial is constructed as:
@@ -306,9 +303,9 @@ To avoid prompt truncation and exceeding token limits, all components are carefu
   &BNCI2015001 & 12(9) & 13 & 512 & 5 & 400/600 &  right hand, both feet \\
   &Weibo2014 & 10 & 60(22) & 200 & 4 & 140, 160 &  right hand, both feet \\
   \midrule
-  Sleep&Sleep-EdfX& 7 & 2 & 100 & 30 & 1025 &  W, N1, N2, N3, REM \\
+  Sleep Stage Classification&Sleep-EdfX& 7 & 2 & 100 & 30 & 1025 &  W, N1, N2, N3, REM \\
   \midrule
-  Epilepsy&CHB-MIT&10&23&256&3&76-618&seizure, non-seizure \\
+  Seizure Detection&CHB-MIT&10&23&256&3&76-618&seizure, non-seizure \\
   \bottomrule
   \end{tabular}
 \end{table*}
@@ -321,7 +318,7 @@ Five MI datasets, one sleep dataset, and one epilepsy dataset are utilized in ou
 \subsubsection{MI Datasets}
 All MI datasets used in our experiments are binary classification tasks and were obtained using the MOABB framework \cite{jayaram2018moabb}. Specifically, two datasets from BCI Competition IV (BNCI2014001 and BNCI2014004) \cite{tangermann2012review} contain left-vs-right hand imagery, while the other three: BNCI2014002, BNCI2015001, and Weibo2014, contain right-hand vs. feet imagery. 
 
-In each session, a subject sat comfortably in an armchair positioned in front of a computer screen. At the beginning of each trial, a fixation cross appeared on a black background, accompanied by a short auditory warning tone. After a brief delay, a directional cue in the form of an arrow pointing left, right, down, or up appeared on the screen, corresponding to one of the four MI classes: left hand, right hand, feet, or tongue. Subject performed the imagery task until the fixation cross disappeared. Each trial ended with a brief black screen before the next trial began \cite{tangermann2012review}.
+In each session, a subject sat comfortably in an armchair positioned in front of a computer screen. At the beginning of each trial, a fixation cross appeared on a black background, accompanied by a short auditory warning tone. After a brief delay, a directional cue in the form of an arrow pointing left, right, down, or up appeared on the screen, corresponding to one of the four MI classes: left hand, right hand, feet, or tongue. Subjects performed the imagery task until the fixation cross disappeared. Each trial ended with a brief black screen before the next trial began \cite{tangermann2012review}.
 
 Notably, for BNCI2015001, the last 3 subjects were excluded due to poor performance \cite{faller2012autocalibration}. And for Weibo2014, only right-hand and feet trials were used for binary classification in this study. From the original 60 usable channels, we selected 21 MI-related channels: FC3, FC1, FCz, FC2, FC4, C5, C3, C1, Cz, C2, C4, C6, CP3, CP1, CPz, CP2, CP4, P3, P1, P2, and P4.
 
@@ -329,7 +326,7 @@ Notably, for BNCI2015001, the last 3 subjects were excluded due to poor performa
 \subsubsection{Sleep Dataset}
 The Sleep-EDF Expanded (Sleep-EDFx) dataset is intended for sleep research, particularly for sleep stage classification. It contains 197 full-night polysomnographic (PSG) recordings, including EEG (Fpz–Cz and Pz–Oz), EOG, EMG, and event markers. Corresponding hypnograms (sleep stage annotations) were manually scored by trained technicians following the Rechtschaffen and Kales manual and are provided alongside the recordings.
 
-Only EEG channels are used for a five-stage sleep classification task. Due to the large volume of data, we selected recordings from first seven subjects, using one night of data per subject.
+Only EEG channels are used for a five-stage sleep classification task. Due to the large volume of data, we selected recordings from the first seven subjects, using one night of data per subject.
 
 During the signal processing and feature extraction stages, EEG data from the Sleep-EDFx dataset were first bandpass filtered between 0.5 Hz and 35 Hz. Since the recordings span an entire night and include prolonged wake periods at the beginning and end, only the first and last 30 minutes of wakefulness were retained to reduce redundancy. Sleep stages were labeled according to the AASM standard and grouped into five classes: Wake (W), N1, N2, N3, and REM. Each trial was segmented into non-overlapping 30-second epochs.
 
@@ -340,7 +337,7 @@ The CHB-MIT Scalp EEG Database comprises EEG recordings from 22 pediatric subjec
 
 All signals were sampled at 256 Hz with 16-bit resolution. Most recordings contain 23 EEG channels, though a few have 24 or 26. Electrode placement follows the International 10-20 system for EEG acquisition.
 
-Considering the computational cost, we only used the first nine subjects in our experiments. The raw EEG signals were segmented using non-overlapping sliding windows of 3 seconds. We extracted all seizure segments and randomly selected an equal number of non-seizure segments from the remaining data to ensure class balance.
+Considering the computational cost, we only used the first ten subjects in our experiments. The raw EEG signals were segmented using non-overlapping sliding windows of 3 seconds. We extracted all seizure segments and randomly selected an equal number of non-seizure segments from the remaining data. During inference, the number of seizure and non-seizure trials was also equal, thus avoiding class imbalance.
 
 For feature extraction, we employed a commonly used and effective time-domain features for seizure detection: band power. Specifically, the raw EEG signals were filtered into five standard frequency bands: $\delta$ (0.5–4 Hz), $\theta$ (4–8 Hz), $\alpha$ (8–13 Hz), $\beta$ (13–30 Hz), and $\gamma$ (30–50 Hz). 
 
@@ -352,20 +349,20 @@ We compare PGAP with various existing approaches:
 \item \emph{BL}, which randomly selects all $M$ samples.
 \item \emph{CTD}, which applies the $k$-means algorithm within each class and selects centroids.
 \item \emph{RD} \cite{wu2018pool}, which starts by selecting the centroid of each class as the initial point. Then, iteratively performs additional rounds of clustering on each class and selects the centroid of the largest cluster not yet covered by the previously selected points.
-\item \emph{SVM-near}, which trains a SVM classifier on the training set and selects, from each class, the sample closest to the decision boundary.
-\item \emph{SVM-far}, which in contrast to SVM-near, selects the sample farthest to the decision boundary within each class. To mitigate the impact of outliers, SVM-far further filters candidates by checking the proportion of same-label samples among their five nearest neighbors.
-\item \emph{PGAP}, which selects the highest-purity samples from each class as describe in Section~\ref{subsec:PGAP}.
+\item \emph{SVM-near}, which trains an SVM classifier on the training set and selects, from each class, the sample closest to the decision boundary.
+\item \emph{SVM-far}, in contrast to SVM-near, selects the sample farthest to the decision boundary within each class. To mitigate the impact of outliers, SVM-far further filters candidates by checking the proportion of same-label samples among their five nearest neighbors.
+\item \emph{PGAP}, which selects the highest-purity samples from each class, as described in Section~\ref{subsec:PGAP}.
 \end{enumerate}
 
 \subsection{Implementation}
 We utilize the Qwen-2.5-14B-Instruct-1M model as the LLM, and apply two demonstrations per category, resulting in a total of four ICL demonstrations for the MI binary classification dataset, ten for the sleep five-class classification task, and four for the epilepsy binary classification dataset.
 
-We conducted experiments under three settings. For the MI datasets, we adopted (i) within-subject, cross-session evaluation and (ii) cross-subject evaluation. For the sleep and epilepsy dataset, as only one session per subject is available, we employed (iii) within-subject five-fold cross-validation instead of (i). For the epilepsy dataset, due to the large variation in the number of seizure segments across subjects, cross-subject experimental results may be affected. Therefore, we only conduct within-subject experiments.
+We conducted experiments under three settings. For the MI datasets, we adopted within-subject cross-session and cross-subject evaluation. For sleep and epilepsy datasets, as only one session per subject is available, we employed within-subject five-fold cross-validation instead of cross-session evaluation. For the epilepsy dataset, due to the large variation in the number of seizure segments across subjects, we only conduct within-subject experiments.
 
-All approaches were run 5 times. Random selection baselines were repeated 20 times. For five-fold cross-validation, the entire process was repeated 5 times, totaling 25 runs for each approach. Classification accuracy was utilized as the evaluation metric.
+All algorithms were run 5 times, except random selection, which was repeated 20 times. For five-fold cross-validation, the entire process was repeated 5 times, totally 25 runs for each approach. Classification accuracy was utilized as the evaluation metric.
 
 \begin{enumerate}
-\item \emph{Within-Subject Cross-Session:}
+\item \emph{Within-subject cross-session:}
 Datasets were partitioned into non-overlapping training and testing sets. Specifically:
   \begin{itemize}
 	\item BNCI2014001: One session for training and another for testing, each containing 144 trials.
@@ -374,32 +371,24 @@ Datasets were partitioned into non-overlapping training and testing sets. Specif
     \item BNCI2015001: One session for training and one for testing (400 trials total). Subjects 8–9 use first 2 sessions for training and the third for testing.
     \item Weibo2014: First half of the session for training; second half for testing.
   \end{itemize}
-  \item \emph{Within-Subject five-Fold Cross-Validation:}
-Trials were shuffled and split into 5 folds with class balance preserved.
-  \item \emph{Cross-Subject:}
-Leave-one-subject-out. Remaining subjects used for training. Euclidean Alignment (EA) \cite{he2019transfer} was applied to each subject's data.
+  \item \emph{Within-subject five-fold cross-validation:}
+Trials from each subject were shuffled and split into 5 folds with class balance preserved.
+  \item \emph{Leave one subject out:} Remaining subjects used for training. Euclidean Alignment (EA) \cite{he2019transfer} was applied to each subject's data.
 \end{enumerate}
 
 \subsection{Main Results}
-Tables~\ref{tab:2014001-result}-~\ref{tab:chb-mit-result} presents the classification accuracies on the seven EEG datasets, respectively. We can observe that:
-
+Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classification accuracies on the seven EEG datasets, respectively. Observe that:
 \begin{enumerate}
   \item {Active selection of ICL demonstrations significantly outperforms random selection.} In both within-subject and cross-subject settings, actively selected demonstrations consistently lead to a better prompting effect on the LLM, resulting in higher prediction accuracy and more stable outputs compared to random selection.
-  
   \item {High-informativeness samples yield the worst prompting effect in ICL.} Contrary to conventional expectations in traditional machine learning, selecting the most informative samples leads to an inferior prompting effect on the LLM, even worse than random selection. This suggests a fundamental difference between how LLMs and traditional classifiers benefit from informative instances.
-  
   \item {Low-informativeness samples achieve the best prompting effect.} Demonstrations with low informativeness and high model confidence, as exemplified by SVM-far and PGAP, result in superior prompting effects. We hypothesize that when classifying complex numerical data, LLMs primarily rely on statistical distributional patterns rather than constructing deep decision boundaries. Therefore, more prototypical and easily distinguishable examples are more effective in guiding the model, whereas highly ambiguous samples fail to provide meaningful distinctions.
-  
   \item {PGAP consistently outperforms SVM-far.} Although SVM-far has been optimized to avoid outlier selection and shows competitive performance, PGAP still achieves better overall prompting effects across datasets and experimental conditions.
-  
   \item {PGAP achieves consistent superiority across multiple datasets and paradigms.} The proposed PGAP consistently outperforms random selection across all experiments and achieves optimal results in the majority of cases. Specifically, in the within-subject setting, PGAP improves over random selection by 8.04\%, 8.19\%, 6.03\%, 3.43\%, and 4.09\% across the five MI datasets, by 5.44\% on the sleep dataset, and by 3.68\% on the epilepsy dataset. In the cross-subject setting, PGAP achieves similar improvements: 10.17\%, 6.32\%, 5.35\%, 1.37\%, and 1.93\% across the five MI datasets, 5.67\% on the sleep dataset.
-  
-  \item {Representativeness- and diversity-based approaches (RD and CTD) also outperform random selection} Although RD and CTD perform slightly worse than PGAP overall, they consistently outperform random selection across all experiments. Notably, in cross-subject settings, their performance significantly improves, achieving results comparable to or even exceeding PGAP on several MI datasets. Moreover, since these approaches do not strictly rely on label information (labels are only used to maintain class balance), they exhibit broader applicability to scenarios where label information is limited or unavailable.
+  \item {RD and CTD also outperform random selection.} Although RD and CTD perform slightly worse than PGAP overall, they consistently outperform random selection across all experiments. Notably, in cross-subject settings, their performance significantly improves, achieving results comparable to or even exceeding PGAP on several MI datasets. Moreover, since these approaches do not strictly rely on label information (labels are only used to maintain class balance), they exhibit broader applicability to scenarios where label information is limited or unavailable.
 \end{enumerate}
 
-
 \begin{table*}[htpb] \centering
-  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014001. The best performance in each subject is marked in bold, and the second best underlined.}
+  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014001. The best performance of each subject is marked in bold, and the second best underlined.}
   \label{tab:2014001-result}
   % \resizebox{0.9\linewidth}{!}{
   \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
@@ -429,7 +418,7 @@ Tables~\ref{tab:2014001-result}-~\ref{tab:chb-mit-result} presents the classific
 \end{table*}
 
 \begin{table*}[htpb] \centering
-  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014002. The best performance in each subject is marked in bold, and the second best underlined.}
+  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014002. The best performance of each subject is marked in bold, and the second best underlined.}
   \label{tab:2014002-result}
   % \resizebox{0.9\linewidth}{!}{
   \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c|c|c|c|c|c}
@@ -459,7 +448,7 @@ Tables~\ref{tab:2014001-result}-~\ref{tab:chb-mit-result} presents the classific
 \end{table*}
 
 \begin{table*}[htpb] \centering
-  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014004. The best performance in each subject is marked in bold, and the second best underlined.}
+  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2014004. The best performance of each subject is marked in bold, and the second best underlined.}
   \label{tab:2014004-result}
   % \resizebox{0.9\linewidth}{!}{
   \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
@@ -488,37 +477,37 @@ Tables~\ref{tab:2014001-result}-~\ref{tab:chb-mit-result} presents the classific
   % }
 \end{table*}
 
-\begin{table*}[htpb] \centering
-  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2015001. The best performance in each subject is marked in bold, and the second best underlined.}
-  \label{tab:2015001-result}
-  % \resizebox{0.9\linewidth}{!}{
-  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
-  \toprule
-  \multicolumn{11}{c}{Within-subject classification} \\
-  \midrule
-  Approaches & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
-  \midrule
-  BL & 75.60 & 88.69 & 72.64 & 82.21 & 68.83 & 50.54 & 77.06 & 57.61 & 56.81 & 70.00 \\
-  RD & 79.60 & 89.00 & 55.90 & 77.40 & 70.40 & 54.90 & 76.50 & 58.30 & 54.30 & 68.48 \\
-  CTD & 79.00 & 89.60 & 55.50 & 78.50 & 69.30 & 56.00 & 74.50 & 58.30 & 50.50 & 67.91 \\
-  SVM-far & 67.00 & 86.30 & 83.00 & 82.60 & 67.70 & 52.20 & 81.70 & 64.90 & 62.40 & \underline{71.98} \\
-  SVM-near & 66.70 & 60.80 & 53.00 & 28.60 & 40.80 & 50.40 & 41.20 & 45.80 & 51.60 & 48.77 \\
-  PGAP & 71.80 & 88.80 & 70.80 & 82.80 & 74.40 & 51.20 & 76.00 & 69.20 & 67.60 & \textbf{72.51 (↑2.51)} \\
-  \midrule
-  \multicolumn{11}{c}{Cross-subject classification} \\
-  \midrule
-  Approaches & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
-  \midrule
-  BL & 70.25 & 80.15 & 68.45 & 65.55 & 61.85 & 56.40 & 55.35 & 56.60 & 64.03 & 64.29 \\
-  RD & 78.50 & 83.55 & 65.85 & 55.60 & 68.75 & 56.65 & 62.00 & 56.63 & 63.27 & \underline{65.64} \\
-  CTD & 71.90 & 79.35 & 66.85 & 62.70 & 68.35 & 55.75 & 58.50 & 57.87 & 63.77 & 65.00 \\
-  SVM-far & 76.15 & 76.80 & 66.00 & 66.20 & 62.70 & 50.15 & 56.70 & 56.67 & 58.67 & 63.34 \\
-  SVM-near & 73.95 & 69.45 & 55.25 & 54.40 & 69.00 & 57.45 & 57.10 & 56.77 & 60.03 & 61.49 \\
-  PGAP & 76.70 & 85.30 & 66.15 & 66.45 & 63.50 & 56.25 & 60.50 & 53.70 & 62.40 & \textbf{65.66 (↑1.37)} \\
-  \bottomrule
-  \end{tabular}
-  % }
-\end{table*}
+%\begin{table*}[htpb] \centering
+%  \caption{Within-subject and cross-subject classification accuracies (\%) on BNCI2015001. The best performance in each subject is marked in bold, and the second best underlined.}
+%  \label{tab:2015001-result}
+%  % \resizebox{0.9\linewidth}{!}{
+%  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
+%  \toprule
+%  \multicolumn{11}{c}{Within-subject classification} \\
+%  \midrule
+%  Approaches & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+%  \midrule
+%  BL & 75.60 & 88.69 & 72.64 & 82.21 & 68.83 & 50.54 & 77.06 & 57.61 & 56.81 & 70.00 \\
+%  RD & 79.60 & 89.00 & 55.90 & 77.40 & 70.40 & 54.90 & 76.50 & 58.30 & 54.30 & 68.48 \\
+%  CTD & 79.00 & 89.60 & 55.50 & 78.50 & 69.30 & 56.00 & 74.50 & 58.30 & 50.50 & 67.91 \\
+%  SVM-far & 67.00 & 86.30 & 83.00 & 82.60 & 67.70 & 52.20 & 81.70 & 64.90 & 62.40 & \underline{71.98} \\
+%  SVM-near & 66.70 & 60.80 & 53.00 & 28.60 & 40.80 & 50.40 & 41.20 & 45.80 & 51.60 & 48.77 \\
+%  PGAP & 71.80 & 88.80 & 70.80 & 82.80 & 74.40 & 51.20 & 76.00 & 69.20 & 67.60 & \textbf{72.51 (↑2.51)} \\
+%  \midrule
+%  \multicolumn{11}{c}{Cross-subject classification} \\
+%  \midrule
+%  Approaches & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
+%  \midrule
+%  BL & 70.25 & 80.15 & 68.45 & 65.55 & 61.85 & 56.40 & 55.35 & 56.60 & 64.03 & 64.29 \\
+%  RD & 78.50 & 83.55 & 65.85 & 55.60 & 68.75 & 56.65 & 62.00 & 56.63 & 63.27 & \underline{65.64} \\
+%  CTD & 71.90 & 79.35 & 66.85 & 62.70 & 68.35 & 55.75 & 58.50 & 57.87 & 63.77 & 65.00 \\
+%  SVM-far & 76.15 & 76.80 & 66.00 & 66.20 & 62.70 & 50.15 & 56.70 & 56.67 & 58.67 & 63.34 \\
+%  SVM-near & 73.95 & 69.45 & 55.25 & 54.40 & 69.00 & 57.45 & 57.10 & 56.77 & 60.03 & 61.49 \\
+%  PGAP & 76.70 & 85.30 & 66.15 & 66.45 & 63.50 & 56.25 & 60.50 & 53.70 & 62.40 & \textbf{65.66 (↑1.37)} \\
+%  \bottomrule
+%  \end{tabular}
+%  % }
+%\end{table*}
 
 \begin{table*}[htpb]
   \centering
@@ -603,7 +592,7 @@ Tables~\ref{tab:2014001-result}-~\ref{tab:chb-mit-result} presents the classific
 \end{table*}
 
 \subsection{Effect of the Number of Demonstration Samples}
-In the preceding experiments, we selected two samples per category as demonstrations. We investigated the impact of varying the number of demonstration samples on performance. The experiments are conducted on the BNCI2014001 dataset. Figure~\ref{fig:diff-demo-num} presents the performance trends as the number of demonstration samples increases, from which we observe the following:
+In the preceding experiments, we selected two samples per category as demonstrations. We investigated the impact of varying the number of demonstration samples on performance. The experiments are conducted on the BNCI2014001 dataset. Figure~\ref{fig:diff-demo-num} presents the performance trends as the number of demonstration samples increases. Observe that:
 
 \begin{enumerate}
   \item The performance of the LLM improves as the number of demonstration samples increases.
@@ -612,36 +601,45 @@ In the preceding experiments, we selected two samples per category as demonstrat
   \item PGAP consistently outperforms random and other selection approaches across different numbers of demonstrations, and exhibits the smallest variance across repeated experiments, indicating the highest stability.
 \end{enumerate}
 
-\begin{figure}[htbp]         \centering
-  \includegraphics[width=1.0\linewidth,clip]{Fig3}
-  \caption{Performance under different numbers of in-context demonstrations on BNCI2014001 datasets using BL, RD, CTD, SVM-near, SVM-far and PGAP approaches. The LLM used here is our base model: Qwen-2.5-14b-instruct-1m.} \label{fig:diff-demo-num}
+\begin{figure}[htbp]   \centering
+  \includegraphics[width=.9\linewidth,clip]{Fig3}
+  \caption{Performance under different numbers of in-context demonstrations on BNCI2014001 datasets using BL, RD, CTD, SVM-near, SVM-far, and PGAP approaches. The utilized LLM is Qwen-2.5-14b-instruct-1m.} \label{fig:diff-demo-num}
 \end{figure}
 
-\subsection{Comparison of LLMs}
-To further assess the generalizability of the proposed PGAP, we evaluated its performance on alternative LLMs. Specifically, DeepSeek-V3 was selected for comparative analysis. Experiments were conducted on the BNCI2015-002 dataset, and the corresponding results are presented in Table~\ref{tab:deepseek-result}. The following observations can be made:
-
+\subsection{Comparison of LLMs and CNNs}
+To further assess the effectiveness of the proposed LLM-based PGAP, we compared PGAP with existing lightweight CNN models and evaluated its performance on alternative LLMs. We reproduced three traditional CNN models, including EEGNet \cite{Lawhern2018EEGNet}, DeepCNN \cite{deepshallow2017}, and FBCNet \cite{mane2021fbcnet}. For PGAP, DeepSeek-V3 and Qwen-2.5 were utilized for comparative analysis. Experiments were conducted on the BNCI2015001 dataset, and the corresponding results are presented in Table~\ref{tab:deepseek-result}. Observe that:
 \begin{enumerate}
-\item Active selection approaches consistently outperform random selection across different LLMs.
-\item The relative performance hierarchy among all approaches remains consistent with previous experiments, confirming the robustness of active selection strategies across different model architectures.
-\item Employing larger and more powerful models leads to a consistent improvement in accuracy for all approaches.Remarkably, on certain datasets, the results surpass the SOTA performance achieved by conventional deep neural networks, highlighting the considerable potential of LLM-based ICL few-shot learning approaches in non-text domains such as EEG signal analysis.
+\item The proposed LLM-based PGAP consistently outperforms all CNN baselines, highlighting the considerable potential of LLM-based ICL few-shot learning approaches in non-text domains such as EEG signal analysis.
+\item The relative performance of DeepSeek-V3 remains consistent with previous performance with Qwen-2.5, confirming the robustness of active selection strategies across different LLM architectures.
 \end{enumerate}
 
-\begin{table*}[htpb] \centering
-  \caption{Within-subject classification accuracies (\%) on BNCI2015001 using the DeepSeek-V3 model. The best performance in each subject is marked in bold, and the second best underlined.}
-  \label{tab:deepseek-result}
-  \begin{tabular}{c|c|c|c|c|c|c|c|c|c|c}
-  \toprule
-  Approaches & S1 & S2 & S3 & S4 & S5 & S6 & S7 & S8 & S9 & Average \\
-  \midrule
-  BL & 87.40 & 92.90 & 95.30 & 84.10 & 79.90 & 63.30 & 76.30 & 59.20 & 71.30 & \underline{78.86} \\
-  RD & 93.80 & 91.20 & 79.50 & 79.10 & 80.40 & 59.80 & 73.20 & 56.40 & 76.10 & 76.61 \\
-  CTD & 93.10 & 93.20 & 80.00 & 76.90 & 80.10 & 62.70 & 71.80 & 57.30 & 87.50 & 78.10 \\
-  SVM-near & 34.30 & 39.60 & 33.90 & 11.10 & 33.50 & 62.10 & 38.50 & 23.90 & 38.50 & 35.04 \\
-  SVM-far & 75.30 & 88.20 & 85.00 & 71.00 & 76.50 & 60.70 & 61.10 & 58.10 & 84.60 & 73.40 \\
-  PGAP & 75.40 & 93.00 & 91.20 & 81.50 & 86.40 & 61.10 & 80.30 & 64.10 & 86.40 & \textbf{79.93 (↑1.07)} \\
-  \bottomrule
-  \end{tabular}
-\end{table*}
+\begin{table}[htpb] \centering
+\setlength{\tabcolsep}{1mm}
+\renewcommand\arraystretch{1}
+\caption{Within-subject classification accuracies (\%) on BNCI2015001 using lightweight CNNs and the proposed LLM-based PGAP. The best performance in each subject is marked in bold, and the second best underlined.}
+\label{tab:deepseek-result}
+\begin{tabular}{c|ccc|cc}
+\toprule
+\multirow{2.5}{*}{Subject} & \multicolumn{3}{c|}{CNN} & \multicolumn{2}{c}{LLM-based PGAP} \\ \cmidrule(lr){2-6}
+ & EEGNet & DeepCNN & FBCNet & Qwen-2.5 & DeepSeek-V3 \\
+\midrule
+S1 & 93.00  & 78.40  & 86.80 & & \\
+S2 & 93.40  & 76.80  & 91.40 & & \\
+S3 & 79.80  & 78.00  & 83.00 & & \\
+S4 & 80.60  & 63.40  & 80.80 & & \\
+S5 & 71.60  & 73.60  & 80.00 & & \\
+S6 & 49.20  & 60.40  & 65.80 & & \\
+S7 & 73.40  & 62.60  & 66.20 & & \\
+S8 & 56.20  & 57.20  & 63.80 & & \\
+S9 & 60.20  & 56.20  & 55.00 & & \\
+S10 & 56.80  & 57.00  & 55.60 & & \\
+S11 & 61.00  & 85.00  & 70.40 & & \\
+S12 & 50.40  & 53.60  & 52.00 & & \\
+\midrule
+Average & 68.80$_{\pm2.14}$ & 66.85$_{\pm2.01}$ & 70.90$_{\pm2.17}$ & & \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{Conclusions}\label{sec:conclusion}
 This paper proposed a purity-guided active prompting (PGAP) framework for EEG decoding with LLMs in a few-shot in-context learning scenario. Existing demonstration selection approaches commonly used in NLP and CV domains are often ineffective for EEG data due to its complexity and inherent lack of semantic interpretability. PGAP addresses these limitations by combining domain-specific feature extraction with an active selection strategy based on local same-label purity, selecting compact sets of representative, low-entropy examples. Experiments on multiple EEG datasets across diverse BCI paradigms show that PGAP consistently outperforms random and baseline selection strategies.
