@@ -300,10 +300,10 @@ To avoid prompt truncation and exceeding token limits, all components are carefu
   \multirow{4}{*}{MI}&BNCI2014001 & 9 & 22 & 250 & 4  & 288 &  left hand, right hand \\
   &BNCI2014004 & 9 & 3 & 250 & 4.5 & 680-760 &  left hand, right hand \\
   &BNCI2014002 & 14 & 15 & 512 & 5 & 160 &  right hand, both feet \\
-  &BNCI2015001 & 12(9) & 13 & 512 & 5 & 400/600 &  right hand, both feet \\
+  &BNCI2015001 & 12 & 13 & 512 & 5 & 400/600 &  right hand, both feet \\
   &Weibo2014 & 10 & 60(22) & 200 & 4 & 140, 160 &  right hand, both feet \\
   \midrule
-  Sleep Stage Classification&Sleep-EdfX& 7 & 2 & 100 & 30 & 1025 &  W, N1, N2, N3, REM \\
+  Sleep Stage Classification&Sleep-edfx& 7 & 2 & 100 & 30 & 1025 &  W, N1, N2, N3, REM \\
   \midrule
   Seizure Detection&CHB-MIT&10&23&256&3&76-618&seizure, non-seizure \\
   \bottomrule
@@ -320,17 +320,18 @@ All MI datasets used in our experiments are binary classification tasks and were
 
 In each session, a subject sat comfortably in an armchair positioned in front of a computer screen. At the beginning of each trial, a fixation cross appeared on a black background, accompanied by a short auditory warning tone. After a brief delay, a directional cue in the form of an arrow pointing left, right, down, or up appeared on the screen, corresponding to one of the four MI classes: left hand, right hand, feet, or tongue. Subjects performed the imagery task until the fixation cross disappeared. Each trial ended with a brief black screen before the next trial began \cite{tangermann2012review}.
 
-Notably, for BNCI2015001, the last 3 subjects were excluded due to poor performance \cite{faller2012autocalibration}. And for Weibo2014, only right-hand and feet trials were used for binary classification in this study. From the original 60 usable channels, we selected 21 MI-related channels: FC3, FC1, FCz, FC2, FC4, C5, C3, C1, Cz, C2, C4, C6, CP3, CP1, CPz, CP2, CP4, P3, P1, P2, and P4.
+Notably, for Weibo2014, only right-hand and feet trials were used for binary classification in this study. From the original 60 usable channels, we selected 21 MI-related channels: FC3, FC1, FCz, FC2, FC4, C5, C3, C1, Cz, C2, C4, C6, CP3, CP1, CPz, CP2, CP4, P3, P1, P2, and P4.
 
+Additionally, to validate the effectiveness of our approach across different model backbones and to explore the potential of applying LLMs to EEG decoding, we conducted experiments on the BNCI2015001 dataset using two representative LLM platforms, Qwen and DeepSeek, and compared the results with those of three classical deep neural networks commonly used in MI-based paradigms.
 
 \subsubsection{Sleep Dataset}
-The Sleep-EDF Expanded (Sleep-EDFx) dataset is intended for sleep research, particularly for sleep stage classification. It contains 197 full-night polysomnographic (PSG) recordings, including EEG (Fpz–Cz and Pz–Oz), EOG, EMG, and event markers. Corresponding hypnograms (sleep stage annotations) were manually scored by trained technicians following the Rechtschaffen and Kales manual and are provided alongside the recordings.
+The Sleep-EDF Expanded (Sleep-edfx) dataset is intended for sleep research, particularly for sleep stage classification. It contains 197 full-night polysomnographic (PSG) recordings, including EEG (Fpz–Cz and Pz–Oz), EOG, EMG, and event markers. Corresponding hypnograms (sleep stage annotations) were manually scored by trained technicians following the Rechtschaffen and Kales manual and are provided alongside the recordings.
 
 Only EEG channels are used for a five-stage sleep classification task. Due to the large volume of data, we selected recordings from the first seven subjects, using one night of data per subject.
 
-During the signal processing and feature extraction stages, EEG data from the Sleep-EDFx dataset were first bandpass filtered between 0.5 Hz and 35 Hz. Since the recordings span an entire night and include prolonged wake periods at the beginning and end, only the first and last 30 minutes of wakefulness were retained to reduce redundancy. Sleep stages were labeled according to the AASM standard and grouped into five classes: Wake (W), N1, N2, N3, and REM. Each trial was segmented into non-overlapping 30-second epochs.
+During the signal processing and feature extraction stages, EEG data from the Sleep-edfx dataset were first bandpass filtered between 0.5 Hz and 35 Hz. Since the recordings span an entire night and include prolonged wake periods at the beginning and end, only the first and last 30 minutes of wakefulness were retained to reduce redundancy. Sleep stages were labeled according to the AASM standard and grouped into five classes: Wake (W), N1, N2, N3, and REM. Each trial was segmented into non-overlapping 30-second epochs.
 
-For each epoch, the signal from every channel was processed individually. The PSD was computed using the Welch algorithm. We then defined five canonical frequency bands-delta (0.5-4 Hz), theta (4-8 Hz), alpha (8-13 Hz), spindle (12-14 Hz) and beta (14-30 Hz). For each band, the mean PSD within the corresponding frequency range was calculated by averaging the PSD values across that band. This process was repeated across all channels and frequency bands, resulting in a feature vector of size $C \times B$ per epoch, where $C$ is the number of EEG channels and B is the number of frequency bands.
+% For each epoch, the signal from every channel was processed individually. The PSD was computed using the Welch algorithm. We then defined five canonical frequency bands-delta (0.5-4 Hz), theta (4-8 Hz), alpha (8-13 Hz), spindle (12-14 Hz) and beta (14-30 Hz). For each band, the mean PSD within the corresponding frequency range was calculated by averaging the PSD values across that band. This process was repeated across all channels and frequency bands, resulting in a feature vector of size $C \times B$ per epoch, where $C$ is the number of EEG channels and B is the number of frequency bands.
 
 \subsubsection{Epilepsy Dataset}
 The CHB-MIT Scalp EEG Database comprises EEG recordings from 22 pediatric subjects (5 males, aged 3–22 years, and 17 females, aged 1.5-19 years) with intractable seizures. Subjects were monitored over multiple days following the withdrawal of anti-seizure medication to capture seizure activity and evaluate their suitability for surgical intervention. In total, 182 seizures were annotated with precise onset and offset timings.
@@ -339,9 +340,9 @@ All signals were sampled at 256 Hz with 16-bit resolution. Most recordings conta
 
 Considering the computational cost, we only used the first ten subjects in our experiments. The raw EEG signals were segmented using non-overlapping sliding windows of 3 seconds. We extracted all seizure segments and randomly selected an equal number of non-seizure segments from the remaining data. During inference, the number of seizure and non-seizure trials was also equal, thus avoiding class imbalance.
 
-For feature extraction, we employed a commonly used and effective time-domain features for seizure detection: band power. Specifically, the raw EEG signals were filtered into five standard frequency bands: $\delta$ (0.5–4 Hz), $\theta$ (4–8 Hz), $\alpha$ (8–13 Hz), $\beta$ (13–30 Hz), and $\gamma$ (30–50 Hz). 
+% For feature extraction, we employed a commonly used and effective time-domain features for seizure detection: band power. Specifically, the raw EEG signals were filtered into five standard frequency bands: $\delta$ (0.5–4 Hz), $\theta$ (4–8 Hz), $\alpha$ (8–13 Hz), $\beta$ (13–30 Hz), and $\gamma$ (30–50 Hz). 
 
-For each frequency band, the signal from every channel was individually filtered and the power was calculated as the mean squared amplitude over time. The power values from all channels were then averaged to obtain a single scalar representing the overall energy in that frequency band. This process was repeated for all five bands, resulting in a five-dimensional feature vector per EEG epoch. These band power features provide a compact summary of the frequency-specific signal energy across the scalp.
+% For each frequency band, the signal from every channel was individually filtered and the power was calculated as the mean squared amplitude over time. The power values from all channels were then averaged to obtain a single scalar representing the overall energy in that frequency band. This process was repeated for all five bands, resulting in a five-dimensional feature vector per EEG epoch. These band power features provide a compact summary of the frequency-specific signal energy across the scalp.
 
 \subsection{Compared Approaches}
 We compare PGAP with various existing approaches:
@@ -366,25 +367,25 @@ All algorithms were run 5 times, except random selection, which was repeated 20 
 Datasets were partitioned into non-overlapping training and testing sets. Specifically:
   \begin{itemize}
 	\item BNCI2014001: One session for training and another for testing, each containing 144 trials.
-	\item BNCI2014004: First 3 sessions for training; last 2 for testing.
-    \item BNCI2014002: First 5 runs for training; last 3 for testing. Each run contains 10 right-hand and 10 feet trials.
-    \item BNCI2015001: One session for training and one for testing (400 trials total). Subjects 8–9 use first 2 sessions for training and the third for testing.
+	\item BNCI2014004: First three sessions for training; last two for testing.
+    \item BNCI2014002: First five runs for training; last three for testing. Each run contains 10 right-hand and 10 feet trials.
+    \item BNCI2015001: One session for training and one for testing (400 trials total). Subjects 8–11 use first two sessions for training and the third for testing.
     \item Weibo2014: First half of the session for training; second half for testing.
   \end{itemize}
   \item \emph{Within-subject five-fold cross-validation:}
-Trials from each subject were shuffled and split into 5 folds with class balance preserved.
+Trials from each subject were shuffled and split into five folds with class balance preserved.
   \item \emph{Leave one subject out:} Remaining subjects used for training. Euclidean Alignment (EA) \cite{he2019transfer} was applied to each subject's data.
 \end{enumerate}
 
 \subsection{Main Results}
-Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classification accuracies on the seven EEG datasets, respectively. Observe that:
+Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classification accuracies on the six EEG datasets, respectively. Observe that:
 \begin{enumerate}
-  \item {Active selection of ICL demonstrations significantly outperforms random selection.} In both within-subject and cross-subject settings, actively selected demonstrations consistently lead to a better prompting effect on the LLM, resulting in higher prediction accuracy and more stable outputs compared to random selection.
-  \item {High-informativeness samples yield the worst prompting effect in ICL.} Contrary to conventional expectations in traditional machine learning, selecting the most informative samples leads to an inferior prompting effect on the LLM, even worse than random selection. This suggests a fundamental difference between how LLMs and traditional classifiers benefit from informative instances.
-  \item {Low-informativeness samples achieve the best prompting effect.} Demonstrations with low informativeness and high model confidence, as exemplified by SVM-far and PGAP, result in superior prompting effects. We hypothesize that when classifying complex numerical data, LLMs primarily rely on statistical distributional patterns rather than constructing deep decision boundaries. Therefore, more prototypical and easily distinguishable examples are more effective in guiding the model, whereas highly ambiguous samples fail to provide meaningful distinctions.
-  \item {PGAP consistently outperforms SVM-far.} Although SVM-far has been optimized to avoid outlier selection and shows competitive performance, PGAP still achieves better overall prompting effects across datasets and experimental conditions.
-  \item {PGAP achieves consistent superiority across multiple datasets and paradigms.} The proposed PGAP consistently outperforms random selection across all experiments and achieves optimal results in the majority of cases. Specifically, in the within-subject setting, PGAP improves over random selection by 8.04\%, 8.19\%, 6.03\%, 3.43\%, and 4.09\% across the five MI datasets, by 5.44\% on the sleep dataset, and by 3.68\% on the epilepsy dataset. In the cross-subject setting, PGAP achieves similar improvements: 10.17\%, 6.32\%, 5.35\%, 1.37\%, and 1.93\% across the five MI datasets, 5.67\% on the sleep dataset.
-  \item {RD and CTD also outperform random selection.} Although RD and CTD perform slightly worse than PGAP overall, they consistently outperform random selection across all experiments. Notably, in cross-subject settings, their performance significantly improves, achieving results comparable to or even exceeding PGAP on several MI datasets. Moreover, since these approaches do not strictly rely on label information (labels are only used to maintain class balance), they exhibit broader applicability to scenarios where label information is limited or unavailable.
+  \item Active selection of ICL demonstrations significantly outperforms random selection. In both within-subject and cross-subject settings, actively selected demonstrations consistently lead to a better prompting effect on the LLM, resulting in higher prediction accuracy and more stable outputs compared to random selection.
+  \item High-informativeness samples yield the worst prompting effect in ICL. Contrary to conventional expectations in traditional machine learning, selecting the most informative samples leads to an inferior prompting effect on the LLM, even worse than random selection. This suggests a fundamental difference between how LLMs and traditional classifiers benefit from informative instances.
+  \item Low-informativeness samples achieve the best prompting effect. Demonstrations with low informativeness and high model confidence, as exemplified by SVM-far and PGAP, result in superior prompting effects. We hypothesize that when classifying complex numerical data, LLMs primarily rely on statistical distributional patterns rather than constructing deep decision boundaries. Therefore, more prototypical and easily distinguishable examples are more effective in guiding the model, whereas highly ambiguous samples fail to provide meaningful distinctions.
+  \item PGAP consistently outperforms SVM-far. Although SVM-far has been optimized to avoid outlier selection and shows competitive performance, PGAP still achieves better overall prompting effects across datasets and experimental conditions.
+  \item PGAP demonstrates consistent superiority across multiple datasets and paradigms, outperforming random selection in all experiments and achieving optimal results in most cases. In the within-subject setting, it surpasses random selection by 8.35\%, 8.88\%, 5.95\% and 3.96\% on the four MI datasets, by 5.44\% on the sleep dataset, and by 3.68\% on the epilepsy dataset. In the cross-subject setting, similar improvements are observed: 10.17\%, 6.32\%, 5.35\% and 1.93\% on the MI datasets, and 5.67\% on the sleep dataset.
+  \item RD and CTD also outperform random selection. Although RD and CTD perform slightly worse than PGAP overall, they consistently outperform random selection across all experiments. Notably, in cross-subject settings, their performance significantly improves, achieving results comparable to or even exceeding PGAP on several MI datasets. Moreover, since these approaches do not strictly rely on label information (labels are only used to maintain class balance), they exhibit broader applicability to scenarios where label information is limited or unavailable.
 \end{enumerate}
 
 \begin{table*}[htpb] \centering
@@ -592,7 +593,7 @@ Tables~\ref{tab:2014001-result}-\ref{tab:chb-mit-result} presents the classifica
 \end{table*}
 
 \subsection{Effect of the Number of Demonstration Samples}
-In the preceding experiments, we selected two samples per category as demonstrations. We investigated the impact of varying the number of demonstration samples on performance. The experiments are conducted on the BNCI2014001 dataset. Figure~\ref{fig:diff-demo-num} presents the performance trends as the number of demonstration samples increases. Observe that:
+In the preceding experiments, we selected two samples per category as demonstrations. To examine the impact of the number of demonstration samples on performance, we conducted experiments on the BNCI2014001 dataset. Figure~\ref{fig:diff-demo-num} illustrates the performance trends as the number of demonstration samples increases. Observe that:
 
 \begin{enumerate}
   \item The performance of the LLM improves as the number of demonstration samples increases.
@@ -607,10 +608,11 @@ In the preceding experiments, we selected two samples per category as demonstrat
 \end{figure}
 
 \subsection{Comparison of LLMs and CNNs}
-To further assess the effectiveness of the proposed LLM-based PGAP, we compared PGAP with existing lightweight CNN models and evaluated its performance on alternative LLMs. We reproduced three traditional CNN models, including EEGNet \cite{Lawhern2018EEGNet}, DeepCNN \cite{deepshallow2017}, and FBCNet \cite{mane2021fbcnet}. For PGAP, DeepSeek-V3 and Qwen-2.5 were utilized for comparative analysis. Experiments were conducted on the BNCI2015001 dataset, and the corresponding results are presented in Table~\ref{tab:deepseek-result}. Observe that:
+To further assess the effectiveness of the proposed LLM-based PGAP, we compared PGAP with existing lightweight CNN models and evaluated its performance on alternative LLMs. We reproduced three traditional CNN models, including EEGNet \cite{Lawhern2018EEGNet}, DeepCNN \cite{deepshallow2017}, and FBCNet \cite{mane2021fbcnet}. For PGAP, DeepSeek-V3 and Qwen-2.5-14B-Instruct-1M were utilized for comparative analysis. Experiments were conducted on the BNCI2015001 dataset, and the corresponding results are presented in Table~\ref{tab:deepseek-result}. Observe that:
 \begin{enumerate}
-\item The proposed LLM-based PGAP consistently outperforms all CNN baselines, highlighting the considerable potential of LLM-based ICL few-shot learning approaches in non-text domains such as EEG signal analysis.
-\item The relative performance of DeepSeek-V3 remains consistent with previous performance with Qwen-2.5, confirming the robustness of active selection strategies across different LLM architectures.
+\item As the model size increases, the classification accuracy of LLM-based PGAP improves. Notably, DeepSeek-V3 outperforms Qwen-2.5-14B-Instruct-1M on nearly all subjects, highlighting the advantage of using more powerful LLMs.
+\item LLM-based PGAP methods have lower variance than CNN-based approaches, indicating better stability.
+\item When powerful large-scale models are employed, the prediction accuracy of LLM-based PGAP methods can even surpass that of the most commonly used CNN-based models. This highlights the tremendous potential of applying LLMs to EEG decoding.
 \end{enumerate}
 
 \begin{table}[htpb] \centering
@@ -623,20 +625,20 @@ To further assess the effectiveness of the proposed LLM-based PGAP, we compared 
 \multirow{2.5}{*}{Subject} & \multicolumn{3}{c|}{CNN} & \multicolumn{2}{c}{LLM-based PGAP} \\ \cmidrule(lr){2-6}
  & EEGNet & DeepCNN & FBCNet & Qwen-2.5 & DeepSeek-V3 \\
 \midrule
-S1 & 93.00  & 78.40  & 86.80 & & \\
-S2 & 93.40  & 76.80  & 91.40 & & \\
-S3 & 79.80  & 78.00  & 83.00 & & \\
-S4 & 80.60  & 63.40  & 80.80 & & \\
-S5 & 71.60  & 73.60  & 80.00 & & \\
-S6 & 49.20  & 60.40  & 65.80 & & \\
-S7 & 73.40  & 62.60  & 66.20 & & \\
-S8 & 56.20  & 57.20  & 63.80 & & \\
-S9 & 60.20  & 56.20  & 55.00 & & \\
-S10 & 56.80  & 57.00  & 55.60 & & \\
-S11 & 61.00  & 85.00  & 70.40 & & \\
-S12 & 50.40  & 53.60  & 52.00 & & \\
+S1  & 93.00 & 78.40 & 86.80 & 71.80 & 75.40 \\
+S2  & 93.40 & 76.80 & 91.40 & 88.80 & 93.00 \\
+S3  & 79.80 & 78.00 & 83.00 & 70.80 & 91.20 \\
+S4  & 80.60 & 63.40 & 80.80 & 82.80 & 81.50 \\
+S5  & 71.60 & 73.60 & 80.00 & 74.40 & 86.40 \\
+S6  & 49.20 & 60.40 & 65.80 & 51.20 & 61.10 \\
+S7  & 73.40 & 62.60 & 66.20 & 76.00 & 80.30 \\
+S8  & 56.20 & 57.20 & 63.80 & 69.20 & 64.10 \\
+S9  & 60.20 & 56.20 & 55.00 & 67.60 & 86.40 \\
+S10 & 56.80 & 57.00 & 55.60 & 46.80 & 51.00 \\
+S11 & 61.00 & 85.00 & 70.40 & 65.80 & 67.60 \\
+S12 & 50.40 & 53.60 & 52.00 & 47.70 & 52.00 \\
 \midrule
-Average & 68.80$_{\pm2.14}$ & 66.85$_{\pm2.01}$ & 70.90$_{\pm2.17}$ & & \\
+Average & 68.80$_{\pm2.14}$ & 66.85$_{\pm2.01}$ & \underline{70.90}$_{\pm2.17}$ & 67.74$_{\pm0.95}$ & \textbf{73.95}$_{\pm0.81}$ \\
 \bottomrule
 \end{tabular}
 \end{table}
